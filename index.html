@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pasar Segar Mobile</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100">
+
+    <div id="app">
+        <!-- Header -->
+        <header class="p-4 flex justify-between items-center sticky top-0 bg-slate-950/80 backdrop-blur-md z-40">
+            <div>
+                <h1 class="text-xl font-bold bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">Pasar Segar</h1>
+                <p class="text-[10px] text-slate-500">Kebutuhan Dapur Lengkap</p>
+            </div>
+            <button onclick="toggleCart()" class="relative p-2 bg-slate-900 rounded-xl border border-slate-800">
+                <i data-lucide="shopping-cart" class="w-6 h-6 text-emerald-400"></i>
+                <span id="cart-badge" class="hidden absolute -top-1 -right-1 bg-rose-500 text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center">0</span>
+            </button>
+        </header>
+
+        <!-- Search -->
+        <div class="px-4 mb-4">
+            <div class="relative">
+                <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 w-4 h-4"></i>
+                <input type="text" id="search-input" oninput="renderProducts()" placeholder="Cari bumbu, sayur..." 
+                    class="w-full bg-slate-900 border border-slate-800 rounded-xl py-3 pl-10 pr-4 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
+            </div>
+        </div>
+
+        <!-- Categories -->
+        <div class="flex gap-2 overflow-x-auto px-4 mb-6 hide-scrollbar" id="category-list">
+            <!-- Categories injected by JS -->
+        </div>
+
+        <!-- Product Grid -->
+        <div class="px-4 grid grid-cols-2 gap-4 pb-24" id="product-grid">
+            <!-- Products injected by JS -->
+        </div>
+
+        <!-- Cart Modal -->
+        <div id="cart-modal" class="fixed inset-0 z-50 hidden">
+            <div class="absolute inset-0 bg-black/80 backdrop-blur-sm" onclick="toggleCart()"></div>
+            <div class="absolute inset-y-0 right-0 w-full max-w-sm bg-slate-900 flex flex-col shadow-2xl">
+                <div class="p-4 border-b border-slate-800 flex justify-between items-center">
+                    <h2 class="font-bold flex items-center gap-2"><i data-lucide="shopping-cart"></i> Keranjang</h2>
+                    <button onclick="toggleCart()" class="p-2"><i data-lucide="x"></i></button>
+                </div>
+                <div id="cart-items" class="flex-1 overflow-y-auto p-4 space-y-4">
+                    <!-- Cart items -->
+                </div>
+                <div class="p-4 border-t border-slate-800 bg-slate-900/50">
+                    <div class="flex justify-between mb-4">
+                        <span class="text-slate-400">Total:</span>
+                        <span id="cart-total" class="font-bold text-emerald-400 text-xl">Rp 0</span>
+                    </div>
+                    <button class="w-full bg-emerald-500 py-4 rounded-xl font-bold">Checkout</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const products = [
+            { id: 1, name: 'Sawi Hijau', category: 'Sayur Mentah', price: 5000, unit: 'kg', status: 'Segar', stock: 25, image: 'https://images.unsplash.com/photo-1597362868479-35442175a6d3?w=300' },
+            { id: 2, name: 'Wortel', category: 'Sayur Mentah', price: 12000, unit: 'kg', status: 'Segar', stock: 40, image: 'https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?w=300' },
+            { id: 3, name: 'Tomat', category: 'Buah', price: 8000, unit: 'kg', status: 'Segar', stock: 15, image: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=300' },
+            { id: 4, name: 'Bumbu Kuning', category: 'Bumbu Dapur', price: 5000, unit: 'pcs', status: 'Segar', stock: 50, image: 'https://images.unsplash.com/photo-1620912189865-1e8a33da4c59?w=300' },
+            { id: 5, name: 'Bumbu Merah', category: 'Bumbu Dapur', price: 5000, unit: 'pcs', status: 'Segar', stock: 50, image: 'https://images.unsplash.com/photo-1514733670139-4d87a1941d55?w=300' },
+            { id: 6, name: 'Pindang', category: 'Ikan', price: 15000, unit: 'ons', status: 'Lama', stock: 10, image: 'https://images.unsplash.com/photo-1534422298391-e4f8c170db76?w=300' },
+            { id: 7, name: 'Ikan Asin', category: 'Ikan', price: 10000, unit: 'ons', status: 'Segar', stock: 30, image: 'https://images.unsplash.com/photo-1580231121101-b32fd12ca604?w=300' },
+            { id: 8, name: 'Paha Ayam', category: 'Daging', price: 35000, unit: 'kg', status: 'Segar', stock: 20, image: 'https://images.unsplash.com/photo-1587593810167-a84920ea0781?w=300' },
+            { id: 10, name: 'Bolu', category: 'Makanan', price: 2500, unit: 'pcs', status: 'Segar', stock: 45, image: 'https://images.unsplash.com/photo-1587132137056-bfbf0166836e?w=300' },
+            { id: 12, name: 'Tempe', category: 'Pangan', price: 5000, unit: 'pcs', status: 'Segar', stock: 100, image: 'https://images.unsplash.com/photo-1624462966581-bc6d768cbce5?w=300' }
+        ];
+
+        const categories = ["Semua", "Sayur Mentah", "Buah", "Bumbu Dapur", "Ikan", "Daging", "Makanan", "Pangan", "Lainnya"];
+        let currentCategory = "Semua";
+        let cart = [];
+
+        function renderCategories() {
+            const list = document.getElementById('category-list');
+            list.innerHTML = categories.map(cat => `
+                <button onclick="setCategory('${cat}')" 
+                    class="px-4 py-2 rounded-full whitespace-nowrap text-xs font-semibold transition-all ${currentCategory === cat ? 'bg-emerald-500 text-white' : 'bg-slate-900 text-slate-400 border border-slate-800'}">
+                    ${cat}
+                </button>
+            `).join('');
+        }
+
+        function setCategory(cat) {
+            currentCategory = cat;
+            renderCategories();
+            renderProducts();
+        }
+
+        function renderProducts() {
+            const searchTerm = document.getElementById('search-input').value.toLowerCase();
+            const grid = document.getElementById('product-grid');
+            
+            const filtered = products.filter(p => {
+                const matchSearch = p.name.toLowerCase().includes(searchTerm);
+                const matchCat = currentCategory === "Semua" || p.category === currentCategory;
+                return matchSearch && matchCat;
+            });
+
+            grid.innerHTML = filtered.map(p => `
+                <div class="bg-slate-900 rounded-2xl overflow-hidden border border-slate-800 flex flex-col">
+                    <div class="relative h-32">
+                        <img src="${p.image}" class="w-full h-full object-cover">
+                        <span class="absolute top-2 right-2 px-1.5 py-0.5 rounded text-[8px] font-bold uppercase ${p.status === 'Segar' ? 'bg-emerald-500' : 'bg-amber-500'}">
+                            ${p.status}
+                        </span>
+                    </div>
+                    <div class="p-3 flex-1 flex flex-col">
+                        <h3 class="font-bold text-sm truncate">${p.name}</h3>
+                        <p class="text-[10px] text-slate-500 mb-2">Stok: ${p.stock} • ${p.unit}</p>
+                        <div class="mt-auto flex justify-between items-center">
+                            <span class="text-emerald-400 font-bold text-xs">Rp ${p.price.toLocaleString()}</span>
+                            <button onclick="addToCart(${p.id})" class="bg-emerald-500 p-1.5 rounded-lg text-white">
+                                <i data-lucide="plus" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        function addToCart(id) {
+            const product = products.find(p => p.id === id);
+            const existing = cart.find(item => item.id === id);
+            if (existing) {
+                existing.qty++;
+            } else {
+                cart.push({ ...product, qty: 1 });
+            }
+            updateCartUI();
+        }
+
+        function updateCartUI() {
+            const count = cart.reduce((sum, item) => sum + item.qty, 0);
+            const badge = document.getElementById('cart-badge');
+            badge.innerText = count;
+            badge.classList.toggle('hidden', count === 0);
+
+            const itemsContainer = document.getElementById('cart-items');
+            itemsContainer.innerHTML = cart.map(item => `
+                <div class="flex gap-3 bg-slate-800/50 p-2 rounded-xl">
+                    <img src="${item.image}" class="w-12 h-12 rounded-lg object-cover">
+                    <div class="flex-1">
+                        <h4 class="text-xs font-bold">${item.name}</h4>
+                        <p class="text-[10px] text-emerald-400">${item.qty} x Rp ${item.price.toLocaleString()}</p>
+                    </div>
+                    <button onclick="removeFromCart(${item.id})" class="text-rose-500 px-2"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                </div>
+            `).join('');
+
+            const total = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+            document.getElementById('cart-total').innerText = `Rp ${total.toLocaleString()}`;
+            lucide.createIcons();
+        }
+
+        function removeFromCart(id) {
+            cart = cart.filter(item => item.id !== id);
+            updateCartUI();
+        }
+
+        function toggleCart() {
+            const modal = document.getElementById('cart-modal');
+            modal.classList.toggle('hidden');
+        }
+
+        // Init
+        renderCategories();
+        renderProducts();
+        lucide.createIcons();
+    </script>
+</body>
+</html>
+
