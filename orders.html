@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Pesanan Hari Ini</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+
+<body class="bg-slate-950 text-slate-100 min-h-screen">
+
+<nav class="p-4 flex items-center gap-3 border-b border-slate-800">
+  <a href="index.html" class="p-2 bg-slate-900 rounded-xl">
+    <i data-lucide="arrow-left"></i>
+  </a>
+  <h1 class="font-bold text-lg text-emerald-400">Pesanan Hari Ini</h1>
+</nav>
+
+<main class="p-4 space-y-4 max-w-2xl mx-auto">
+  <div id="orders-list" class="space-y-4">
+    <p class="text-slate-500 text-center">Memuat pesanan...</p>
+  </div>
+</main>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
+import {
+  getFirestore, collection, query, orderBy,
+  onSnapshot, doc, updateDoc
+} from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBWkPqyh54IRccNz2YjuB1bL5r49YadAP4",
+  authDomain: "sayurjuju-bfe82.firebaseapp.com",
+  projectId: "sayurjuju-bfe82",
+};
+
+const ADMIN_UID = "XVmdoXxSptTlA8xHVmAIzeLgkru2";
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+const ordersList = document.getElementById("orders-list");
+
+onAuthStateChanged(auth, (user) => {
+  if (!user || user.uid !== ADMIN_UID) {
+    alert("Akses ditolak");
+    window.location.href = "index.html";
+    return;
+  }
+
+  loadOrders();
+});
+
+function loadOrders() {
+  const q = query(
+    collection(db, "orders"),
+    orderBy("createdAt", "desc")
+  );
+
+  onSnapshot(q, (snap) => {
+    ordersList.innerHTML = "";
+
+    if (snap.empty) {
+      ordersList.innerHTML = `<p class="text-center text-slate-500">Belum ada pesanan</p>`;
+      return;
+    }
+
+    snap.forEach(docSnap => {
+      const o = docSnap.data();
+      const id = docSnap.id;
+
+      const card = document.createElement("div");
+      card.className = "bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3";
+
+      card.innerHTML = `
+        <div class="flex justify-between items-center">
+          <span class="text-xs font-bold ${
+            o.deliveryMethod === "ANTAR"
+              ? "text-emerald-400"
+              : "text-cyan-400"
+          }">
+            ${o.deliveryMethod}
+          </span>
+          <span class="text-xs text-slate-400">${o.status}</span>
+        </div>
+
+        <ul class="text-sm space-y-1">
+          ${o.items.map(i => `<li>• ${i.name} × ${i.qty}</li>`).join("")}
+        </ul>
+
+        <div class="flex justify-between text-sm font-bold">
+          <span>Total</span>
+          <span class="text-emerald-400">Rp ${o.total.toLocaleString()}</span>
+        </div>
+
+        <div class="flex gap-2">
+          ${
+            o.status !== "SELESAI"
+            ? `<button onclick="updateStatus('${id}', '${o.status}')"
+                class="flex-1 bg-emerald-500 text-slate-950 py-2 rounded-xl text-sm font-bold">
+                Update Status
+              </button>`
+            : `<span class="text-xs text-slate-500">Pesanan selesai</span>`
+          }
+        </div>
+      `;
+
+      ordersList.appendChild(card);
+    });
+
+    lucide.createIcons();
+  });
+}
+
+window.updateStatus = async (id, current) => {
+  let next = "SELESAI";
+
+  if (current === "MENUNGGU") next = "DIANTAR";
+  else if (current === "DIANTAR") next = "SELESAI";
+  else if (current === "SIAP DIAMBIL") next = "SELESAI";
+
+  await updateDoc(doc(db, "orders", id), {
+    status: next
+  });
+};
+</script>
+
+</body>
+</html>
