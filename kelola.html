@@ -3,220 +3,258 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tambah Produk - Pasar Segar</title>
+    <title>Kelola Produk - Pasar Segar</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap');
         body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .checkbox-custom:checked + label { border-color: #10b981; background: rgba(16, 185, 129, 0.1); }
     </style>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen p-4 pb-12">
+<body class="bg-slate-950 text-slate-100 min-h-screen">
 
-    <div class="max-w-xl mx-auto">
-        <nav class="p-4 flex items-center gap-3 sticky top-0 
-            bg-slate-950/90 backdrop-blur-md z-40 
-            border-b border-slate-900 mb-6">
+    <nav class="p-4 flex justify-between items-center sticky top-0 bg-slate-950/90 backdrop-blur-md z-40 border-b border-slate-900">
+        <div class="flex items-center gap-3">
             <a href="index.html" class="p-2 bg-slate-900 rounded-xl border border-slate-800 text-slate-400">
-    <i data-lucide="arrow-left" class="w-5 h-5"></i>
-</a>
-<h2 class="text-lg font-bold">Tambah Produk Baru</h2>
-            <div class="w-10"></div>
+                <i data-lucide="arrow-left" class="w-5 h-5"></i>
+            </a>
+            <h1 class="text-lg font-bold">Manajemen Produk</h1>
         </div>
-
-        <div id="auth-guard" class="hidden text-center py-20 bg-slate-900 rounded-3xl border border-slate-800">
-            <i data-lucide="lock" class="w-12 h-12 mx-auto text-slate-700 mb-4"></i>
-            <h3 class="font-bold text-slate-300">Akses Dibatasi</h3>
-            <p class="text-slate-500 text-sm mb-6 px-6">Hanya admin yang dapat menambahkan produk ke katalog.</p>
-            <a href="login.html" class="px-6 py-3 bg-emerald-500 rounded-xl font-bold inline-block">Login Admin</a>
+        <div class="flex items-center gap-2" id="action-buttons">
+            <!-- Muncul saat produk dipilih -->
         </div>
+    </nav>
 
-        <form id="product-form" class="hidden space-y-5 bg-slate-900 p-6 rounded-3xl border border-slate-800 shadow-2xl">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div class="md:col-span-2">
-                    <label class="block text-xs text-slate-400 mb-2 font-semibold">NAMA PRODUK</label>
-                    <input type="text" id="p-name" required placeholder="Contoh: Wortel Brastagi" class="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 text-sm focus:border-emerald-500 outline-none">
-                </div>
-                
-                <div>
-                    <label class="block text-xs text-slate-400 mb-2 font-semibold">KATEGORI</label>
-                    <select id="p-category" class="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 text-sm focus:border-emerald-500 outline-none appearance-none">
-                        <option value="Sayur Mentah">Sayur Mentah</option>
-                        <option value="Buah">Buah</option>
-                        <option value="Bumbu Dapur">Bumbu Dapur</option>
-                        <option value="Ikan">Ikan</option>
-                        <option value="Daging">Daging</option>
-                        <option value="Makanan">Makanan</option>
-                        <option value="Pangan">Pangan</option>
-                        <option value="Lainnya">Lainnya</option>
-                    </select>
-                </div>
-
-                <div>
-                    <label class="block text-xs text-slate-400 mb-2 font-semibold">SATUAN</label>
-                    <select id="p-unit" class="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 text-sm focus:border-emerald-500 outline-none">
-                        <option value="kg">kg</option>
-                        <option value="pcs">pcs</option>
-                        <option value="ons">ons</option>
-                        <option value="g">g</option>
-                    </select>
-                </div>
-
-                <div>
-                    <label class="block text-xs text-slate-400 mb-2 font-semibold">HARGA (RP)</label>
-                    <input type="number" id="p-price" required placeholder="0" class="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 text-sm focus:border-emerald-500 outline-none">
-                </div>
-
-                <div>
-                    <label class="block text-xs text-slate-400 mb-2 font-semibold">STOK</label>
-                    <input type="number" id="p-stock" required placeholder="0" class="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 text-sm focus:border-emerald-500 outline-none">
-                </div>
-            </div>
-
-            <div>
-                <label class="block text-xs text-slate-400 mb-2 font-semibold">WAKTU PEMBELIAN</label>
-                <input type="datetime-local" id="p-purchase-time" class="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 text-sm focus:border-emerald-500 outline-none">
-            </div>
-
-            <div>
-                <label class="block text-xs text-slate-400 mb-2 font-semibold">STATUS KESEGARAN</label>
-                <div class="flex gap-4">
-                    <label class="flex-1 flex items-center justify-center gap-2 p-4 bg-slate-950 border border-slate-800 rounded-2xl cursor-pointer has-[:checked]:border-emerald-500 has-[:checked]:bg-emerald-500/5 transition-all">
-                        <input type="radio" name="p-status" value="Segar" checked class="hidden"> 
-                        <span class="text-sm font-semibold">Segar</span>
-                    </label>
-                    <label class="flex-1 flex items-center justify-center gap-2 p-4 bg-slate-950 border border-slate-800 rounded-2xl cursor-pointer has-[:checked]:border-amber-500 has-[:checked]:bg-amber-500/5 transition-all">
-                        <input type="radio" name="p-status" value="Lama" class="hidden"> 
-                        <span class="text-sm font-semibold">Lama</span>
-                    </label>
-                </div>
-            </div>
-
-            <div>
-                <label class="block text-xs text-slate-400 mb-2 font-semibold">URL GAMBAR (OPSIONAL)</label>
-                <input type="file" id="p-image" accept="image/*">
-            </div>
-
-            <button type="submit" id="btn-submit" class="w-full bg-emerald-500 hover:bg-emerald-600 py-5 rounded-2xl font-bold shadow-xl shadow-emerald-900/20 transition-all flex justify-center items-center gap-2">
-                Simpan ke Katalog
-            </button>
-        </form>
+    <div id="auth-overlay" class="fixed inset-0 bg-slate-950 z-50 flex flex-col items-center justify-center p-6 text-center">
+        <div class="w-16 h-16 bg-slate-900 rounded-3xl flex items-center justify-center mb-4 border border-slate-800">
+            <i data-lucide="lock" class="text-emerald-500"></i>
+        </div>
+        <h2 class="text-xl font-bold mb-2">Akses Terbatas</h2>
+        <p class="text-slate-400 text-sm max-w-xs">Hanya administrator yang diizinkan mengelola katalog produk.</p>
+        <a href="login.html" class="mt-6 px-8 py-3 bg-emerald-500 rounded-2xl font-bold">Login Admin</a>
     </div>
 
-  <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
-import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+    <main class="p-4 pb-32">
+        <div class="flex items-center justify-between mb-6">
+            <div class="flex items-center gap-2 bg-slate-900 p-1 rounded-xl border border-slate-800">
+                <button id="select-all" onclick="toggleSelectAll()" class="px-3 py-1.5 text-xs font-semibold rounded-lg hover:bg-slate-800 transition-colors">Pilih Semua</button>
+            </div>
+            <span id="selected-count" class="text-xs text-slate-500">0 produk dipilih</span>
+        </div>
 
-/* ===============================
-   CONFIG
-================================ */
-const firebaseConfig = {
-    apiKey: "AIzaSyBWkPqyh54IRccNz2YjuB1bL5r49YadAP4",
-    authDomain: "sayurjuju-bfe82.firebaseapp.com",
-    projectId: "sayurjuju-bfe82",
-    storageBucket: "sayurjuju-bfe82.firebasestorage.app",
-    messagingSenderId: "754413439458",
-    appId: "1:754413439458:web:341c9fe99fd9b1550551bb"
-};
+        <div id="management-grid" class="space-y-3">
+            <!-- Item produk render di sini -->
+        </div>
+    </main>
 
-const CLOUD_NAME = "dvjfrrusn";
-const UPLOAD_PRESET = "sayurjuju";
-const ADMIN_UID = "XVmdoXxSptTlA8xHVmAIzeLgkru2";
+    <!-- Modal Edit Individu -->
+    <div id="edit-modal" class="fixed inset-0 z-[60] hidden">
+        <div class="absolute inset-0 bg-black/90 backdrop-blur-md" onclick="closeEditModal()"></div>
+        <div class="absolute bottom-0 left-0 right-0 bg-slate-900 rounded-t-[2.5rem] p-6 border-t border-slate-800 max-h-[90vh] overflow-y-auto">
+            <div class="w-12 h-1.5 bg-slate-800 rounded-full mx-auto mb-6"></div>
+            <h2 class="text-xl font-bold mb-6 text-center">Edit Produk</h2>
+            <form id="edit-form" class="space-y-4">
+                <input type="hidden" id="edit-id">
+                <div>
+                    <label class="block text-[10px] text-slate-500 font-bold mb-1 ml-1 uppercase">Nama</label>
+                    <input type="text" id="edit-name" class="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 text-sm focus:border-emerald-500 outline-none">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-[10px] text-slate-500 font-bold mb-1 ml-1 uppercase">Harga</label>
+                        <input type="number" id="edit-price" class="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 text-sm focus:border-emerald-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] text-slate-500 font-bold mb-1 ml-1 uppercase">Stok</label>
+                        <input type="number" id="edit-stock" class="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 text-sm focus:border-emerald-500 outline-none">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-[10px] text-slate-500 font-bold mb-1 ml-1 uppercase">Status Kesegaran</label>
+                    <div class="flex gap-2">
+                        <button type="button" onclick="setStatus('Segar')" id="status-segar" class="flex-1 py-3 rounded-xl border border-slate-800 text-sm font-semibold transition-all">Segar</button>
+                        <button type="button" onclick="setStatus('Lama')" id="status-lama" class="flex-1 py-3 rounded-xl border border-slate-800 text-sm font-semibold transition-all">Lama</button>
+                    </div>
+                    <input type="hidden" id="edit-status">
+                </div>
+                <div class="pt-4 flex gap-3">
+                    <button type="button" onclick="closeEditModal()" class="flex-1 py-4 bg-slate-800 rounded-2xl font-bold">Batal</button>
+                    <button type="submit" class="flex-[2] py-4 bg-emerald-500 rounded-2xl font-bold">Simpan Perubahan</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
-/* ===============================
-   INIT FIREBASE
-================================ */
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-const productsRef = collection(db, "products");
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
+        import { getFirestore, collection, onSnapshot, doc, updateDoc, deleteDoc, writeBatch } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
-/* ===============================
-   AUTH GUARD
-================================ */
-onAuthStateChanged(auth, (user) => {
-    const form = document.getElementById("product-form");
-    const guard = document.getElementById("auth-guard");
-
-    if (user && user.uid === ADMIN_UID) {
-        form.classList.remove("hidden");
-        guard.classList.add("hidden");
-    } else {
-        form.classList.add("hidden");
-        guard.classList.remove("hidden");
-    }
-});
-
-/* ===============================
-   CLOUDINARY UPLOAD
-================================ */
-async function uploadToCloudinary(file) {
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("upload_preset", UPLOAD_PRESET);
-
-    const res = await fetch(
-        `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,
-        {
-            method: "POST",
-            body: formData
-        }
-    );
-
-    const data = await res.json();
-
-    if (!data.secure_url) {
-        throw new Error("Upload gambar gagal");
-    }
-
-    return data.secure_url;
-}
-
-/* ===============================
-   SUBMIT FORM
-================================ */
-document.getElementById("product-form").addEventListener("submit", async (e) => {
-    e.preventDefault();
-
-    const btn = document.getElementById("btn-submit");
-    btn.disabled = true;
-    btn.innerText = "Upload gambar...";
-
-    try {
-        let imageUrl = "https://images.unsplash.com/photo-1542831371-29b0f74f9713?w=300";
-        const fileInput = document.getElementById("p-image");
-
-        if (fileInput.files.length > 0) {
-            imageUrl = await uploadToCloudinary(fileInput.files[0]);
-        }
-
-        btn.innerText = "Menyimpan produk...";
-
-        const newProduct = {
-            name: document.getElementById("p-name").value,
-            category: document.getElementById("p-category").value,
-            price: parseInt(document.getElementById("p-price").value),
-            unit: document.getElementById("p-unit").value,
-            stock: parseInt(document.getElementById("p-stock").value),
-            status: document.querySelector('input[name="p-status"]:checked').value,
-            image: imageUrl,
-            purchaseTime: new Date().toISOString()
+        const firebaseConfig = {
+            apiKey: "AIzaSyBWkPqyh54IRccNz2YjuB1bL5r49YadAP4",
+            authDomain: "sayurjuju-bfe82.firebaseapp.com",
+            projectId: "sayurjuju-bfe82",
+            storageBucket: "sayurjuju-bfe82.firebasestorage.app",
+            messagingSenderId: "754413439458",
+            appId: "1:754413439458:web:341c9fe99fd9b1550551bb"
         };
 
-        await addDoc(productsRef, newProduct);
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const productsRef = collection(db, "products");
+        const ADMIN_UID = "XVmdoXxSptTlA8xHVmAIzeLgkru2";
 
-        alert("Produk berhasil ditambahkan!");
-        window.location.href = "index.html";
+        let allProducts = [];
+        let selectedIds = new Set();
 
-    } catch (err) {
-        alert("Error: " + err.message);
-        btn.disabled = false;
-        btn.innerText = "Simpan ke Katalog";
-    }
-});
-lucide.createIcons();
-</script>
+        // Guard Access
+        onAuthStateChanged(auth, (user) => {
+            if (user && user.uid === ADMIN_UID) {
+                document.getElementById('auth-overlay').classList.add('hidden');
+            } else {
+                document.getElementById('auth-overlay').classList.remove('hidden');
+            }
+        });
+
+        // Listen Products
+        onSnapshot(productsRef, (snapshot) => {
+            allProducts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            renderManagement();
+        });
+
+        window.renderManagement = () => {
+            const grid = document.getElementById('management-grid');
+            grid.innerHTML = allProducts.map(p => `
+                <div class="bg-slate-900 border ${selectedIds.has(p.id) ? 'border-emerald-500 bg-emerald-500/5' : 'border-slate-800'} rounded-2xl p-3 flex items-center gap-4 transition-all">
+                    <div class="relative">
+                        <input type="checkbox" id="check-${p.id}" ${selectedIds.has(p.id) ? 'checked' : ''} 
+                            onchange="toggleSelect('${p.id}')" class="hidden">
+                        <label for="check-${p.id}" class="w-6 h-6 rounded-lg border-2 border-slate-800 flex items-center justify-center cursor-pointer transition-all ${selectedIds.has(p.id) ? 'bg-emerald-500 border-emerald-500' : 'bg-slate-950'}">
+                            ${selectedIds.has(p.id) ? '<i data-lucide="check" class="w-4 h-4 text-white"></i>' : ''}
+                        </label>
+                    </div>
+                    <img src="${p.image}" class="w-14 h-14 rounded-xl object-cover bg-slate-800">
+                    <div class="flex-1 min-w-0">
+                        <h3 class="font-bold text-sm truncate">${p.name}</h3>
+                        <p class="text-[10px] text-slate-500">${p.category} • Rp ${Number(p.price).toLocaleString()} • ${p.stock} ${p.unit}</p>
+                        <span class="inline-block mt-1 px-2 py-0.5 rounded text-[8px] font-bold uppercase ${p.status === 'Segar' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-amber-500/20 text-amber-400'}">
+                            ${p.status}
+                        </span>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="openEditModal('${p.id}')" class="p-2 bg-slate-800 rounded-lg text-slate-400 hover:text-white">
+                            <i data-lucide="edit-3" class="w-4 h-4"></i>
+                        </button>
+                        <button onclick="deleteProduct('${p.id}')" class="p-2 bg-rose-500/10 rounded-lg text-rose-500 hover:bg-rose-500 hover:text-white">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+            
+            updateUI();
+            lucide.createIcons();
+        };
+
+        window.toggleSelect = (id) => {
+            if (selectedIds.has(id)) selectedIds.delete(id);
+            else selectedIds.add(id);
+            renderManagement();
+        };
+
+        window.toggleSelectAll = () => {
+            if (selectedIds.size === allProducts.length) selectedIds.clear();
+            else allProducts.forEach(p => selectedIds.add(p.id));
+            renderManagement();
+        };
+
+        const updateUI = () => {
+            document.getElementById('selected-count').innerText = `${selectedIds.size} produk dipilih`;
+            const actionContainer = document.getElementById('action-buttons');
+            
+            if (selectedIds.size > 0) {
+                actionContainer.innerHTML = `
+                    <button onclick="deleteSelected()" class="p-2 bg-rose-500 text-white rounded-xl">
+                        <i data-lucide="trash-2" class="w-5 h-5"></i>
+                    </button>
+                    <button onclick="bulkStatus('Segar')" class="px-4 py-2 bg-emerald-500 text-[10px] font-bold rounded-xl">Set Segar</button>
+                `;
+            } else {
+                actionContainer.innerHTML = '';
+            }
+            lucide.createIcons();
+        };
+
+        // CRUD Actions
+        window.deleteProduct = async (id) => {
+            if (!confirm('Hapus produk ini?')) return;
+            try {
+                await deleteDoc(doc(db, "products", id));
+            } catch (e) { alert(e.message); }
+        };
+
+        window.deleteSelected = async () => {
+            if (!confirm(`Hapus ${selectedIds.size} produk terpilih?`)) return;
+            const batch = writeBatch(db);
+            selectedIds.forEach(id => batch.delete(doc(db, "products", id)));
+            await batch.commit();
+            selectedIds.clear();
+        };
+
+        window.bulkStatus = async (status) => {
+            const batch = writeBatch(db);
+            selectedIds.forEach(id => batch.update(doc(db, "products", id), { status }));
+            await batch.commit();
+            selectedIds.clear();
+            alert('Status massal diperbarui!');
+        };
+
+        // Individual Edit
+        window.openEditModal = (id) => {
+            const p = allProducts.find(prod => prod.id === id);
+            document.getElementById('edit-id').value = p.id;
+            document.getElementById('edit-name').value = p.name;
+            document.getElementById('edit-price').value = p.price;
+            document.getElementById('edit-stock').value = p.stock;
+            setStatus(p.status);
+            document.getElementById('edit-modal').classList.remove('hidden');
+        };
+
+        window.setStatus = (status) => {
+            document.getElementById('edit-status').value = status;
+            const s = document.getElementById('status-segar');
+            const l = document.getElementById('status-lama');
+            if (status === 'Segar') {
+                s.className = "flex-1 py-3 rounded-xl bg-emerald-500/20 border border-emerald-500 text-emerald-400 text-sm font-semibold transition-all";
+                l.className = "flex-1 py-3 rounded-xl border border-slate-800 text-slate-500 text-sm font-semibold transition-all";
+            } else {
+                l.className = "flex-1 py-3 rounded-xl bg-amber-500/20 border border-amber-500 text-amber-400 text-sm font-semibold transition-all";
+                s.className = "flex-1 py-3 rounded-xl border border-slate-800 text-slate-500 text-sm font-semibold transition-all";
+            }
+        };
+
+        window.closeEditModal = () => document.getElementById('edit-modal').classList.add('hidden');
+
+        document.getElementById('edit-form').onsubmit = async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('edit-id').value;
+            const data = {
+                name: document.getElementById('edit-name').value,
+                price: Number(document.getElementById('edit-price').value),
+                stock: Number(document.getElementById('edit-stock').value),
+                status: document.getElementById('edit-status').value
+            };
+            
+            try {
+                await updateDoc(doc(db, "products", id), data);
+                closeEditModal();
+            } catch (err) { alert(err.message); }
+        };
+
+    </script>
 </body>
 </html>
 
