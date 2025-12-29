@@ -55,12 +55,36 @@
 
                 <div>
                     <label class="block text-xs text-slate-400 mb-2 font-semibold">SATUAN</label>
-                    <select id="p-unit" class="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 text-sm focus:border-emerald-500 outline-none">
-                        <option value="kg">kg</option>
-                        <option value="pcs">pcs</option>
-                        <option value="ons">ons</option>
-                        <option value="g">g</option>
-                    </select>
+                    <select id="p-unit"
+  class="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 text-sm focus:border-emerald-500 outline-none">
+
+  <optgroup label="Berat">
+    <option value="kg">kg</option>
+    <option value="ons">ons</option>
+    <option value="g">gram</option>
+  </optgroup>
+
+  <optgroup label="Jumlah">
+    <option value="pcs">pcs</option>
+    <option value="buah">buah</option>
+    <option value="butir">butir</option>
+    <option value="batang">batang</option>
+    <option value="ekor">ekor</option>
+    <option value="siung">siung</option>
+  </optgroup>
+
+  <optgroup label="Ikatan / Potongan">
+    <option value="ikat">ikat</option>
+    <option value="lembar">lembar</option>
+    <option value="potong">potong</option>
+  </optgroup>
+
+  <optgroup label="Kemasan">
+    <option value="bungkus">bungkus</option>
+    <option value="pack">pack</option>
+    <option value="cup">cup</option>
+  </optgroup>
+</select>
                 </div>
 
                 <div>
@@ -174,6 +198,20 @@ async function uploadToCloudinary(file) {
     return data.secure_url;
 }
 
+const DECIMAL_UNITS = ["kg", "ons", "g"];
+
+document.getElementById("p-unit").addEventListener("change", () => {
+  const unit = document.getElementById("p-unit").value;
+  const stockInput = document.getElementById("p-stock");
+
+  if (DECIMAL_UNITS.includes(unit)) {
+    stockInput.step = "0.1";
+  } else {
+    stockInput.step = "1";
+    stockInput.value = Math.floor(stockInput.value || 0);
+  }
+});
+
 /* ===============================
    SUBMIT FORM
 ================================ */
@@ -199,7 +237,15 @@ document.getElementById("product-form").addEventListener("submit", async (e) => 
             category: document.getElementById("p-category").value,
             price: parseInt(document.getElementById("p-price").value),
             unit: document.getElementById("p-unit").value,
-            stock: parseInt(document.getElementById("p-stock").value),
+            const unit = document.getElementById("p-unit").value;
+const stockRaw = document.getElementById("p-stock").value;
+
+const stock = ["kg", "ons", "g"].includes(unit)
+  ? parseFloat(stockRaw)
+  : parseInt(stockRaw);
+
+stock,
+unit,
             status: document.querySelector('input[name="p-status"]:checked').value,
             image: imageUrl,
             purchaseTime: new Date().toISOString()
@@ -220,5 +266,6 @@ lucide.createIcons();
 </script>
 </body>
 </html>
+
 
 
