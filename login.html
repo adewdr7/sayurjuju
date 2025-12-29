@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Admin - Pasar Segar</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 flex items-center justify-center min-h-screen p-4">
+
+    <div class="w-full max-w-sm">
+        <div class="text-center mb-8">
+            <a href="index.html" class="inline-flex items-center gap-2 text-emerald-400 font-bold text-xl mb-2">
+                <i data-lucide="shopping-bag"></i> Pasar Segar
+            </a>
+            <p class="text-slate-500 text-sm">Masuk ke Panel Administrasi</p>
+        </div>
+
+        <div id="login-card" class="bg-slate-900 p-6 rounded-3xl border border-slate-800 shadow-xl">
+            <div id="login-form">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs text-slate-400 mb-2 uppercase tracking-wider font-semibold">Email Admin</label>
+                        <input id="admin-email" type="email" placeholder="admin@pasar.com" 
+                            class="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 text-sm focus:ring-2 focus:ring-emerald-500 outline-none transition-all">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-slate-400 mb-2 uppercase tracking-wider font-semibold">Password</label>
+                        <input id="admin-password" type="password" placeholder="••••••••" 
+                            class="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 text-sm focus:ring-2 focus:ring-emerald-500 outline-none transition-all">
+                    </div>
+                    <button onclick="handleLogin()" id="btn-login" class="w-full bg-emerald-500 hover:bg-emerald-600 py-4 rounded-2xl font-bold shadow-lg shadow-emerald-900/20 transition-all flex justify-center items-center gap-2">
+                        Masuk Sekarang
+                    </button>
+                </div>
+            </div>
+
+            <div id="logout-section" class="hidden text-center space-y-4">
+                <p class="text-emerald-400 font-semibold">Anda sudah masuk sebagai Admin</p>
+                <div class="flex flex-col gap-3">
+                    <a href="tambahproduk.html" class="w-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 py-4 rounded-2xl font-bold">Kelola Produk</a>
+                    <button onclick="handleLogout()" class="w-full bg-rose-500/10 text-rose-400 border border-rose-500/20 py-4 rounded-2xl font-bold">Keluar (Logout)</button>
+                </div>
+            </div>
+        </div>
+
+        <a href="index.html" class="block text-center mt-6 text-slate-500 text-sm hover:text-slate-300">
+            Kembali ke Katalog
+        </a>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBWkPqyh54IRccNz2YjuB1bL5r49YadAP4",
+            authDomain: "sayurjuju-bfe82.firebaseapp.com",
+            projectId: "sayurjuju-bfe82",
+            storageBucket: "sayurjuju-bfe82.firebasestorage.app",
+            messagingSenderId: "754413439458",
+            appId: "1:754413439458:web:341c9fe99fd9b1550551bb"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+
+        onAuthStateChanged(auth, (user) => {
+            const form = document.getElementById('login-form');
+            const logout = document.getElementById('logout-section');
+            if (user) {
+                form.classList.add('hidden');
+                logout.classList.remove('hidden');
+            } else {
+                form.classList.remove('hidden');
+                logout.classList.add('hidden');
+            }
+        });
+
+        window.handleLogin = async () => {
+            const email = document.getElementById('admin-email').value;
+            const pass = document.getElementById('admin-password').value;
+            const btn = document.getElementById('btn-login');
+
+            if(!email || !pass) return alert("Isi email dan password!");
+
+            btn.innerText = "Memproses...";
+            btn.disabled = true;
+
+            try {
+                await signInWithEmailAndPassword(auth, email, pass);
+                window.location.href = "index.html";
+            } catch (err) {
+                alert("Login gagal: " + err.message);
+                btn.innerText = "Masuk Sekarang";
+                btn.disabled = false;
+            }
+        };
+
+        window.handleLogout = async () => {
+            if(confirm("Keluar dari akun admin?")) {
+                await signOut(auth);
+                location.reload();
+            }
+        };
+
+        lucide.createIcons();
+    </script>
+</body>
+</html>
+
