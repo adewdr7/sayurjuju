@@ -20,78 +20,87 @@
             <a href="index.html" class="p-2 bg-slate-900 text-slate-400 rounded-xl border border-slate-800">
                 <i data-lucide="arrow-left" class="w-6 h-6"></i>
             </a>
-            <h1 class="text-xl font-bold bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">Akun Saya</h1>
+            <h1 class="text-xl font-bold bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">Profil Saya</h1>
         </div>
-        <button onclick="handleLogout()" class="p-2 bg-rose-500/10 text-rose-400 rounded-xl border border-rose-500/20">
+        <button onclick="handleLogout()" class="p-2 bg-rose-500/10 text-rose-500 rounded-xl border border-rose-500/20">
             <i data-lucide="log-out" class="w-6 h-6"></i>
         </button>
     </nav>
 
-    <!-- Konten Profil Pelanggan -->
-    <div id="customer-view" class="hidden p-4 max-w-lg mx-auto">
-        <div class="bg-slate-900 rounded-3xl p-6 border border-slate-800 shadow-xl text-center">
-            <div class="relative w-32 h-32 mx-auto mb-4">
-                <img id="cust-photo" src="" class="w-full h-full rounded-full object-cover border-4 border-emerald-500/20">
-                <div class="absolute bottom-0 right-0 bg-emerald-500 p-2 rounded-full border-4 border-slate-900">
-                    <i data-lucide="check-circle" class="w-4 h-4 text-white"></i>
-                </div>
-            </div>
-            <h2 id="cust-name" class="text-2xl font-bold text-white mb-1">-</h2>
-            <p id="cust-email" class="text-slate-500 text-sm mb-4">-</p>
+    <main class="p-4 max-w-2xl mx-auto space-y-6">
+        <!-- Kartu Profil User -->
+        <div class="bg-slate-900 rounded-[2rem] p-6 border border-slate-800 relative overflow-hidden">
+            <div class="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 blur-3xl rounded-full -mr-16 -mt-16"></div>
             
-            <div class="flex items-center gap-2 justify-center bg-slate-950/50 p-3 rounded-2xl border border-slate-800 mb-6">
-                <i data-lucide="map-pin" class="w-4 h-4 text-emerald-400"></i>
-                <span id="cust-address" class="text-sm text-slate-300">-</span>
-            </div>
-
-            <div class="grid grid-cols-2 gap-4">
-                <div class="bg-emerald-500/5 p-4 rounded-2xl border border-emerald-500/10">
-                    <p class="text-[10px] text-emerald-400 uppercase font-bold tracking-widest mb-1">Belanja</p>
-                    <p id="cust-freq" class="text-xl font-bold text-white">0 Kali</p>
-                </div>
-                <div class="bg-rose-500/5 p-4 rounded-2xl border border-rose-500/10">
-                    <p class="text-[10px] text-rose-400 uppercase font-bold tracking-widest mb-1">Hutang</p>
-                    <p id="cust-debt" class="text-xl font-bold text-white">Rp 0</p>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Konten Admin Panel -->
-    <div id="admin-view" class="hidden p-4">
-        <div class="mb-6 flex flex-col gap-4">
-            <div class="flex justify-between items-center">
-                <h2 class="text-lg font-bold flex items-center gap-2"><i data-lucide="users" class="text-emerald-400"></i> Katalog User</h2>
-                <button onclick="confirmReset()" class="bg-rose-500 text-white px-4 py-2 rounded-xl text-xs font-bold shadow-lg shadow-rose-900/20">Reset Frekuensi</button>
-            </div>
-            <div class="flex gap-2 overflow-x-auto hide-scrollbar">
-                <button onclick="loadUsers('shoppingFrequency')" class="filter-btn active px-4 py-2 bg-emerald-500 text-white rounded-full text-xs font-semibold whitespace-nowrap">Belanja Terbanyak</button>
-                <button onclick="loadUsers('debt')" class="filter-btn px-4 py-2 bg-slate-900 text-slate-400 border border-slate-800 rounded-full text-xs font-semibold whitespace-nowrap">Hutang Terbanyak</button>
-            </div>
-        </div>
-
-        <div id="user-list" class="space-y-4">
-            <!-- User Cards -->
-        </div>
-    </div>
-
-    <!-- Modal Edit User (Admin Only) -->
-    <div id="edit-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4">
-        <div class="absolute inset-0 bg-black/80 backdrop-blur-sm" onclick="closeEditModal()"></div>
-        <div class="relative w-full max-w-sm bg-slate-900 rounded-3xl border border-slate-800 p-6 shadow-2xl">
-            <h3 class="text-lg font-bold mb-4">Edit Data User</h3>
-            <div class="space-y-4">
-                <div>
-                    <label class="text-[10px] text-slate-500 uppercase font-bold mb-1 block">Frekuensi Belanja</label>
-                    <input id="edit-freq" type="number" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
+            <div class="flex items-center gap-5 relative z-10">
+                <div class="relative">
+                    <img id="user-photo" src="https://ui-avatars.com/api/?name=User&background=random" class="w-20 h-20 rounded-2xl object-cover border-2 border-slate-800 shadow-2xl">
+                    <div id="user-role-badge" class="absolute -bottom-2 -right-2 bg-emerald-500 text-slate-950 text-[10px] font-bold px-2 py-1 rounded-lg uppercase border-2 border-slate-900">
+                        Customer
+                    </div>
                 </div>
                 <div>
-                    <label class="text-[10px] text-slate-500 uppercase font-bold mb-1 block">Total Hutang (Rp)</label>
-                    <input id="edit-debt" type="number" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
+                    <h2 id="user-name" class="text-xl font-bold text-white mb-1">Memuat...</h2>
+                    <p id="user-email" class="text-xs text-slate-500 mb-2">email@contoh.com</p>
+                    <div class="flex gap-2">
+                        <span class="text-[10px] bg-slate-800 text-slate-400 px-2 py-1 rounded-md border border-slate-700">
+                            <i data-lucide="map-pin" class="w-3 h-3 inline mr-1"></i> <span id="user-address">Alamat belum diatur</span>
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3 mt-8">
+                <div class="bg-slate-950/50 p-4 rounded-2xl border border-slate-800/50">
+                    <p class="text-[10px] text-slate-500 uppercase font-bold mb-1">Frekuensi Belanja</p>
+                    <p class="text-lg font-bold text-emerald-400"><span id="user-freq">0</span>x</p>
+                </div>
+                <div class="bg-slate-950/50 p-4 rounded-2xl border border-slate-800/50">
+                    <p class="text-[10px] text-slate-500 uppercase font-bold mb-1">Catatan Hutang</p>
+                    <p class="text-lg font-bold text-rose-400">Rp <span id="user-debt">0</span></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bagian Khusus Admin: Daftar Pelanggan -->
+        <div id="admin-section" class="hidden space-y-4">
+            <div class="flex justify-between items-end">
+                <div>
+                    <h3 class="text-lg font-bold text-white">Daftar Pelanggan</h3>
+                    <p class="text-xs text-slate-500">Kelola data frekuensi & hutang pelanggan</p>
                 </div>
                 <div class="flex gap-2">
-                    <button onclick="closeEditModal()" class="flex-1 bg-slate-800 py-3 rounded-xl font-bold">Batal</button>
-                    <button id="save-user-btn" class="flex-1 bg-emerald-500 py-3 rounded-xl font-bold">Simpan</button>
+                    <button onclick="loadUsers('shoppingFrequency')" class="p-2 bg-slate-900 text-slate-400 rounded-lg border border-slate-800">
+                        <i data-lucide="sort-asc" class="w-4 h-4"></i>
+                    </button>
+                    <button onclick="confirmReset()" class="p-2 bg-rose-500/10 text-rose-500 rounded-lg border border-rose-500/20">
+                        <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div id="users-list" class="space-y-3">
+                <!-- User list items -->
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal Edit Admin -->
+    <div id="edit-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-slate-900 w-full max-w-sm rounded-[2.5rem] p-8 border border-slate-800 shadow-2xl">
+            <h3 class="text-xl font-bold text-white mb-6">Edit Data Pelanggan</h3>
+            <div class="space-y-5">
+                <div>
+                    <label class="block text-[10px] text-slate-500 uppercase font-bold mb-2">Frekuensi Belanja</label>
+                    <input type="number" id="edit-freq" class="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 text-sm outline-none focus:ring-2 focus:ring-emerald-500">
+                </div>
+                <div>
+                    <label class="block text-[10px] text-slate-500 uppercase font-bold mb-2">Catatan Hutang (Rp)</label>
+                    <input type="number" id="edit-debt" class="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 text-sm outline-none focus:ring-2 focus:ring-rose-500">
+                </div>
+                <div class="flex gap-3 pt-4">
+                    <button onclick="closeEditModal()" class="flex-1 py-4 bg-slate-800 rounded-2xl font-bold text-sm">Batal</button>
+                    <button onclick="saveUserEdit()" class="flex-1 py-4 bg-emerald-500 text-slate-950 rounded-2xl font-bold text-sm shadow-lg shadow-emerald-500/20">Simpan</button>
                 </div>
             </div>
         </div>
@@ -100,7 +109,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
-        import { getFirestore, doc, getDoc, updateDoc, collection, getDocs, query, orderBy, writeBatch } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, getDocs, collection, updateDoc, writeBatch, query, orderBy } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBWkPqyh54IRccNz2YjuB1bL5r49YadAP4",
@@ -116,7 +125,6 @@
         const db = getFirestore(app);
 
         const ADMIN_UID = "XVmdoXxSptTlA8xHVmAIzeLgkru2";
-        let currentUserData = null;
         let targetEditUid = null;
 
         onAuthStateChanged(auth, async (user) => {
@@ -125,71 +133,62 @@
                 return;
             }
 
-            const userSnap = await getDoc(doc(db, "users", user.uid));
-            if (userSnap.exists()) {
-                currentUserData = userSnap.data();
+            // Load Profil Sendiri
+            const userRef = doc(db, "users", user.uid);
+            const snap = await getDoc(userRef);
+            if (snap.exists()) {
+                const data = snap.data();
+                document.getElementById('user-name').innerText = data.name || "Tanpa Nama";
+                document.getElementById('user-email').innerText = data.email;
+                document.getElementById('user-address').innerText = data.address || "Alamat belum diatur";
+                document.getElementById('user-photo').src = data.photo || `https://ui-avatars.com/api/?name=${data.email}&background=random`;
+                document.getElementById('user-freq').innerText = data.shoppingFrequency || 0;
+                document.getElementById('user-debt').innerText = (data.debt || 0).toLocaleString();
+                document.getElementById('user-role-badge').innerText = data.role || "Customer";
+                
+                // Jika Admin, tampilkan bagian kelola pelanggan
                 if (user.uid === ADMIN_UID) {
-                    document.getElementById('admin-view').classList.remove('hidden');
-                    loadUsers('shoppingFrequency');
-                } else {
-                    document.getElementById('customer-view').classList.remove('hidden');
-                    displayCustomerProfile(currentUserData);
+                    document.getElementById('admin-section').classList.remove('hidden');
+                    loadUsers();
                 }
             }
         });
 
-        function displayCustomerProfile(data) {
-            document.getElementById('cust-photo').src = data.photo || 'https://ui-avatars.com/api/?name=User';
-            document.getElementById('cust-name').innerText = data.name;
-            document.getElementById('cust-email').innerText = data.email;
-            document.getElementById('cust-address').innerText = data.address;
-            document.getElementById('cust-freq').innerText = `${data.shoppingFrequency} Kali`;
-            document.getElementById('cust-debt').innerText = `Rp ${Number(data.debt).toLocaleString()}`;
-            lucide.createIcons();
-        }
-
-        window.loadUsers = async (sortBy) => {
-            const userList = document.getElementById('user-list');
-            userList.innerHTML = '<p class="text-center text-slate-500 py-10">Memuat data user...</p>';
-
-            // Update UI filter buttons
-            const buttons = document.querySelectorAll('.filter-btn');
-            buttons.forEach(btn => {
-                btn.classList.remove('bg-emerald-500', 'text-white');
-                btn.classList.add('bg-slate-900', 'text-slate-400');
-            });
-            event.target.classList.add('bg-emerald-500', 'text-white');
-            event.target.classList.remove('bg-slate-900', 'text-slate-400');
+        window.loadUsers = async (sortBy = 'shoppingFrequency') => {
+            const listEl = document.getElementById('users-list');
+            listEl.innerHTML = '<div class="text-center py-10 text-slate-600 text-xs">Mengambil data pelanggan...</div>';
 
             try {
-                // Sesuai aturan: No complex queries, fetch all and sort in memory
-                const q = collection(db, "users");
+                // Perbaikan: Menggunakan koleksi "users" bukan "profiles"
+                const usersRef = collection(db, "users");
+                const q = query(usersRef, orderBy(sortBy, "desc"));
                 const snap = await getDocs(q);
-                let users = [];
-                snap.forEach(doc => users.push({ id: doc.id, ...doc.data() }));
+                
+                listEl.innerHTML = "";
+                snap.forEach(userDoc => {
+                    const u = userDoc.data();
+                    if (userDoc.id === ADMIN_UID) return; // Jangan tampilkan admin di list pelanggan
 
-                // Sort Descending
-                users.sort((a, b) => (b[sortBy] || 0) - (a[sortBy] || 0));
-
-                userList.innerHTML = users.map(user => `
-                    <div class="bg-slate-900 p-4 rounded-2xl border border-slate-800 flex items-center gap-4">
-                        <img src="${user.photo}" class="w-12 h-12 rounded-full border border-slate-700">
+                    const card = document.createElement('div');
+                    card.className = "bg-slate-900/50 p-4 rounded-2xl border border-slate-800 flex items-center gap-4 transition-all hover:border-slate-700";
+                    card.innerHTML = `
+                        <img src="${u.photo || 'https://ui-avatars.com/api/?name=' + u.email}" class="w-12 h-12 rounded-xl object-cover bg-slate-800">
                         <div class="flex-1">
-                            <h4 class="font-bold text-sm">${user.name} ${user.id === ADMIN_UID ? '<span class="text-[8px] bg-emerald-500 px-1 rounded">ADMIN</span>' : ''}</h4>
-                            <p class="text-[10px] text-slate-500 truncate w-32">${user.email}</p>
+                            <h4 class="text-sm font-bold text-slate-100">${u.name || u.email.split('@')[0]}</h4>
+                            <div class="flex gap-3 mt-1">
+                                <span class="text-[10px] text-emerald-400 font-bold"><i data-lucide="shopping-cart" class="w-3 h-3 inline"></i> ${u.shoppingFrequency || 0}x</span>
+                                <span class="text-[10px] text-rose-400 font-bold"><i data-lucide="banknote" class="w-3 h-3 inline"></i> Rp ${(u.debt || 0).toLocaleString()}</span>
+                            </div>
                         </div>
-                        <div class="text-right flex flex-col items-end">
-                            <span class="text-[10px] text-emerald-400 font-bold">${user.shoppingFrequency} Blj</span>
-                            <span class="text-[10px] text-rose-400 font-bold">Rp ${Number(user.debt).toLocaleString()}</span>
-                        </div>
-                        <button onclick="openEditModal('${user.id}', ${user.shoppingFrequency}, ${user.debt})" class="p-2 bg-slate-800 text-slate-400 rounded-xl">
+                        <button onclick="openEditModal('${userDoc.id}', ${u.shoppingFrequency || 0}, ${u.debt || 0})" class="p-3 bg-slate-800 text-slate-400 rounded-xl hover:text-white transition-colors">
                             <i data-lucide="edit-3" class="w-4 h-4"></i>
                         </button>
-                    </div>
-                `).join('');
+                    `;
+                    listEl.appendChild(card);
+                });
                 lucide.createIcons();
             } catch (err) {
-                userList.innerHTML = `<p class="text-rose-500 text-center">Error: ${err.message}</p>`;
+                listEl.innerHTML = `<div class="p-4 bg-rose-500/10 text-rose-500 rounded-xl text-xs">Error: ${err.message}</div>`;
             }
         };
 
@@ -204,7 +203,7 @@
             document.getElementById('edit-modal').classList.add('hidden');
         };
 
-        document.getElementById('save-user-btn').onclick = async () => {
+        window.saveUserEdit = async () => {
             const freq = parseInt(document.getElementById('edit-freq').value);
             const debt = parseInt(document.getElementById('edit-debt').value);
             
@@ -214,24 +213,25 @@
                     debt: debt
                 });
                 closeEditModal();
-                loadUsers('shoppingFrequency');
+                loadUsers();
             } catch (err) {
                 alert("Gagal update user: " + err.message);
             }
         };
 
         window.confirmReset = async () => {
-            const confirmAction = confirm("PERHATIAN: Apakah Anda yakin ingin mereset frekuensi belanja SEMUA user ke 0?");
-            if (confirmAction) {
+            if (confirm("Hapus semua riwayat frekuensi belanja pelanggan? Tindakan ini tidak bisa dibatalkan.")) {
                 try {
                     const snap = await getDocs(collection(db, "users"));
                     const batch = writeBatch(db);
                     snap.forEach(userDoc => {
-                        batch.update(userDoc.ref, { shoppingFrequency: 0 });
+                        if (userDoc.id !== ADMIN_UID) {
+                            batch.update(userDoc.ref, { shoppingFrequency: 0 });
+                        }
                     });
                     await batch.commit();
                     alert("Berhasil mereset data!");
-                    loadUsers('shoppingFrequency');
+                    loadUsers();
                 } catch (err) {
                     alert("Gagal reset data: " + err.message);
                 }
@@ -249,4 +249,5 @@
     </script>
 </body>
 </html>
+
 
