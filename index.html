@@ -269,8 +269,10 @@ onAuthStateChanged(auth, (user) => {
     });
 
     cart = [];
-    updateCartUI();
-    toggleCart();
+updateCartUI();
+toggleCart();
+
+window.location.href = "orders.html";
 
     alert("Pesanan berhasil dibuat ✅");
   } catch (err) {
@@ -281,6 +283,7 @@ onAuthStateChanged(auth, (user) => {
     </script>
 </body>
 </html>
+
 
 
 
