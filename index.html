@@ -273,7 +273,11 @@ onAuthStateChanged(auth, (user) => {
     toggleCart();
 
     // 🔥 REDIRECT
-    window.location.href = "orders.html";
+    if (user.uid === ADMIN_UID) {
+  window.location.href = "orders.html";
+} else {
+  window.location.href = "profile.html";
+}
 
   } catch (err) {
     alert("Gagal checkout: " + err.message);
