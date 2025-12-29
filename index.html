@@ -100,6 +100,15 @@
                             <input type="number" id="p-stock" required class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm focus:border-emerald-500 outline-none">
                         </div>
                     </div>
+<div>
+  <label class="block text-xs text-slate-400 mb-1">
+    Waktu Beli (dari pasar)
+  </label>
+  <input 
+    type="datetime-local" 
+    id="p-purchase-time"
+    class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm focus:border-emerald-500 outline-none">
+</div>
 
                     <div>
                         <label class="block text-xs text-slate-400 mb-1">Status</label>
@@ -152,13 +161,13 @@
 
         // SILAKAN GANTI DENGAN CONFIG ANDA SENDIRI
         const firebaseConfig = {
-            apiKey: "",
-            authDomain: "",
-            projectId: "",
-            storageBucket: "",
-            messagingSenderId: "",
-            appId: ""
-        };
+  apiKey: "AIzaSyBWkPqyh54IRccNz2YjuB1bL5r49YadAP4",
+  authDomain: "sayurjuju-bfe82.firebaseapp.com",
+  projectId: "sayurjuju-bfe82",
+  storageBucket: "sayurjuju-bfe82.firebasestorage.app",
+  messagingSenderId: "754413439458",
+  appId: "1:754413439458:web:341c9fe99fd9b1550551bb"
+};
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
@@ -168,6 +177,19 @@
         let allProducts = [];
         let cart = [];
         let currentCategory = "Semua";
+
+// FORMAT WAKTU PEMBELIAN PRODUK
+function formatPurchaseTime(value) {
+    if (!value) return "Waktu beli tidak diketahui";
+
+    const date = new Date(value);
+    return date.toLocaleString("id-ID", {
+        day: "2-digit",
+        month: "short",
+        hour: "2-digit",
+        minute: "2-digit"
+    });
+}
 
         // 1. LISTEN REALTIME DATA DARI FIREBASE
         onSnapshot(query(productsRef, orderBy("name", "asc")), (snapshot) => {
@@ -186,14 +208,16 @@
             btn.disabled = true;
 
             const newProduct = {
-                name: document.getElementById('p-name').value,
-                category: document.getElementById('p-category').value,
-                price: parseInt(document.getElementById('p-price').value),
-                unit: document.getElementById('p-unit').value,
-                stock: parseInt(document.getElementById('p-stock').value),
-                status: document.querySelector('input[name="p-status"]:checked').value,
-                image: document.getElementById('p-image').value || 'https://images.unsplash.com/photo-1542831371-29b0f74f9713?w=300'
-            };
+  name: document.getElementById('p-name').value,
+  category: document.getElementById('p-category').value,
+  price: parseInt(document.getElementById('p-price').value),
+  unit: document.getElementById('p-unit').value,
+  stock: parseInt(document.getElementById('p-stock').value),
+  status: document.querySelector('input[name="p-status"]:checked').value,
+  image: document.getElementById('p-image').value || 'https://images.unsplash.com/photo-1542831371-29b0f74f9713?w=300',
+
+  // 👉 FIELD BARU
+  purchaseTime: document.getElementById('p-purchase-time').value || new Date().toISOString()
 
             try {
                 await addDoc(productsRef, newProduct);
@@ -257,7 +281,13 @@
                     </div>
                     <div class="p-3 flex-1 flex flex-col">
                         <h3 class="font-bold text-sm truncate text-slate-100">${p.name}</h3>
-                        <p class="text-[10px] text-slate-500 mb-2">Stok: ${p.stock} • ${p.unit}</p>
+                      <p class="text-[10px] text-slate-500">
+  Stok: ${p.stock} • ${p.unit}
+</p>
+
+<p class="text-[10px] text-cyan-400 mt-1">
+  🕒 Beli: ${formatPurchaseTime(p.purchaseTime)}
+</p>
                         <div class="mt-auto flex justify-between items-center">
                             <span class="text-emerald-400 font-bold text-xs">Rp ${p.price.toLocaleString()}</span>
                             <button onclick="addToCart('${p.id}')" class="bg-emerald-500 p-2 rounded-xl text-white hover:scale-110 transition-transform">
