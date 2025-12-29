@@ -17,13 +17,16 @@
     <div id="app">
         <nav class="p-4 flex justify-between items-center sticky top-0 bg-slate-950/90 backdrop-blur-md z-40 border-b border-slate-900">
             <div class="flex items-center gap-3">
-                <!-- Tombol Admin: Hanya muncul jika sudah login -->
-                <a href="tambahproduk.html" id="btn-admin" class="hidden p-2 bg-emerald-500/10 text-emerald-400 rounded-xl border border-emerald-500/20">
-                    <i data-lucide="plus-circle" class="w-6 h-6"></i>
+                <!-- Tombol Kelola Produk: Hanya untuk Admin -->
+                <a href="kelola.html" id="btn-manage" class="hidden p-2 bg-slate-900 text-slate-400 rounded-xl border border-slate-800 hover:text-emerald-400 transition-colors">
+                    <i data-lucide="menu" class="w-6 h-6"></i>
                 </a>
                 <h1 class="text-xl font-bold bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">Pasar Segar</h1>
             </div>
             <div class="flex items-center gap-2">
+                <a href="tambahproduk.html" id="btn-admin" class="hidden p-2 bg-emerald-500/10 text-emerald-400 rounded-xl border border-emerald-500/20">
+                    <i data-lucide="plus-circle" class="w-6 h-6"></i>
+                </a>
                 <a href="login.html" id="btn-login-nav" class="p-2 bg-slate-900 rounded-xl border border-slate-800 text-slate-400">
                     <i data-lucide="user" class="w-6 h-6"></i>
                 </a>
@@ -51,7 +54,7 @@
         <!-- Modal Keranjang -->
         <div id="cart-modal" class="fixed inset-0 z-50 hidden">
             <div class="absolute inset-0 bg-black/80 backdrop-blur-sm" onclick="toggleCart()"></div>
-            <div class="absolute inset-y-0 right-0 w-full max-w-sm bg-slate-900 flex flex-col shadow-2xl">
+            <div class="absolute inset-y-0 right-0 w-full max-w-sm bg-slate-900 flex flex-col shadow-2xl border-l border-slate-800">
                 <div class="p-4 border-b border-slate-800 flex justify-between items-center">
                     <h2 class="font-bold flex items-center gap-2"><i data-lucide="shopping-cart"></i> Keranjang</h2>
                     <button onclick="toggleCart()" class="p-2"><i data-lucide="x"></i></button>
@@ -95,14 +98,20 @@
         // Auth Sinkronisasi
         onAuthStateChanged(auth, (user) => {
             const adminBtn = document.getElementById("btn-admin");
+            const manageBtn = document.getElementById("btn-manage");
             const loginBtn = document.getElementById("btn-login-nav");
+            
             if (user && user.uid === ADMIN_UID) {
                 adminBtn.classList.remove("hidden");
+                manageBtn.classList.remove("hidden");
                 loginBtn.innerHTML = '<i data-lucide="log-out" class="w-6 h-6 text-rose-400"></i>';
-                loginBtn.href = "login.html"; // Redirect ke login untuk logout
+                loginBtn.onclick = () => auth.signOut();
+                loginBtn.href = "#";
             } else {
                 adminBtn.classList.add("hidden");
+                manageBtn.classList.add("hidden");
                 loginBtn.innerHTML = '<i data-lucide="user" class="w-6 h-6"></i>';
+                loginBtn.href = "login.html";
             }
             lucide.createIcons();
         });
@@ -136,6 +145,11 @@
             const grid = document.getElementById('product-grid');
             const filtered = allProducts.filter(p => (currentCategory === "Semua" || p.category === currentCategory) && p.name.toLowerCase().includes(searchTerm));
 
+            if (filtered.length === 0) {
+                grid.innerHTML = '<div class="col-span-2 text-center py-10 text-slate-500">Produk tidak ditemukan</div>';
+                return;
+            }
+
             grid.innerHTML = filtered.map(p => `
                 <div class="bg-slate-900 rounded-2xl overflow-hidden border border-slate-800 flex flex-col shadow-lg">
                     <div class="relative h-32 bg-slate-800">
@@ -146,7 +160,7 @@
                         <h3 class="font-bold text-sm truncate text-slate-100">${p.name}</h3>
                         <p class="text-[10px] text-slate-500">Stok: ${p.stock} • ${p.unit}</p>
                         <div class="mt-auto flex justify-between items-center">
-                            <span class="text-emerald-400 font-bold text-xs">Rp ${p.price.toLocaleString()}</span>
+                            <span class="text-emerald-400 font-bold text-xs">Rp ${Number(p.price).toLocaleString()}</span>
                             <button onclick="addToCart('${p.id}')" class="bg-emerald-500 p-2 rounded-xl text-white"><i data-lucide="plus" class="w-4 h-4"></i></button>
                         </div>
                     </div>
@@ -171,7 +185,7 @@
                     <img src="${item.image}" class="w-12 h-12 rounded-lg object-cover">
                     <div class="flex-1">
                         <h4 class="text-xs font-bold text-slate-100">${item.name}</h4>
-                        <p class="text-[10px] text-emerald-400">${item.qty} x Rp ${item.price.toLocaleString()}</p>
+                        <p class="text-[10px] text-emerald-400">${item.qty} x Rp ${Number(item.price).toLocaleString()}</p>
                     </div>
                     <button onclick="removeFromCart('${item.id}')" class="text-rose-500 p-2"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                 </div>
@@ -188,4 +202,5 @@
     </script>
 </body>
 </html>
+
 
