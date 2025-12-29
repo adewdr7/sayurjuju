@@ -30,10 +30,8 @@
                 <a href="login.html" id="btn-login-nav" class="p-2 bg-slate-900 rounded-xl border border-slate-800 text-slate-400">
                     <i data-lucide="user" class="w-6 h-6"></i>
                 </a>
-                <button onclick="toggleCart()" class="relative p-2 bg-slate-900 rounded-xl border border-slate-800">
-                    <i data-lucide="shopping-cart" class="w-6 h-6 text-emerald-400"></i>
-                    <span id="cart-badge" class="hidden absolute -top-1 -right-1 bg-rose-500 text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center">0</span>
-                </button>
+                <button id="btn-cart-toggle" onclick="toggleCart()" class="relative p-2 bg-slate-900 rounded-xl border border-slate-800">
+    </button>
             </div>
         </nav>
 
@@ -121,31 +119,52 @@ function getShippingCost(method) {
 }
         const ADMIN_UID = "XVmdoXxSptTlA8xHVmAIzeLgkru2";
 
-        // Auth Sinkronisasi di index.html
-onAuthStateChanged(auth, (user) => {
+       onAuthStateChanged(auth, (user) => {
     const adminBtn = document.getElementById("btn-admin");
     const manageBtn = document.getElementById("btn-manage");
     const loginBtn = document.getElementById("btn-login-nav");
+    const cartBtn = document.getElementById("btn-cart-toggle"); // Ambil elemen tombol
     
     if (user) {
-        // Jika sudah login (Admin atau Pelanggan)
         if (user.uid === ADMIN_UID) {
+            // Tampilan JIKA ADMIN
             adminBtn.classList.remove("hidden");
             manageBtn.classList.remove("hidden");
+            
+            // UBAH TOMBOL KERANJANG JADI KELOLA PESANAN
+            cartBtn.innerHTML = `
+                <i data-lucide="clipboard-list" class="w-6 h-6 text-cyan-400"></i>
+                <span class="sr-only">Pesanan</span>
+            `;
+            // Alihkan fungsi klik jika admin ingin langsung ke halaman orders
+            cartBtn.onclick = () => window.location.href = "orders.html";
+        } else {
+            // Tampilan JIKA PELANGGAN BIASA
+            setDefaultCartBtn(cartBtn);
         }
-        // Ubah icon/link ke Profil jika sudah masuk
+        
         loginBtn.innerHTML = '<i data-lucide="user-check" class="w-6 h-6 text-emerald-400"></i>';
-        loginBtn.href = "profile.html"; // Sekarang mengarah ke profil
+        loginBtn.href = "profile.html";
     } else {
-        // Jika belum login
+        // Tampilan JIKA BELUM LOGIN
         adminBtn.classList.add("hidden");
         manageBtn.classList.add("hidden");
+        setDefaultCartBtn(cartBtn);
+        
         loginBtn.innerHTML = '<i data-lucide="user" class="w-6 h-6"></i>';
         loginBtn.href = "login.html";
     }
     lucide.createIcons();
 });
 
+// Fungsi pembantu untuk mengembalikan tampilan Keranjang Belanja
+function setDefaultCartBtn(btn) {
+    btn.innerHTML = `
+        <i data-lucide="shopping-cart" class="w-6 h-6 text-emerald-400"></i>
+        <span id="cart-badge" class="hidden absolute -top-1 -right-1 bg-rose-500 text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center">0</span>
+    `;
+    btn.onclick = () => toggleCart();
+}
 
         // Load Products
         onSnapshot(query(productsRef, orderBy("name", "asc")), (snapshot) => {
@@ -287,6 +306,7 @@ onAuthStateChanged(auth, (user) => {
     </script>
 </body>
 </html>
+
 
 
 
