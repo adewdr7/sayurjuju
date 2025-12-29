@@ -23,6 +23,23 @@
 
         <div id="login-card" class="bg-slate-900 p-6 rounded-3xl border border-slate-800 shadow-xl">
             <div id="login-form">
+<div class="space-y-4">
+    <button onclick="handleLogin()" id="btn-login" class="w-full bg-emerald-500 hover:bg-emerald-600 py-4 rounded-2xl font-bold shadow-lg shadow-emerald-900/20 transition-all flex justify-center items-center gap-2">
+        Masuk Sekarang
+    </button>
+    
+    <div class="flex items-center my-4">
+        <div class="flex-1 h-[1px] bg-slate-800"></div>
+        <span class="px-3 text-xs text-slate-500">ATAU</span>
+        <div class="flex-1 h-[1px] bg-slate-800"></div>
+    </div>
+
+    <button onclick="handleRegister()" class="w-full bg-slate-800 hover:bg-slate-700 py-4 rounded-2xl font-bold transition-all">
+        Daftar Akun Baru
+    </button>
+
+    <p class="text-center text-[10px] text-slate-500">Verifikasi email diperlukan untuk pendaftaran baru.</p>
+</div>
                 <div class="space-y-4">
                     <div>
                         <label class="block text-xs text-slate-400 mb-2 uppercase tracking-wider font-semibold">Email</label>
@@ -90,41 +107,60 @@
             }
         });
 
-        window.handleLogin = async () => {
+      // Fungsi Login
+window.handleLogin = async () => {
     const email = document.getElementById('user-email').value;
     const pass = document.getElementById('user-password').value;
     const btn = document.getElementById('btn-login');
 
     if(!email || !pass) return alert("Isi email dan password!");
-    if(pass.length < 6) return alert("Password minimal 6 karakter!");
 
     btn.innerText = "Memproses...";
     btn.disabled = true;
 
     try {
-        // 1. Coba login terlebih dahulu
         const userCredential = await signInWithEmailAndPassword(auth, email, pass);
-        await ensureUserDoc(userCredential.user);
+        const user = userCredential.user;
+
+        // Cek apakah email sudah diverifikasi
+        if (!user.emailVerified && user.uid !== ADMIN_UID) {
+            alert("Harap verifikasi email Anda terlebih dahulu! Periksa kotak masuk/spam.");
+            await signOut(auth);
+            location.reload();
+            return;
+        }
+
+        await ensureUserDoc(user);
         window.location.href = "index.html";
     } catch (err) {
-        // 2. Jika gagal karena user tidak ada, otomatis buat akun baru
-        // Catatan: Firebase v10+ sering menggunakan 'auth/invalid-credential' 
-        // baik untuk salah password maupun user tidak ditemukan demi keamanan.
-        if (err.code === 'auth/user-not-found' || err.code === 'auth/invalid-credential') {
-            try {
-                const newUser = await createUserWithEmailAndPassword(auth, email, pass);
-                await ensureUserDoc(newUser.user);
-                alert("Akun baru berhasil dibuat!");
-                window.location.href = "index.html";
-            } catch (createErr) {
-                alert("Gagal membuat akun: " + createErr.message);
-            }
-        } else {
-            alert("Terjadi kesalahan: " + err.message);
-        }
+        alert("Login gagal: " + err.message);
     } finally {
         btn.innerText = "Masuk Sekarang";
         btn.disabled = false;
+    }
+};
+
+// Fungsi Daftar Baru (Gunakan ini untuk tombol daftar terpisah)
+window.handleRegister = async () => {
+    const email = document.getElementById('user-email').value;
+    const pass = document.getElementById('user-password').value;
+    
+    if(pass.length < 6) return alert("Password minimal 6 karakter!");
+
+    try {
+        const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
+        
+        // Kirim Verifikasi Email
+        await sendEmailVerification(userCredential.user);
+        
+        // Buat dokumen di Firestore
+        await ensureUserDoc(userCredential.user);
+        
+        alert("Pendaftaran berhasil! Kode verifikasi telah dikirim ke email Anda. Silakan verifikasi sebelum login.");
+        await signOut(auth); // Paksa keluar sampai verifikasi selesai
+        location.reload();
+    } catch (err) {
+        alert("Gagal daftar: " + err.message);
     }
 };
 
