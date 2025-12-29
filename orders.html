@@ -2,24 +2,50 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <title>Pesanan Hari Ini</title>
+  <title>Kelola Pesanan - Admin</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap');
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+  </style>
 </head>
 
-<body class="bg-slate-950 text-slate-100 min-h-screen">
+<body class="bg-slate-950 text-slate-100 min-h-screen pb-10">
 
-<nav class="p-4 flex items-center gap-3 border-b border-slate-800">
-  <a href="index.html" class="p-2 bg-slate-900 rounded-xl">
-    <i data-lucide="arrow-left"></i>
-  </a>
-  <h1 class="font-bold text-lg text-emerald-400">Pesanan Hari Ini</h1>
+<nav class="p-4 flex items-center justify-between sticky top-0 bg-slate-950/90 backdrop-blur-md z-40 border-b border-slate-900">
+  <div class="flex items-center gap-3">
+    <a href="index.html" class="p-2 bg-slate-900 rounded-xl border border-slate-800 hover:text-emerald-400 transition-colors">
+      <i data-lucide="arrow-left"></i>
+    </a>
+    <h1 class="font-bold text-lg text-emerald-400">Daftar Pesanan</h1>
+  </div>
+  <div id="revenue-today" class="text-right">
+    <p class="text-[10px] text-slate-500 uppercase font-bold">Pendapatan Hari Ini</p>
+    <p id="total-revenue" class="text-emerald-400 font-bold">Rp 0</p>
+  </div>
 </nav>
 
 <main class="p-4 space-y-4 max-w-2xl mx-auto">
+  <!-- Ringkasan Status -->
+  <div class="grid grid-cols-3 gap-3 mb-6">
+    <div class="bg-slate-900 border border-slate-800 p-3 rounded-2xl text-center">
+      <p id="count-pending" class="text-xl font-bold text-amber-500">0</p>
+      <p class="text-[10px] text-slate-500">Menunggu</p>
+    </div>
+    <div class="bg-slate-900 border border-slate-800 p-3 rounded-2xl text-center">
+      <p id="count-process" class="text-xl font-bold text-cyan-400">0</p>
+      <p class="text-[10px] text-slate-500">Proses</p>
+    </div>
+    <div class="bg-slate-900 border border-slate-800 p-3 rounded-2xl text-center">
+      <p id="count-done" class="text-xl font-bold text-emerald-500">0</p>
+      <p class="text-[10px] text-slate-500">Selesai</p>
+    </div>
+  </div>
+
   <div id="orders-list" class="space-y-4">
-    <p class="text-slate-500 text-center">Memuat pesanan...</p>
+    <p class="text-slate-500 text-center py-10">Memuat pesanan...</p>
   </div>
 </main>
 
@@ -47,87 +73,132 @@ const ordersList = document.getElementById("orders-list");
 
 onAuthStateChanged(auth, (user) => {
   if (!user || user.uid !== ADMIN_UID) {
-    alert("Akses ditolak");
     window.location.href = "index.html";
     return;
   }
-
   loadOrders();
 });
 
 function loadOrders() {
-  const q = query(
-    collection(db, "orders"),
-    orderBy("createdAt", "desc")
-  );
+  const q = query(collection(db, "orders"), orderBy("createdAt", "desc"));
 
   onSnapshot(q, (snap) => {
     ordersList.innerHTML = "";
+    let totalRev = 0;
+    let counts = { pending: 0, process: 0, done: 0 };
 
     if (snap.empty) {
-      ordersList.innerHTML = `<p class="text-center text-slate-500">Belum ada pesanan</p>`;
+      ordersList.innerHTML = `<p class="text-center text-slate-500 py-10">Belum ada pesanan yang masuk.</p>`;
       return;
     }
 
     snap.forEach(docSnap => {
       const o = docSnap.data();
       const id = docSnap.id;
+      
+      // Hitung ringkasan
+      if (o.status === "MENUNGGU" || o.status === "SIAP DIAMBIL") counts.pending++;
+      else if (o.status === "DIANTAR") counts.process++;
+      else if (o.status === "SELESAI") {
+          counts.done++;
+          totalRev += o.total;
+      }
+
+      const dateStr = o.createdAt ? new Date(o.createdAt.seconds * 1000).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '...';
 
       const card = document.createElement("div");
-      card.className = "bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3";
+      card.className = "bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl";
 
       card.innerHTML = `
-        <div class="flex justify-between items-center">
-          <span class="text-xs font-bold ${
-            o.deliveryMethod === "ANTAR"
-              ? "text-emerald-400"
-              : "text-cyan-400"
-          }">
-            ${o.deliveryMethod}
-          </span>
-          <span class="text-xs text-slate-400">${o.status}</span>
+        <div class="p-4 border-b border-slate-800 flex justify-between items-start">
+          <div>
+            <div class="flex items-center gap-2 mb-1">
+              <span class="text-[10px] font-bold px-2 py-0.5 rounded ${o.deliveryMethod === 'ANTAR' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-cyan-500/10 text-cyan-400'}">
+                ${o.deliveryMethod === 'ANTAR' ? '🛵 ANTAR' : '🚶 AMBIL'}
+              </span>
+              <span class="text-[10px] text-slate-500 font-mono">#${id.slice(-5).toUpperCase()}</span>
+            </div>
+            <p class="text-sm font-bold text-slate-100">${o.userName || 'Pelanggan'}</p>
+            <p class="text-[10px] text-slate-500">${o.userEmail || ''}</p>
+          </div>
+          <div class="text-right">
+            <p class="text-xs font-bold text-slate-400">${dateStr}</p>
+            <span class="text-[10px] font-bold uppercase ${getStatusColor(o.status)}">${o.status}</span>
+          </div>
         </div>
 
-        <ul class="text-sm space-y-1">
-          ${o.items.map(i => `<li>• ${i.name} × ${i.qty}</li>`).join("")}
-        </ul>
-
-        <div class="flex justify-between text-sm font-bold">
-          <span>Total</span>
-          <span class="text-emerald-400">Rp ${o.total.toLocaleString()}</span>
+        <div class="p-4 bg-slate-900/50">
+          <ul class="space-y-2 mb-3">
+            ${o.items.map(i => `
+              <li class="flex justify-between text-xs">
+                <span class="text-slate-400">${i.qty}x ${i.name}</span>
+                <span class="text-slate-200">Rp ${(i.price * i.qty).toLocaleString()}</span>
+              </li>
+            `).join("")}
+          </ul>
+          
+          <div class="flex justify-between items-center pt-2 border-t border-slate-800">
+            <span class="text-xs text-slate-500">Total Pembayaran</span>
+            <span class="text-emerald-400 font-bold">Rp ${o.total.toLocaleString()}</span>
+          </div>
         </div>
 
-        <div class="flex gap-2">
-          ${
-            o.status !== "SELESAI"
-            ? `<button onclick="updateStatus('${id}', '${o.status}')"
-                class="flex-1 bg-emerald-500 text-slate-950 py-2 rounded-xl text-sm font-bold">
-                Update Status
-              </button>`
-            : `<span class="text-xs text-slate-500">Pesanan selesai</span>`
-          }
+        <div class="p-4 bg-slate-900 flex gap-2">
+          ${o.status !== "SELESAI" ? `
+            <button onclick="updateStatus('${id}', '${o.status}')"
+              class="flex-1 bg-emerald-500 hover:bg-emerald-400 text-slate-950 py-3 rounded-xl text-xs font-bold transition-colors active:scale-95">
+              ${getNextActionLabel(o.status)}
+            </button>
+          ` : `
+            <div class="flex-1 text-center py-2 bg-slate-800 rounded-xl border border-slate-700">
+                <span class="text-xs text-slate-500 font-bold">✓ Pesanan Selesai</span>
+            </div>
+          `}
         </div>
       `;
 
       ordersList.appendChild(card);
     });
 
+    // Update Header
+    document.getElementById("total-revenue").innerText = `Rp ${totalRev.toLocaleString()}`;
+    document.getElementById("count-pending").innerText = counts.pending;
+    document.getElementById("count-process").innerText = counts.process;
+    document.getElementById("count-done").innerText = counts.done;
+
     lucide.createIcons();
   });
 }
 
+function getStatusColor(status) {
+    if (status === "MENUNGGU") return "text-amber-500";
+    if (status === "DIANTAR") return "text-cyan-400";
+    if (status === "SELESAI") return "text-emerald-500";
+    if (status === "SIAP DIAMBIL") return "text-amber-500";
+    return "text-slate-400";
+}
+
+function getNextActionLabel(current) {
+    if (current === "MENUNGGU") return "Proses & Antar 🛵";
+    if (current === "SIAP DIAMBIL") return "Tandai Diambil 🚶";
+    if (current === "DIANTAR") return "Selesaikan Pesanan ✓";
+    return "Update Status";
+}
+
 window.updateStatus = async (id, current) => {
   let next = "SELESAI";
-
   if (current === "MENUNGGU") next = "DIANTAR";
-  else if (current === "DIANTAR") next = "SELESAI";
-  else if (current === "SIAP DIAMBIL") next = "SELESAI";
+  else if (current === "DIANTAR" || current === "SIAP DIAMBIL") next = "SELESAI";
 
-  await updateDoc(doc(db, "orders", id), {
-    status: next
-  });
+  try {
+    await updateDoc(doc(db, "orders", id), { status: next });
+  } catch (err) {
+    console.error("Gagal update status:", err);
+  }
 };
 </script>
 
 </body>
 </html>
+
+
