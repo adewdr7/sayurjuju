@@ -92,7 +92,7 @@
 
             <div>
                 <label class="block text-xs text-slate-400 mb-2 font-semibold">URL GAMBAR (OPSIONAL)</label>
-                <input type="text" id="p-image" placeholder="https://..." class="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 text-sm focus:border-emerald-500 outline-none">
+                <input type="file" id="p-image" accept="image/*">
             </div>
 
             <button type="submit" id="btn-submit" class="w-full bg-emerald-500 hover:bg-emerald-600 py-5 rounded-2xl font-bold shadow-xl shadow-emerald-900/20 transition-all flex justify-center items-center gap-2">
@@ -101,68 +101,120 @@
         </form>
     </div>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
-        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
-        import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+  <script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
+import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyBWkPqyh54IRccNz2YjuB1bL5r49YadAP4",
-            authDomain: "sayurjuju-bfe82.firebaseapp.com",
-            projectId: "sayurjuju-bfe82",
-            storageBucket: "sayurjuju-bfe82.firebasestorage.app",
-            messagingSenderId: "754413439458",
-            appId: "1:754413439458:web:341c9fe99fd9b1550551bb"
+/* ===============================
+   CONFIG
+================================ */
+const firebaseConfig = {
+    apiKey: "AIzaSyBWkPqyh54IRccNz2YjuB1bL5r49YadAP4",
+    authDomain: "sayurjuju-bfe82.firebaseapp.com",
+    projectId: "sayurjuju-bfe82",
+    storageBucket: "sayurjuju-bfe82.firebasestorage.app",
+    messagingSenderId: "754413439458",
+    appId: "1:754413439458:web:341c9fe99fd9b1550551bb"
+};
+
+const CLOUD_NAME = "dvjfrrusn";
+const UPLOAD_PRESET = "sayurjuju";
+const ADMIN_UID = "XVmdoXxSptTlA8xHVmAIzeLgkru2";
+
+/* ===============================
+   INIT FIREBASE
+================================ */
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const productsRef = collection(db, "products");
+
+/* ===============================
+   AUTH GUARD
+================================ */
+onAuthStateChanged(auth, (user) => {
+    const form = document.getElementById("product-form");
+    const guard = document.getElementById("auth-guard");
+
+    if (user && user.uid === ADMIN_UID) {
+        form.classList.remove("hidden");
+        guard.classList.add("hidden");
+    } else {
+        form.classList.add("hidden");
+        guard.classList.remove("hidden");
+    }
+});
+
+/* ===============================
+   CLOUDINARY UPLOAD
+================================ */
+async function uploadToCloudinary(file) {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("upload_preset", UPLOAD_PRESET);
+
+    const res = await fetch(
+        `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,
+        {
+            method: "POST",
+            body: formData
+        }
+    );
+
+    const data = await res.json();
+
+    if (!data.secure_url) {
+        throw new Error("Upload gambar gagal");
+    }
+
+    return data.secure_url;
+}
+
+/* ===============================
+   SUBMIT FORM
+================================ */
+document.getElementById("product-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const btn = document.getElementById("btn-submit");
+    btn.disabled = true;
+    btn.innerText = "Upload gambar...";
+
+    try {
+        let imageUrl = "https://images.unsplash.com/photo-1542831371-29b0f74f9713?w=300";
+        const fileInput = document.getElementById("p-image");
+
+        if (fileInput.files.length > 0) {
+            imageUrl = await uploadToCloudinary(fileInput.files[0]);
+        }
+
+        btn.innerText = "Menyimpan produk...";
+
+        const newProduct = {
+            name: document.getElementById("p-name").value,
+            category: document.getElementById("p-category").value,
+            price: parseInt(document.getElementById("p-price").value),
+            unit: document.getElementById("p-unit").value,
+            stock: parseInt(document.getElementById("p-stock").value),
+            status: document.querySelector('input[name="p-status"]:checked').value,
+            image: imageUrl,
+            purchaseTime: new Date().toISOString()
         };
 
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-        const productsRef = collection(db, "products");
-        const ADMIN_UID = "XVmdoXxSptTlA8xHVmAIzeLgkru2";
+        await addDoc(productsRef, newProduct);
 
-        onAuthStateChanged(auth, (user) => {
-            const form = document.getElementById('product-form');
-            const guard = document.getElementById('auth-guard');
-            if (user && user.uid === ADMIN_UID) {
-                form.classList.remove('hidden');
-                guard.classList.add('hidden');
-            } else {
-                form.classList.add('hidden');
-                guard.classList.remove('hidden');
-            }
-        });
+        alert("Produk berhasil ditambahkan!");
+        window.location.href = "index.html";
 
-        document.getElementById('product-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const btn = document.getElementById('btn-submit');
-            btn.innerText = "Menyimpan...";
-            btn.disabled = true;
-
-            const newProduct = {
-                name: document.getElementById('p-name').value,
-                category: document.getElementById('p-category').value,
-                price: parseInt(document.getElementById('p-price').value),
-                unit: document.getElementById('p-unit').value,
-                stock: parseInt(document.getElementById('p-stock').value),
-                status: document.querySelector('input[name="p-status"]:checked').value,
-                image: document.getElementById('p-image').value || 'https://images.unsplash.com/photo-1542831371-29b0f74f9713?w=300',
-                purchaseTime: document.getElementById('p-purchase-time').value || new Date().toISOString()
-            };
-
-            try {
-                await addDoc(productsRef, newProduct);
-                alert("Produk berhasil ditambahkan!");
-                window.location.href = "index.html";
-            } catch (err) {
-                alert("Error: " + err.message);
-                btn.innerText = "Simpan ke Katalog";
-                btn.disabled = false;
-            }
-        });
-
-        lucide.createIcons();
-    </script>
+    } catch (err) {
+        alert("Error: " + err.message);
+        btn.disabled = false;
+        btn.innerText = "Simpan ke Katalog";
+    }
+});
+</script>
 </body>
 </html>
+
 
