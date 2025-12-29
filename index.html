@@ -291,20 +291,26 @@ function setDefaultCartBtn(btn) {
     try {
         // 1. Simpan Pesanan
         await addDoc(collection(db, "orders"), {
-            userId: user.uid,
-            items: cart.map(i => ({
-                productId: i.id,
-                name: i.name,
-                qty: i.qty,
-                price: i.price
-            })),
-            subtotal,
-            shippingCost,
-            total,
-            deliveryMethod: method,
-            status: method === "ANTAR" ? "MENUNGGU" : "SIAP DIAMBIL",
-            createdAt: serverTimestamp()
-        });
+  userId: user.uid,
+  items: cart.map(i => ({
+    productId: i.id,
+    name: i.name,
+    qty: i.qty,
+    price: i.price
+  })),
+
+  subtotal,
+  shippingCost,
+  total,
+  deliveryMethod: method,
+
+  status: "MENUNGGU",
+
+  createdAt: serverTimestamp(),
+
+  // 🔥 BATAS WAKTU BATAL (5 MENIT)
+  cancelableUntil: Date.now() + (5 * 60 * 1000)
+});
 
         // 2. KURANGI STOK PRODUK (Logika Baru)
         for (const item of cart) {
@@ -333,6 +339,7 @@ function setDefaultCartBtn(btn) {
     </script>
 </body>
 </html>
+
 
 
 
