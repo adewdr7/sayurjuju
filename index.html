@@ -95,26 +95,31 @@
         let currentCategory = "Semua";
         const ADMIN_UID = "XVmdoXxSptTlA8xHVmAIzeLgkru2";
 
-        // Auth Sinkronisasi
-        onAuthStateChanged(auth, (user) => {
-            const adminBtn = document.getElementById("btn-admin");
-            const manageBtn = document.getElementById("btn-manage");
-            const loginBtn = document.getElementById("btn-login-nav");
-            
-            if (user && user.uid === ADMIN_UID) {
-                adminBtn.classList.remove("hidden");
-                manageBtn.classList.remove("hidden");
-                loginBtn.innerHTML = '<i data-lucide="log-out" class="w-6 h-6 text-rose-400"></i>';
-                loginBtn.onclick = () => auth.signOut();
-                loginBtn.href = "#";
-            } else {
-                adminBtn.classList.add("hidden");
-                manageBtn.classList.add("hidden");
-                loginBtn.innerHTML = '<i data-lucide="user" class="w-6 h-6"></i>';
-                loginBtn.href = "login.html";
-            }
-            lucide.createIcons();
-        });
+        // Auth Sinkronisasi di index.html
+onAuthStateChanged(auth, (user) => {
+    const adminBtn = document.getElementById("btn-admin");
+    const manageBtn = document.getElementById("btn-manage");
+    const loginBtn = document.getElementById("btn-login-nav");
+    
+    if (user) {
+        // Jika sudah login (Admin atau Pelanggan)
+        if (user.uid === ADMIN_UID) {
+            adminBtn.classList.remove("hidden");
+            manageBtn.classList.remove("hidden");
+        }
+        // Ubah icon/link ke Profil jika sudah masuk
+        loginBtn.innerHTML = '<i data-lucide="user-check" class="w-6 h-6 text-emerald-400"></i>';
+        loginBtn.href = "profile.html"; // Sekarang mengarah ke profil
+    } else {
+        // Jika belum login
+        adminBtn.classList.add("hidden");
+        manageBtn.classList.add("hidden");
+        loginBtn.innerHTML = '<i data-lucide="user" class="w-6 h-6"></i>';
+        loginBtn.href = "login.html";
+    }
+    lucide.createIcons();
+});
+
 
         // Load Products
         onSnapshot(query(productsRef, orderBy("name", "asc")), (snapshot) => {
@@ -202,5 +207,6 @@
     </script>
 </body>
 </html>
+
 
 
