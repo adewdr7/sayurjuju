@@ -211,7 +211,9 @@ function setDefaultCartBtn(btn) {
                         <p class="text-[10px] text-slate-500">Stok: ${p.stock} • ${p.unit}</p>
                         <div class="mt-auto flex justify-between items-center">
                             <span class="text-emerald-400 font-bold text-xs">Rp ${Number(p.price).toLocaleString()}</span>
-                            <button onclick="addToCart('${p.id}')" class="bg-emerald-500 p-2 rounded-xl text-white"><i data-lucide="plus" class="w-4 h-4"></i></button>
+                           <button onclick="addToCart('${p.id}')" class="${auth.currentUser?.uid === ADMIN_UID ? 'bg-cyan-500' : 'bg-emerald-500'} p-2 rounded-xl text-white">
+    <i data-lucide="${auth.currentUser?.uid === ADMIN_UID ? 'package-plus' : 'plus'}" class="w-4 h-4"></i>
+</button>
                         </div>
                     </div>
                 </div>
@@ -219,12 +221,41 @@ function setDefaultCartBtn(btn) {
             lucide.createIcons();
         };
 
-        window.addToCart = (id) => {
-            const product = allProducts.find(p => p.id === id);
-            const existing = cart.find(item => item.id === id);
-            if (existing) existing.qty++; else cart.push({ ...product, qty: 1 });
-            updateCartUI();
-        };
+        window.addToCart = async (id) => {
+    const user = auth.currentUser;
+
+    // JIKA ADMIN: Tambah Stok di Database
+    if (user && user.uid === ADMIN_UID) {
+        try {
+            const productRef = doc(db, "products", id);
+            await updateDoc(productRef, {
+                stock: increment(1) // Tambah stok +1
+            });
+            // Tidak perlu render manual karena onSnapshot akan otomatis update tampilan
+        } catch (err) {
+            console.error("Gagal update stok:", err);
+        }
+    } 
+    // JIKA PELANGGAN: Masukkan ke Keranjang
+    else {
+        const product = allProducts.find(p => p.id === id);
+        if (product.stock <= 0) {
+            alert("Stok habis!");
+            return;
+        }
+        const existing = cart.find(item => item.id === id);
+        if (existing) {
+            if (existing.qty >= product.stock) {
+                alert("Tidak bisa melebihi stok yang tersedia");
+                return;
+            }
+            existing.qty++;
+        } else {
+            cart.push({ ...product, qty: 1 });
+        }
+        updateCartUI();
+    }
+};
 
         window.updateCartUI = () => {
             const count = cart.reduce((sum, item) => sum + item.qty, 0);
@@ -248,59 +279,55 @@ function setDefaultCartBtn(btn) {
         window.toggleCart = () => document.getElementById('cart-modal').classList.toggle('hidden');
         window.removeFromCart = (id) => { cart = cart.filter(i => i.id !== id); updateCartUI(); };
         window.checkout = async function () {
-  const user = auth.currentUser;
-  if (!user) {
-    alert("Silakan login dulu");
-    return;
-  }
+    const user = auth.currentUser;
+    if (!user) { alert("Silakan login dulu"); return; }
+    if (cart.length === 0) { alert("Keranjang kosong"); return; }
 
-  if (cart.length === 0) {
-    alert("Keranjang kosong");
-    return;
-  }
+    const method = document.querySelector('input[name="delivery"]:checked').value;
+    const shippingCost = getShippingCost(method);
+    const subtotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
+    const total = subtotal + shippingCost;
 
-  const method = document.querySelector('input[name="delivery"]:checked').value;
-  const shippingCost = getShippingCost(method);
+    try {
+        // 1. Simpan Pesanan
+        await addDoc(collection(db, "orders"), {
+            userId: user.uid,
+            items: cart.map(i => ({
+                productId: i.id,
+                name: i.name,
+                qty: i.qty,
+                price: i.price
+            })),
+            subtotal,
+            shippingCost,
+            total,
+            deliveryMethod: method,
+            status: method === "ANTAR" ? "MENUNGGU" : "SIAP DIAMBIL",
+            createdAt: serverTimestamp()
+        });
 
-  const subtotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
-  const total = subtotal + shippingCost;
+        // 2. KURANGI STOK PRODUK (Logika Baru)
+        for (const item of cart) {
+            const productRef = doc(db, "products", item.id);
+            await updateDoc(productRef, {
+                stock: increment(-item.qty) // Mengurangi stok sejumlah qty
+            });
+        }
 
-  try {
-    await addDoc(collection(db, "orders"), {
-      userId: user.uid,
-      items: cart.map(i => ({
-        productId: i.id,
-        name: i.name,
-        qty: i.qty,
-        price: i.price
-      })),
-      subtotal,
-      shippingCost,
-      total,
-      deliveryMethod: method,
-      status: method === "ANTAR" ? "MENUNGGU" : "SIAP DIAMBIL",
-      createdAt: serverTimestamp()
-    });
+        // 3. Update profil user
+        await updateDoc(doc(db, "users", user.uid), {
+            shoppingFrequency: increment(1),
+            lastCheckoutAt: serverTimestamp()
+        });
 
-    await updateDoc(doc(db, "users", user.uid), {
-      shoppingFrequency: increment(1),
-      lastCheckoutAt: serverTimestamp()
-    });
+        cart = [];
+        updateCartUI();
+        toggleCart();
+        window.location.href = (user.uid === ADMIN_UID) ? "orders.html" : "profile.html";
 
-    cart = [];
-    updateCartUI();
-    toggleCart();
-
-    // 🔥 REDIRECT
-    if (user.uid === ADMIN_UID) {
-  window.location.href = "orders.html";
-} else {
-  window.location.href = "profile.html";
-}
-
-  } catch (err) {
-    alert("Gagal checkout: " + err.message);
-  }
+    } catch (err) {
+        alert("Gagal checkout: " + err.message);
+    }
 };
         lucide.createIcons();
     </script>
