@@ -91,37 +91,43 @@
         });
 
         window.handleLogin = async () => {
-            const email = document.getElementById('user-email').value;
-            const pass = document.getElementById('user-password').value;
-            const btn = document.getElementById('btn-login');
+    const email = document.getElementById('user-email').value;
+    const pass = document.getElementById('user-password').value;
+    const btn = document.getElementById('btn-login');
 
-            if(!email || !pass) return alert("Isi email dan password!");
+    if(!email || !pass) return alert("Isi email dan password!");
+    if(pass.length < 6) return alert("Password minimal 6 karakter!");
 
-            btn.innerText = "Memproses...";
-            btn.disabled = true;
+    btn.innerText = "Memproses...";
+    btn.disabled = true;
 
+    try {
+        // 1. Coba login terlebih dahulu
+        const userCredential = await signInWithEmailAndPassword(auth, email, pass);
+        await ensureUserDoc(userCredential.user);
+        window.location.href = "index.html";
+    } catch (err) {
+        // 2. Jika gagal karena user tidak ada, otomatis buat akun baru
+        // Catatan: Firebase v10+ sering menggunakan 'auth/invalid-credential' 
+        // baik untuk salah password maupun user tidak ditemukan demi keamanan.
+        if (err.code === 'auth/user-not-found' || err.code === 'auth/invalid-credential') {
             try {
-                // Coba login
-                const userCredential = await signInWithEmailAndPassword(auth, email, pass);
-                await ensureUserDoc(userCredential.user);
+                const newUser = await createUserWithEmailAndPassword(auth, email, pass);
+                await ensureUserDoc(newUser.user);
+                alert("Akun baru berhasil dibuat!");
                 window.location.href = "index.html";
-            } catch (err) {
-                if (err.code === 'auth/user-not-found') {
-                    // Jika user belum ada, buat baru (Opsional: tergantung kebijakan app Anda)
-                    try {
-                        const newUser = await createUserWithEmailAndPassword(auth, email, pass);
-                        await ensureUserDoc(newUser.user);
-                        window.location.href = "index.html";
-                    } catch (createErr) {
-                        alert("Gagal membuat akun: " + createErr.message);
-                    }
-                } else {
-                    alert("Login gagal: " + err.message);
-                }
-                btn.innerText = "Masuk Sekarang";
-                btn.disabled = false;
+            } catch (createErr) {
+                alert("Gagal membuat akun: " + createErr.message);
             }
-        };
+        } else {
+            alert("Terjadi kesalahan: " + err.message);
+        }
+    } finally {
+        btn.innerText = "Masuk Sekarang";
+        btn.disabled = false;
+    }
+};
+
 
         async function ensureUserDoc(user) {
             const userDocRef = doc(db, "users", user.uid);
@@ -151,5 +157,6 @@
     </script>
 </body>
 </html>
+
 
 
