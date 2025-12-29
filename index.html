@@ -218,6 +218,7 @@ function formatPurchaseTime(value) {
 
   // 👉 FIELD BARU
   purchaseTime: document.getElementById('p-purchase-time').value || new Date().toISOString()
+};
 
             try {
                 await addDoc(productsRef, newProduct);
