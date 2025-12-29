@@ -54,27 +54,33 @@
         </div>
 
         <!-- PAGE: TAMBAH PRODUK (Admin) -->
-        <div id="admin-page" class="page">
-            <div class="p-4">
-                <div class="flex items-center gap-2 mb-6">
-                    <button onclick="showPage('home-page')" class="p-2 bg-slate-900 rounded-lg"><i data-lucide="arrow-left"></i></button>
-                    <h2 class="text-xl font-bold">Admin</h2>
-                </div>
-<!-- PAGE: TAMBAH PRODUK (Admin) -->
-<div id="admin-page" class="page">
-  <div class="p-4">
-    <div class="flex items-center gap-2 mb-6">
-      <button onclick="showPage('home-page')" ...></button>
-      <h2 class="text-xl font-bold">Tambah Produk Baru</h2>
-    </div>
 
-    <form id="product-form" class="space-y-4 bg-slate-900 p-6 ...">
-      ...
-    </form>
-  </div>
+<!-- 🔐 LOGIN ADMIN -->
+<div id="admin-login" class="mb-6 bg-slate-900 p-5 rounded-2xl border border-slate-800">
+  <h3 class="font-bold mb-4 text-emerald-400">Login Admin</h3>
+
+  <input
+    id="admin-email"
+    type="email"
+    placeholder="Email admin"
+    class="w-full mb-3 bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm">
+
+  <input
+    id="admin-password"
+    type="password"
+    placeholder="Password"
+    class="w-full mb-4 bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm">
+
+  <button
+    type="button"
+    onclick="adminLogin()"
+    class="w-full bg-emerald-500 py-3 rounded-xl font-bold">
+    Login
+  </button>
 </div>
+       
 
-                <form id="product-form" class="space-y-4 bg-slate-900 p-6 rounded-2xl border border-slate-800 shadow-xl">
+                <form id="product-form" class="hidden space-y-4 bg-slate-900 p-6 rounded-2xl border border-slate-800 shadow-xl">
                     <div>
                         <label class="block text-xs text-slate-400 mb-1">Nama Produk</label>
                         <input type="text" id="p-name" required class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm focus:border-emerald-500 outline-none">
@@ -234,13 +240,18 @@ const ADMIN_UID = "XVmdoXxSptTlA8xHVmAIzeLgkru2"; // ⬅️ WAJIB GANTI
 
 onAuthStateChanged(auth, (user) => {
   const adminBtn = document.getElementById("btn-admin");
+  const loginBox = document.getElementById("admin-login");
+  const productForm = document.getElementById("product-form");
 
   if (user && user.uid === ADMIN_UID) {
     adminBtn.classList.remove("hidden");
-    console.log("Admin login");
+    loginBox.classList.add("hidden");
+    productForm.classList.remove("hidden");
+    console.log("Admin login OK");
   } else {
     adminBtn.classList.add("hidden");
-    showPage('home-page');
+    if (loginBox) loginBox.classList.remove("hidden");
+    if (productForm) productForm.classList.add("hidden");
   }
 });
 
