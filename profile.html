@@ -1,285 +1,161 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Profil - Pasar Segar</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap');
-        body { font-family: 'Plus Jakarta Sans', sans-serif; }
-        .hide-scrollbar::-webkit-scrollbar { display: none; }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Profil - Pasar Segar</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap');
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+  </style>
 </head>
+
 <body class="bg-slate-950 text-slate-100 min-h-screen pb-20">
 
-    <!-- Navigasi -->
-    <nav class="p-4 flex justify-between items-center sticky top-0 bg-slate-950/90 backdrop-blur-md z-40 border-b border-slate-900">
-        <div class="flex items-center gap-3">
-            <a href="index.html" class="p-2 bg-slate-900 text-slate-400 rounded-xl border border-slate-800">
-                <i data-lucide="arrow-left" class="w-6 h-6"></i>
-            </a>
-            <h1 class="text-xl font-bold bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">Profil Saya</h1>
-        </div>
-        <button onclick="handleLogout()" class="p-2 bg-rose-500/10 text-rose-500 rounded-xl border border-rose-500/20">
-            <i data-lucide="log-out" class="w-6 h-6"></i>
-        </button>
-    </nav>
+<!-- NAV -->
+<nav class="p-4 flex justify-between items-center sticky top-0 bg-slate-950/90 backdrop-blur z-40 border-b border-slate-900">
+  <div class="flex items-center gap-3">
+    <a href="index.html" class="p-2 bg-slate-900 rounded-xl border border-slate-800">
+      <i data-lucide="arrow-left"></i>
+    </a>
+    <h1 class="text-xl font-bold bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">
+      Profil Saya
+    </h1>
+  </div>
+  <button onclick="handleLogout()" class="p-2 bg-rose-500/10 text-rose-500 rounded-xl border border-rose-500/20">
+    <i data-lucide="log-out"></i>
+  </button>
+</nav>
 
-    <main class="p-4 max-w-2xl mx-auto space-y-6">
-        <!-- Kartu Profil User -->
-        <div class="bg-slate-900 rounded-[2rem] p-6 border border-slate-800 relative overflow-hidden">
-            <div class="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 blur-3xl rounded-full -mr-16 -mt-16"></div>
-            
-            <div class="flex items-center gap-5 relative z-10">
-                <div class="relative">
-                    <img id="user-photo" src="https://ui-avatars.com/api/?name=User&background=random" class="w-20 h-20 rounded-2xl object-cover border-2 border-slate-800 shadow-2xl">
-                    <div id="user-role-badge" class="absolute -bottom-2 -right-2 bg-emerald-500 text-slate-950 text-[10px] font-bold px-2 py-1 rounded-lg uppercase border-2 border-slate-900">
-                        Customer
-                    </div>
-                </div>
-                <div>
-                    <h2 id="user-name" class="text-xl font-bold text-white mb-1">Memuat...</h2>
-                    <p id="user-email" class="text-xs text-slate-500 mb-2">email@contoh.com</p>
-                    <div class="flex gap-2">
-                        <span class="text-[10px] bg-slate-800 text-slate-400 px-2 py-1 rounded-md border border-slate-700">
-                            <i data-lucide="map-pin" class="w-3 h-3 inline mr-1"></i> <span id="user-address">Alamat belum diatur</span>
-                        </span>
-                    </div>
-                </div>
-            </div>
+<!-- CONTENT -->
+<main class="p-4 max-w-2xl mx-auto space-y-6">
 
-            <div class="grid grid-cols-2 gap-3 mt-8">
-                <div class="bg-slate-950/50 p-4 rounded-2xl border border-slate-800/50">
-                    <p class="text-[10px] text-slate-500 uppercase font-bold mb-1">Frekuensi Belanja</p>
-                    <p class="text-lg font-bold text-emerald-400"><span id="user-freq">0</span>x</p>
-                </div>
-                <div class="bg-slate-950/50 p-4 rounded-2xl border border-slate-800/50">
-                    <p class="text-[10px] text-slate-500 uppercase font-bold mb-1">Catatan Hutang</p>
-                    <p class="text-lg font-bold text-rose-400">Rp <span id="user-debt">0</span></p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Bagian Khusus Admin: Daftar Pelanggan -->
-        <div id="admin-section" class="hidden space-y-4">
-            <div class="flex justify-between items-end">
-                <div>
-                    <h3 class="text-lg font-bold text-white">Daftar Pelanggan</h3>
-                    <p class="text-xs text-slate-500">Kelola data frekuensi & hutang pelanggan</p>
-                </div>
-                <div class="flex gap-2">
-                    <button onclick="loadUsers('shoppingFrequency')" class="p-2 bg-slate-900 text-slate-400 rounded-lg border border-slate-800">
-                        <i data-lucide="sort-asc" class="w-4 h-4"></i>
-                    </button>
-                    <button onclick="confirmReset()" class="p-2 bg-rose-500/10 text-rose-500 rounded-lg border border-rose-500/20">
-                        <i data-lucide="refresh-cw" class="w-4 h-4"></i>
-                    </button>
-                </div>
-            </div>
-
-            <div id="users-list" class="space-y-3">
-                <!-- User list items -->
-            </div>
-        </div>
-    </main>
-
-    <!-- Modal Edit Admin -->
-    <div id="edit-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-        <div class="bg-slate-900 w-full max-w-sm rounded-[2.5rem] p-8 border border-slate-800 shadow-2xl">
-            <h3 class="text-xl font-bold text-white mb-6">Edit Data Pelanggan</h3>
-            <div class="space-y-5">
-                <div>
-                    <label class="block text-[10px] text-slate-500 uppercase font-bold mb-2">Frekuensi Belanja</label>
-                    <input type="number" id="edit-freq" class="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 text-sm outline-none focus:ring-2 focus:ring-emerald-500">
-                </div>
-                <div>
-                    <label class="block text-[10px] text-slate-500 uppercase font-bold mb-2">Catatan Hutang (Rp)</label>
-                    <input type="number" id="edit-debt" class="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 text-sm outline-none focus:ring-2 focus:ring-rose-500">
-                </div>
-                <div class="flex gap-3 pt-4">
-                    <button onclick="closeEditModal()" class="flex-1 py-4 bg-slate-800 rounded-2xl font-bold text-sm">Batal</button>
-                    <button onclick="saveUserEdit()" class="flex-1 py-4 bg-emerald-500 text-slate-950 rounded-2xl font-bold text-sm shadow-lg shadow-emerald-500/20">Simpan</button>
-                </div>
-            </div>
-        </div>
+  <!-- PROFILE CARD -->
+  <div class="bg-slate-900 p-6 rounded-3xl border border-slate-800">
+    <div class="flex gap-5">
+      <img id="user-photo" class="w-20 h-20 rounded-2xl object-cover border border-slate-800"/>
+      <div>
+        <h2 id="user-name" class="text-xl font-bold">...</h2>
+        <p id="user-email" class="text-xs text-slate-500"></p>
+        <span id="user-role" class="text-[10px] uppercase font-bold text-emerald-400"></span>
+      </div>
     </div>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
-        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
-        import {
-  getFirestore,
-  doc,
-  getDoc,
-  getDocs,
-  collection,
-  updateDoc,
-  writeBatch,
-  query,
-  orderBy,
-  where,
-  onSnapshot
+    <div class="grid grid-cols-2 gap-4 mt-6">
+      <div class="bg-slate-950 p-4 rounded-2xl border border-slate-800">
+        <p class="text-[10px] uppercase text-slate-500">Frekuensi Belanja</p>
+        <p class="text-lg font-bold text-emerald-400"><span id="user-freq">0</span>x</p>
+      </div>
+      <div class="bg-slate-950 p-4 rounded-2xl border border-slate-800">
+        <p class="text-[10px] uppercase text-slate-500">Catatan Hutang</p>
+        <p class="text-lg font-bold text-rose-400">Rp <span id="user-debt">0</span></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADMIN -->
+  <section id="admin-section" class="hidden space-y-3">
+    <h3 class="font-bold">Daftar Pelanggan</h3>
+    <div id="users-list" class="space-y-3"></div>
+  </section>
+
+</main>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
+import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
+import {
+  getFirestore, doc, getDoc, updateDoc,
+  collection, query, where, onSnapshot, orderBy
 } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyBWkPqyh54IRccNz2YjuB1bL5r49YadAP4",
-            authDomain: "sayurjuju-bfe82.firebaseapp.com",
-            projectId: "sayurjuju-bfe82",
-            storageBucket: "sayurjuju-bfe82.firebasestorage.app",
-            messagingSenderId: "754413439458",
-            appId: "1:754413439458:web:341c9fe99fd9b1550551bb"
-        };
+const firebaseConfig = {
+  apiKey: "AIzaSyBWkPqyh54IRccNz2YjuB1bL5r49YadAP4",
+  authDomain: "sayurjuju-bfe82.firebaseapp.com",
+  projectId: "sayurjuju-bfe82"
+};
 
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
+const ADMIN_UID = "XVmdoXxSptTlA8xHVmAIzeLgkru2";
 
-        const ADMIN_UID = "XVmdoXxSptTlA8xHVmAIzeLgkru2";
-        let targetEditUid = null;
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
 
-        onAuthStateChanged(auth, async (user) => {
-            if (!user) {
-                window.location.href = "login.html";
-                return;
-            }
+let authReady = false;
 
-            // Load Profil Sendiri
-            const userRef = doc(db, "users", user.uid);
-            const snap = await getDoc(userRef);
-            if (snap.exists()) {
-  const data = snap.data();
+/* ================= AUTH SAFE ================= */
+onAuthStateChanged(auth, async (user) => {
+  if (!authReady) {
+    authReady = true;
+    return; // ⛔ ignore first null call
+  }
 
-  document.getElementById('user-name').innerText = data.name || "Tanpa Nama";
-  document.getElementById('user-email').innerText = data.email;
-  document.getElementById('user-address').innerText = data.address || "Alamat belum diatur";
-  document.getElementById('user-photo').src = data.photo || `https://ui-avatars.com/api/?name=${data.email}&background=random`;
-  document.getElementById('user-debt').innerText = (data.debt || 0).toLocaleString();
-  document.getElementById('user-role-badge').innerText = data.role || "Customer";
+  if (!user) {
+    location.href = "login.html";
+    return;
+  }
 
-  // 🔥 ini yang baru
-  syncShoppingFrequencyFromOrders(user);
+  loadProfile(user);
+  syncFrequency(user);
 
   if (user.uid === ADMIN_UID) {
-    document.getElementById('admin-section').classList.remove('hidden');
+    document.getElementById("admin-section").classList.remove("hidden");
     loadUsers();
   }
+});
+
+/* ================= PROFILE ================= */
+async function loadProfile(user) {
+  const snap = await getDoc(doc(db, "users", user.uid));
+  if (!snap.exists()) return;
+
+  const d = snap.data();
+  user-photo.src = d.photo || `https://ui-avatars.com/api/?name=${d.email}`;
+  user-name.innerText = d.name || "User";
+  user-email.innerText = d.email;
+  user-debt.innerText = (d.debt || 0).toLocaleString();
+  user-role.innerText = d.role || "Customer";
 }
-        });
 
-async function syncShoppingFrequencyFromOrders(user) {
-  const ordersRef = collection(db, "orders");
-  const q = query(ordersRef, where("userId", "==", user.uid));
-
-  onSnapshot(q, async (snap) => {
-    const orderCount = snap.size;
-
-    // update UI langsung
-    document.getElementById("user-freq").innerText = orderCount;
-
-    // sinkron ke users (biar konsisten)
+/* ================= FREQUENCY ================= */
+function syncFrequency(user) {
+  const q = query(collection(db, "orders"), where("userId", "==", user.uid));
+  onSnapshot(q, async snap => {
+    user-freq.innerText = snap.size;
     await updateDoc(doc(db, "users", user.uid), {
-      shoppingFrequency: orderCount
+      shoppingFrequency: snap.size
     });
   });
 }
 
-        window.loadUsers = (sortBy = 'shoppingFrequency') => {
-    const listEl = document.getElementById('users-list');
-    const usersRef = collection(db, "users");
-    const q = query(usersRef, orderBy(sortBy, "desc"));
-
-    // Menggunakan onSnapshot untuk sinkronisasi real-time
-    onSnapshot(q, (snap) => {
-        listEl.innerHTML = "";
-        snap.forEach(userDoc => {
-            const u = userDoc.data();
-            if (userDoc.id === ADMIN_UID) return;
-
-            const card = document.createElement('div');
-            card.className = "bg-slate-900/50 p-4 rounded-2xl border border-slate-800 flex items-center gap-4 transition-all hover:border-slate-700";
-            card.innerHTML = `
-                <img src="${u.photo || 'https://ui-avatars.com/api/?name=' + u.email}" class="w-12 h-12 rounded-xl object-cover bg-slate-800">
-                <div class="flex-1">
-                    <h4 class="text-sm font-bold text-slate-100">${u.name || u.email.split('@')[0]}</h4>
-                    <div class="flex gap-3 mt-1">
-                        <span class="text-[10px] text-emerald-400 font-bold"><i data-lucide="shopping-cart" class="w-3 h-3 inline"></i> ${u.shoppingFrequency || 0}x</span>
-                        <span class="text-[10px] text-rose-400 font-bold"><i data-lucide="banknote" class="w-3 h-3 inline"></i> Rp ${(u.debt || 0).toLocaleString()}</span>
-                    </div>
-                </div>
-                <button onclick="openEditModal('${userDoc.id}', ${u.shoppingFrequency || 0}, ${u.debt || 0})" class="p-3 bg-slate-800 text-slate-400 rounded-xl">
-                    <i data-lucide="edit-3" class="w-4 h-4"></i>
-                </button>
-            `;
-            listEl.appendChild(card);
-        });
-        lucide.createIcons();
+/* ================= ADMIN ================= */
+function loadUsers() {
+  const q = query(collection(db, "users"), orderBy("shoppingFrequency", "desc"));
+  onSnapshot(q, snap => {
+    users-list.innerHTML = "";
+    snap.forEach(docu => {
+      if (docu.id === ADMIN_UID) return;
+      const u = docu.data();
+      users-list.innerHTML += `
+        <div class="bg-slate-900 p-3 rounded-xl border border-slate-800">
+          <b>${u.name || u.email}</b>
+          <div class="text-xs text-slate-400">
+            ${u.shoppingFrequency || 0}x • Rp ${(u.debt || 0).toLocaleString()}
+          </div>
+        </div>`;
     });
+  });
+}
+
+/* ================= LOGOUT ================= */
+window.handleLogout = async () => {
+  await signOut(auth);
+  location.href = "login.html";
 };
 
-            } catch (err) {
-                listEl.innerHTML = `<div class="p-4 bg-rose-500/10 text-rose-500 rounded-xl text-xs">Error: ${err.message}</div>`;
-            }
-        };
-
-        window.openEditModal = (uid, freq, debt) => {
-            targetEditUid = uid;
-            document.getElementById('edit-freq').value = freq;
-            document.getElementById('edit-debt').value = debt;
-            document.getElementById('edit-modal').classList.remove('hidden');
-        };
-
-        window.closeEditModal = () => {
-            document.getElementById('edit-modal').classList.add('hidden');
-        };
-
-        window.saveUserEdit = async () => {
-            const freq = parseInt(document.getElementById('edit-freq').value);
-            const debt = parseInt(document.getElementById('edit-debt').value);
-            
-            try {
-                await updateDoc(doc(db, "users", targetEditUid), {
-                    shoppingFrequency: freq,
-                    debt: debt
-                });
-                closeEditModal();
-                loadUsers();
-            } catch (err) {
-                alert("Gagal update user: " + err.message);
-            }
-        };
-
-        window.confirmReset = async () => {
-            if (confirm("Hapus semua riwayat frekuensi belanja pelanggan? Tindakan ini tidak bisa dibatalkan.")) {
-                try {
-                    const snap = await getDocs(collection(db, "users"));
-                    const batch = writeBatch(db);
-                    snap.forEach(userDoc => {
-                        if (userDoc.id !== ADMIN_UID) {
-                            batch.update(userDoc.ref, { shoppingFrequency: 0 });
-                        }
-                    });
-                    await batch.commit();
-                    alert("Berhasil mereset data!");
-                    loadUsers();
-                } catch (err) {
-                    alert("Gagal reset data: " + err.message);
-                }
-            }
-        };
-
-        window.handleLogout = async () => {
-            if (confirm("Keluar dari akun?")) {
-                await signOut(auth);
-                window.location.href = "login.html";
-            }
-        };
-
-        lucide.createIcons();
-    </script>
+lucide.createIcons();
+</script>
 </body>
 </html>
-
-
-
