@@ -216,51 +216,51 @@ document.getElementById("p-unit").addEventListener("change", () => {
    SUBMIT FORM
 ================================ */
 document.getElementById("product-form").addEventListener("submit", async (e) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    const btn = document.getElementById("btn-submit");
-    btn.disabled = true;
-    btn.innerText = "Upload gambar...";
+  const btn = document.getElementById("btn-submit");
+  btn.disabled = true;
+  btn.innerText = "Upload gambar...";
 
-    try {
-        let imageUrl = "https://images.unsplash.com/photo-1542831371-29b0f74f9713?w=300";
-        const fileInput = document.getElementById("p-image");
+  try {
+    let imageUrl = "https://images.unsplash.com/photo-1542831371-29b0f74f9713?w=300";
+    const fileInput = document.getElementById("p-image");
 
-        if (fileInput.files.length > 0) {
-            imageUrl = await uploadToCloudinary(fileInput.files[0]);
-        }
-
-        btn.innerText = "Menyimpan produk...";
-
-        const newProduct = {
-            name: document.getElementById("p-name").value,
-            category: document.getElementById("p-category").value,
-            price: parseInt(document.getElementById("p-price").value),
-            unit: document.getElementById("p-unit").value,
-            const unit = document.getElementById("p-unit").value;
-const stockRaw = document.getElementById("p-stock").value;
-
-const stock = ["kg", "ons", "g"].includes(unit)
-  ? parseFloat(stockRaw)
-  : parseInt(stockRaw);
-
-stock,
-unit,
-            status: document.querySelector('input[name="p-status"]:checked').value,
-            image: imageUrl,
-            purchaseTime: new Date().toISOString()
-        };
-
-        await addDoc(productsRef, newProduct);
-
-        alert("Produk berhasil ditambahkan!");
-        window.location.href = "index.html";
-
-    } catch (err) {
-        alert("Error: " + err.message);
-        btn.disabled = false;
-        btn.innerText = "Simpan ke Katalog";
+    if (fileInput.files.length > 0) {
+      imageUrl = await uploadToCloudinary(fileInput.files[0]);
     }
+
+    btn.innerText = "Menyimpan produk...";
+
+    // ✅ AMBIL UNIT & STOK DULU (DI LUAR OBJECT)
+    const unit = document.getElementById("p-unit").value;
+    const stockRaw = document.getElementById("p-stock").value;
+
+    const stock = ["kg", "ons", "g"].includes(unit)
+      ? parseFloat(stockRaw)
+      : parseInt(stockRaw);
+
+    const newProduct = {
+      name: document.getElementById("p-name").value,
+      category: document.getElementById("p-category").value,
+      price: parseInt(document.getElementById("p-price").value),
+      unit,
+      stock,
+      status: document.querySelector('input[name="p-status"]:checked').value,
+      image: imageUrl,
+      purchaseTime: new Date().toISOString()
+    };
+
+    await addDoc(productsRef, newProduct);
+
+    alert("Produk berhasil ditambahkan!");
+    window.location.href = "index.html";
+
+  } catch (err) {
+    alert("Error: " + err.message);
+    btn.disabled = false;
+    btn.innerText = "Simpan ke Katalog";
+  }
 });
 lucide.createIcons();
 </script>
