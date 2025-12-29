@@ -20,9 +20,11 @@
         <!-- NAVIGATION BAR (Fixed) -->
         <nav class="p-4 flex justify-between items-center sticky top-0 bg-slate-950/90 backdrop-blur-md z-40 border-b border-slate-900">
             <div class="flex items-center gap-3">
-                <button id="btn-admin" onclick="showPage('admin-page')" class="p-2 bg-emerald-500/10 text-emerald-400 rounded-xl border border-emerald-500/20 hover:bg-emerald-500 hover:text-white transition-all">
-                    <i data-lucide="plus-circle" class="w-6 h-6"></i>
-                </button>
+               <button id="btn-admin"
+  onclick="showPage('admin-page')"
+  class="hidden p-2 bg-emerald-500/10 text-emerald-400 rounded-xl border border-emerald-500/20">
+  <i data-lucide="plus-circle" class="w-6 h-6"></i>
+</button>
                 <h1 class="text-xl font-bold bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">Pasar Segar</h1>
             </div>
             <button onclick="toggleCart()" class="relative p-2 bg-slate-900 rounded-xl border border-slate-800">
@@ -56,8 +58,21 @@
             <div class="p-4">
                 <div class="flex items-center gap-2 mb-6">
                     <button onclick="showPage('home-page')" class="p-2 bg-slate-900 rounded-lg"><i data-lucide="arrow-left"></i></button>
-                    <h2 class="text-xl font-bold">Tambah Produk Baru</h2>
+                    <h2 class="text-xl font-bold">Admin</h2>
                 </div>
+<!-- PAGE: TAMBAH PRODUK (Admin) -->
+<div id="admin-page" class="page">
+  <div class="p-4">
+    <div class="flex items-center gap-2 mb-6">
+      <button onclick="showPage('home-page')" ...></button>
+      <h2 class="text-xl font-bold">Tambah Produk Baru</h2>
+    </div>
+
+    <form id="product-form" class="space-y-4 bg-slate-900 p-6 ...">
+      ...
+    </form>
+  </div>
+</div>
 
                 <form id="product-form" class="space-y-4 bg-slate-900 p-6 rounded-2xl border border-slate-800 shadow-xl">
                     <div>
@@ -156,6 +171,12 @@
 
     <!-- FIREBASE INTEGRATION -->
     <script type="module">
+import { 
+  getAuth, 
+  onAuthStateChanged, 
+  signInWithEmailAndPassword,
+  signOut
+} from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
         import { getFirestore, collection, addDoc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
@@ -170,6 +191,7 @@
 };
 
         const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
         const db = getFirestore(app);
         const productsRef = collection(db, "products");
 
@@ -177,6 +199,50 @@
         let allProducts = [];
         let cart = [];
         let currentCategory = "Semua";
+
+// =======================
+// ADMIN LOGIN & LOGOUT
+// =======================
+
+window.adminLogin = async () => {
+  const email = document.getElementById("admin-email").value;
+  const password = document.getElementById("admin-password").value;
+
+  if (!email || !password) {
+    alert("Email dan password wajib diisi");
+    return;
+  }
+
+  try {
+    await signInWithEmailAndPassword(auth, email, password);
+    alert("Login admin berhasil");
+  } catch (err) {
+    alert("Login gagal: " + err.message);
+  }
+};
+
+window.adminLogout = async () => {
+  try {
+    await signOut(auth);
+    alert("Logout berhasil");
+  } catch (err) {
+    alert("Logout gagal");
+  }
+};
+
+const ADMIN_UID = "XVmdoXxSptTlA8xHVmAIzeLgkru2"; // ⬅️ WAJIB GANTI
+
+onAuthStateChanged(auth, (user) => {
+  const adminBtn = document.getElementById("btn-admin");
+
+  if (user && user.uid === ADMIN_UID) {
+    adminBtn.classList.remove("hidden");
+    console.log("Admin login");
+  } else {
+    adminBtn.classList.add("hidden");
+    showPage('home-page');
+  }
+});
 
 // FORMAT WAKTU PEMBELIAN PRODUK
 function formatPurchaseTime(value) {
