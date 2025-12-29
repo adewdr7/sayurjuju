@@ -143,18 +143,32 @@ function loadOrders() {
           </div>
         </div>
 
-        <div class="p-4 bg-slate-900 flex gap-2">
-          ${o.status !== "SELESAI" ? `
-            <button onclick="updateStatus('${id}', '${o.status}')"
-              class="flex-1 bg-emerald-500 hover:bg-emerald-400 text-slate-950 py-3 rounded-xl text-xs font-bold transition-colors active:scale-95">
-              ${getNextActionLabel(o.status)}
-            </button>
-          ` : `
-            <div class="flex-1 text-center py-2 bg-slate-800 rounded-xl border border-slate-700">
-                <span class="text-xs text-slate-500 font-bold">✓ Pesanan Selesai</span>
-            </div>
-          `}
-        </div>
+    <div class="p-4 bg-slate-900 flex gap-2">
+  ${
+    o.status !== "SELESAI" && o.status !== "DIBATALKAN"
+      ? `
+        <button onclick="updateStatus('${id}', '${o.status}')"
+          class="flex-1 bg-emerald-500 hover:bg-emerald-400 text-slate-950 py-3 rounded-xl text-xs font-bold transition-colors active:scale-95">
+          ${getNextActionLabel(o.status)}
+        </button>
+      `
+      : o.status === "SELESAI"
+        ? `
+          <div class="flex-1 text-center py-2 bg-slate-800 rounded-xl border border-slate-700">
+            <span class="text-xs text-slate-500 font-bold">
+              ✓ Pesanan Selesai
+            </span>
+          </div>
+        `
+        : `
+          <div class="flex-1 text-center py-2 bg-rose-500/10 rounded-xl border border-rose-500/30">
+            <span class="text-xs text-rose-400 font-bold">
+              ✖ Pesanan Dibatalkan Pelanggan
+            </span>
+          </div>
+        `
+  }
+</div>
       `;
 
       ordersList.appendChild(card);
@@ -175,6 +189,7 @@ function getStatusColor(status) {
     if (status === "DIANTAR") return "text-cyan-400";
     if (status === "SELESAI") return "text-emerald-500";
     if (status === "SIAP DIAMBIL") return "text-amber-500";
+    if (status === "DIBATALKAN") return "text-rose-500";
     return "text-slate-400";
 }
 
@@ -186,6 +201,10 @@ function getNextActionLabel(current) {
 }
 
 window.updateStatus = async (id, current) => {
+if (current === "DIBATALKAN") {
+  alert("Pesanan ini sudah dibatalkan pelanggan");
+  return;
+}
   let next = "SELESAI";
   if (current === "MENUNGGU") next = "DIANTAR";
   else if (current === "DIANTAR" || current === "SIAP DIAMBIL") next = "SELESAI";
@@ -200,5 +219,6 @@ window.updateStatus = async (id, current) => {
 
 </body>
 </html>
+
 
 
