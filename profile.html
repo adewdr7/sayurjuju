@@ -60,13 +60,18 @@
 
         <!-- ================= PESANAN SAYA ================= -->
         <section id="orders-section" class="bg-slate-900 rounded-[2rem] p-5 border border-slate-800">
+ <div class="flex justify-between items-center mb-3">
             <h3 class="text-lg font-bold text-white mb-3">Pesanan Saya</h3>
-<div id="delete-controls" class="hidden flex justify-between items-center mb-3">
-    <button onclick="deleteSelectedOrders()" class="text-xs font-bold text-rose-500 bg-rose-500/10 px-4 py-2 rounded-xl border border-rose-500/20">
-        Hapus Terpilih (<span id="selected-count">0</span>)
-    </button>
-    <button onclick="toggleSelectMode()" class="text-xs text-slate-400">Batal</button>
-</div>
+ <button onclick="toggleSelectMode()" class="text-[10px] font-bold text-rose-400 bg-rose-400/10 px-3 py-1.5 rounded-lg border border-rose-400/20">
+            Kelola Hapus
+        </button>
+    </div>
+<div id="delete-controls" class="hidden flex justify-between items-center mb-3 bg-slate-800/50 p-3 rounded-2xl border border-slate-700">
+        <button onclick="deleteSelectedOrders()" class="text-xs font-bold text-rose-500 bg-rose-500/20 px-4 py-2 rounded-xl border border-rose-500/30">
+            Hapus Terpilih (<span id="selected-count">0</span>)
+        </button>
+        <button onclick="toggleSelectMode()" class="text-xs text-slate-400 font-bold">Batal</button>
+    </div>
 
             <div id="my-orders" class="space-y-3 max-h-[60vh] overflow-y-auto hide-scrollbar pr-1">
                 <p class="text-slate-500 text-sm">Memuat pesanan...</p>
@@ -159,13 +164,19 @@ window.toggleSelectMode = () => {
 
 
 window.toggleOrderSelection = (id) => {
-    if (selectedOrders.includes(id)) {
-        selectedOrders = selectedOrders.filter(item => item !== id);
+    const index = selectedOrders.indexOf(id);
+    if (index > -1) {
+        selectedOrders.splice(index, 1);
     } else {
         selectedOrders.push(id);
     }
     document.getElementById('selected-count').innerText = selectedOrders.length;
+    
+    // Opsional: Beri border merah pada kartu yang dipilih secara manual tanpa reload
+    const user = auth.currentUser;
+    if (user) loadMyOrders(user.uid); 
 };
+
 
 window.deleteSelectedOrders = async () => {
     if (!confirm(`Hapus ${selectedOrders.length} pesanan?`)) return;
