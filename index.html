@@ -284,61 +284,39 @@ function setDefaultCartBtn(btn) {
     if (cart.length === 0) { alert("Keranjang kosong"); return; }
 
     const method = document.querySelector('input[name="delivery"]:checked').value;
-    const shippingCost = getShippingCost(method);
     const subtotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
-    const total = subtotal + shippingCost;
+    const total = subtotal + getShippingCost(method);
 
     try {
-        // 1. Simpan Pesanan
         await addDoc(collection(db, "orders"), {
-  userId: user.uid,
-  items: cart.map(i => ({
-    productId: i.id,
-    name: i.name,
-    qty: i.qty,
-    price: i.price
-  })),
-
-  subtotal,
-  shippingCost,
-  total,
-  deliveryMethod: method,
-
-  status: "MENUNGGU",
-
-  createdAt: serverTimestamp(),
-
-  // 🔥 BATAS WAKTU BATAL (5 MENIT)
-  cancelableUntil: Date.now() + (5 * 60 * 1000)
-});
-
-        // 2. KURANGI STOK PRODUK (Logika Baru)
-        for (const item of cart) {
-            const productRef = doc(db, "products", item.id);
-            await updateDoc(productRef, {
-                stock: increment(-item.qty) // Mengurangi stok sejumlah qty
-            });
-        }
-
-        // 3. Update profil user
-        await updateDoc(doc(db, "users", user.uid), {
-            shoppingFrequency: increment(1),
-            lastCheckoutAt: serverTimestamp()
+            userId: user.uid,
+            userName: document.getElementById('user-name')?.innerText || user.email, // Tambahkan ini agar admin tahu siapa yang pesan
+            items: cart.map(i => ({
+                productId: i.id,
+                name: i.name,
+                qty: i.qty,
+                price: i.price
+            })),
+            total,
+            deliveryMethod: method,
+            status: "MENUNGGU",
+            createdAt: serverTimestamp(),
+            cancelableUntil: Date.now() + (5 * 60 * 1000)
         });
 
+        // HAPUS LOGIKA PENGURANGAN STOK DI SINI
         cart = [];
         updateCartUI();
         toggleCart();
-        window.location.href = (user.uid === ADMIN_UID) ? "orders.html" : "profile.html";
-
-    } catch (err) {
-        alert("Gagal checkout: " + err.message);
-    }
+        window.location.href = "profile.html";
+    } catch (err) { alert("Gagal checkout: " + err.message); }
 };
+
         lucide.createIcons();
     </script>
 </body>
 </html>
+
 
 
 
