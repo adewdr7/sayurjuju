@@ -340,44 +340,51 @@ function loadMyOrders(uid) {
 window.loadUsers = (maxSpent) => {
   const listEl = document.getElementById('users-list');
 
+  // 1. Tentukan Query
   const q = currentSort === "spent"
     ? query(collection(db, "users"), orderBy("totalSpent", "desc"))
     : query(collection(db, "users"), orderBy("debt", "desc"));
 
+  // 2. Gunakan onSnapshot (Try-Catch biasanya di dalam callback atau membungkus inisialisasi)
   onSnapshot(q, (snap) => {
-    listEl.innerHTML = "";
+    try {
+      listEl.innerHTML = "";
 
-    snap.forEach(userDoc => {
-      if (userDoc.id === ADMIN_UID) return;
+      snap.forEach(userDoc => {
+        if (userDoc.id === ADMIN_UID) return;
 
-      const u = userDoc.data();
-      const score = maxSpent > 0
-        ? Math.round((u.totalSpent || 0) / maxSpent * 100)
-        : 0;
+        const u = userDoc.data();
+        const score = maxSpent > 0
+          ? Math.round((u.totalSpent || 0) / maxSpent * 100)
+          : 0;
 
-            const card = document.createElement('div');
-            card.className = "bg-slate-900/50 p-4 rounded-2xl border border-slate-800 flex items-center gap-4";
-            card.innerHTML = `
-                <img src="${u.photo || 'https://ui-avatars.com/api/?name=' + u.email}" class="w-12 h-12 rounded-xl object-cover bg-slate-800">
-                <div class="flex-1">
-                    <h4 class="text-sm font-bold text-slate-100">${u.name || u.email.split('@')[0]}</h4>
-                    <div class="flex gap-3 mt-1">
-                        <span class="text-[10px] text-emerald-400 font-bold"><i data-lucide="star" class="w-3 h-3 inline"></i> ${score}%</span>
-                        <span class="text-[10px] text-rose-400 font-bold"><i data-lucide="banknote" class="w-3 h-3 inline"></i> Rp ${(u.debt || 0).toLocaleString()}</span>
-                    </div>
+        const card = document.createElement('div');
+        card.className = "bg-slate-900/50 p-4 rounded-2xl border border-slate-800 flex items-center gap-4";
+        card.innerHTML = `
+            <img src="${u.photo || 'https://ui-avatars.com/api/?name=' + u.email}" class="w-12 h-12 rounded-xl object-cover bg-slate-800">
+            <div class="flex-1">
+                <h4 class="text-sm font-bold text-slate-100">${u.name || (u.email ? u.email.split('@')[0] : 'User')}</h4>
+                <div class="flex gap-3 mt-1">
+                    <span class="text-[10px] text-emerald-400 font-bold"><i data-lucide="star" class="w-3 h-3 inline"></i> ${score}%</span>
+                    <span class="text-[10px] text-rose-400 font-bold"><i data-lucide="banknote" class="w-3 h-3 inline"></i> Rp ${(u.debt || 0).toLocaleString()}</span>
                 </div>
-                <button onclick="openEditModal('${userDoc.id}', ${u.totalSpent || 0}, ${u.debt || 0})" class="p-3 bg-slate-800 text-slate-400 rounded-xl">
-                    <i data-lucide="edit-3" class="w-4 h-4"></i>
-                </button>
-            `;
-            listEl.appendChild(card);
-        });
-        lucide.createIcons();
-    }, (err) => console.error("Snapshot error:", err)); // Menutup onSnapshot dengan benar
-  } catch (err) { 
-    console.error("General error:", err); 
-  }
+            </div>
+            <button onclick="openEditModal('${userDoc.id}', ${u.totalSpent || 0}, ${u.debt || 0})" class="p-3 bg-slate-800 text-slate-400 rounded-xl">
+                <i data-lucide="edit-3" class="w-4 h-4"></i>
+            </button>
+        `;
+        listEl.appendChild(card);
+      });
+
+      lucide.createIcons();
+    } catch (err) {
+      console.error("Error rendering users:", err);
+    }
+  }, (error) => {
+    console.error("Firebase Snapshot error:", error);
+  });
 };
+
 
 window.openEditModal = (uid, totalSpent, debt) => {
     targetEditUid = uid;
