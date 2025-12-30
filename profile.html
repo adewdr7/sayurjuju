@@ -174,7 +174,9 @@ function loadMyOrders(uid) {
     orderBy("createdAt", "desc")
   );
 
-  onSnapshot(q, (snap) => {
+  onSnapshot(
+  q,
+  (snap) => {
     if (snap.empty) {
       list.innerHTML = `<p class="text-slate-500 text-sm">Belum ada pesanan</p>`;
       return;
@@ -196,11 +198,13 @@ function loadMyOrders(uid) {
         <div class="bg-slate-900 p-4 rounded-2xl border border-slate-800">
           <div class="flex justify-between mb-2">
             <span class="text-xs font-bold text-emerald-400">${o.status}</span>
-            <span class="text-xs text-slate-500">Rp ${o.total.toLocaleString()}</span>
+            <span class="text-xs text-slate-500">
+              Rp ${(o.total || 0).toLocaleString()}
+            </span>
           </div>
 
           <ul class="text-xs text-slate-400 mb-3">
-            ${o.items.map(i => `<li>${i.qty}x ${i.name}</li>`).join("")}
+            ${(o.items || []).map(i => `<li>${i.qty}x ${i.name}</li>`).join("")}
           </ul>
 
           ${
@@ -210,12 +214,25 @@ function loadMyOrders(uid) {
                     Batalkan Pesanan
                 </button>`
               : `<p class="text-[10px] text-slate-500 text-center">
-                   Tidak dapat dibatalkan
+                   ${o.status === "DIBATALKAN"
+                     ? "Pesanan dibatalkan"
+                     : "Tidak dapat dibatalkan"}
                  </p>`
           }
         </div>
       `;
     });
+  },
+  (error) => {
+    console.error("❌ Gagal load orders:", error);
+    list.innerHTML = `
+      <div class="p-3 bg-rose-500/10 text-rose-400 text-xs rounded-xl">
+        Gagal memuat pesanan<br>
+        ${error.message}
+      </div>
+    `;
+  }
+);
   });
 }
 
