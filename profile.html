@@ -61,6 +61,13 @@
         <!-- ================= PESANAN SAYA ================= -->
         <section id="orders-section" class="bg-slate-900 rounded-[2rem] p-5 border border-slate-800">
             <h3 class="text-lg font-bold text-white mb-3">Pesanan Saya</h3>
+<div id="delete-controls" class="hidden flex justify-between items-center mb-3">
+    <button onclick="deleteSelectedOrders()" class="text-xs font-bold text-rose-500 bg-rose-500/10 px-4 py-2 rounded-xl border border-rose-500/20">
+        Hapus Terpilih (<span id="selected-count">0</span>)
+    </button>
+    <button onclick="toggleSelectMode()" class="text-xs text-slate-400">Batal</button>
+</div>
+
             <div id="my-orders" class="space-y-3 max-h-[60vh] overflow-y-auto hide-scrollbar pr-1">
                 <p class="text-slate-500 text-sm">Memuat pesanan...</p>
             </div>
@@ -137,6 +144,40 @@ const ADMIN_UID = "XVmdoXxSptTlA8xHVmAIzeLgkru2";
 let currentSort = "spent"; // spent | debt
 let targetEditUid = null;
 let activeTimers = {};
+
+// Tambahkan fungsi pendukung di dalam tag <script>
+let selectedOrders = [];
+
+window.toggleSelectMode = () => {
+    selectedOrders = [];
+    document.getElementById('delete-controls').classList.toggle('hidden');
+    
+    // Ambil UID user yang sedang login untuk memuat ulang list
+    const user = auth.currentUser;
+    if (user) loadMyOrders(user.uid); 
+};
+
+
+window.toggleOrderSelection = (id) => {
+    if (selectedOrders.includes(id)) {
+        selectedOrders = selectedOrders.filter(item => item !== id);
+    } else {
+        selectedOrders.push(id);
+    }
+    document.getElementById('selected-count').innerText = selectedOrders.length;
+};
+
+window.deleteSelectedOrders = async () => {
+    if (!confirm(`Hapus ${selectedOrders.length} pesanan?`)) return;
+    const { deleteDoc, doc } = await import("https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js");
+    
+    for (const id of selectedOrders) {
+        await deleteDoc(doc(db, "orders", id));
+    }
+    selectedOrders = [];
+    document.getElementById('delete-controls').classList.add('hidden');
+};
+
 
 window.toggleSort = (btn) => {
   // 1. Ganti status sort
@@ -274,7 +315,6 @@ function formatCountdown(ms) {
 function loadMyOrders(uid) {
     const list = document.getElementById("my-orders");
     
-    // Deklarasikan variabel q di sini
     const q = query(
         collection(db, "orders"), 
         where("userId", "==", uid), 
@@ -291,16 +331,33 @@ function loadMyOrders(uid) {
         }
 
         list.innerHTML = "";
+        
+        // Cek apakah panel kontrol hapus sedang terbuka
+        const isDeleteMode = !document.getElementById('delete-controls').classList.contains('hidden');
+
         snap.forEach(docSnap => {
             const o = docSnap.data();
             const id = docSnap.id;
             const now = Date.now();
             const remainingMs = o.cancelableUntil ? o.cancelableUntil - now : 0;
-            const canCancel = o.status === "MENUNGGU" && remainingMs > 0;
+            
+            // Aturan: Hanya boleh hapus jika SELESAI atau DIBATALKAN
+            const canBeDeleted = o.status === "SELESAI" || o.status === "DIBATALKAN";
+            const isSelected = selectedOrders.includes(id);
 
             const card = document.createElement("div");
-            card.className = "bg-slate-950/50 p-4 rounded-2xl border border-slate-800 mb-3";
+            // Ganti border jika dipilih
+            card.className = `bg-slate-950/50 p-4 rounded-2xl border ${isSelected ? 'border-rose-500 bg-rose-500/5' : 'border-slate-800'} mb-3 relative transition-all`;
+
             card.innerHTML = `
+                ${isDeleteMode && canBeDeleted ? `
+                    <div class="absolute top-4 right-4 z-10">
+                        <input type="checkbox" ${isSelected ? 'checked' : ''} 
+                            onchange="toggleOrderSelection('${id}')" 
+                            class="w-5 h-5 rounded-lg border-slate-700 bg-slate-800 text-rose-500 focus:ring-rose-500 transition-transform active:scale-90">
+                    </div>
+                ` : ''}
+
                 <div class="flex justify-between mb-2">
                     <span class="text-xs font-bold ${o.status === 'DIBATALKAN' ? 'text-rose-400' : 'text-emerald-400'}">${o.status}</span>
                     <span class="text-xs text-slate-500">Rp ${(o.total || 0).toLocaleString()}</span>
@@ -308,7 +365,8 @@ function loadMyOrders(uid) {
                 <ul class="text-xs text-slate-400 mb-3">
                     ${(o.items || []).map(i => `<li>${i.qty}x ${i.name}</li>`).join("")}
                 </ul>
-                ${canCancel ? `
+                
+                ${o.status === "MENUNGGU" && remainingMs > 0 ? `
                     <div class="flex items-center justify-between text-[10px] text-amber-400 mb-2">
                         <span>⏱ Bisa dibatalkan dalam <span id="timer-${id}" class="font-bold">${formatCountdown(remainingMs)}</span></span>
                     </div>
@@ -317,13 +375,14 @@ function loadMyOrders(uid) {
                     </button>
                 ` : `
                     <p class="text-[10px] text-slate-500 text-center py-2 bg-slate-900/50 rounded-lg">
-                        ${o.status === "DIBATALKAN" ? "Pesanan telah dibatalkan" : (o.status === "SELESAI" ? "Pesanan Diterima" : "Waktu pembatalan habis")}
+                        ${o.status === "DIBATALKAN" ? "Pesanan telah dibatalkan" : (o.status === "SELESAI" ? "Pesanan Diterima" : "Pesanan sedang diproses")}
                     </p>
                 `}
             `;
             list.appendChild(card);
 
-            if (canCancel) {
+            // Logika Timer tetap sama
+            if (o.status === "MENUNGGU" && remainingMs > 0) {
                 activeTimers[id] = setInterval(() => {
                     const currentNow = Date.now();
                     const newRemaining = o.cancelableUntil - currentNow;
@@ -443,6 +502,7 @@ lucide.createIcons();
     </script>
 </body>
 </html>
+
 
 
 
