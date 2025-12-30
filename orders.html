@@ -53,10 +53,21 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
 import {
-  getFirestore, collection, query, orderBy,
-  onSnapshot, doc, updateDoc, getDoc
+  getFirestore,
+  collection,
+  query,
+  orderBy,
+  onSnapshot,
+  doc,
+  updateDoc,
+  getDoc,
+  serverTimestamp
 } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
-import { increment, writeBatch } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+
+import {
+  increment,
+  writeBatch
+} from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBWkPqyh54IRccNz2YjuB1bL5r49YadAP4",
