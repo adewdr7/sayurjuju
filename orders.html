@@ -233,10 +233,29 @@ window.updateStatus = async (id, current) => {
 
             // 2. Tambah Total Pengeluaran User (untuk hitung % frekuensi nanti)
             const userRef = doc(db, "users", orderData.userId);
-            batch.update(userRef, { 
-                totalSpent: increment(orderData.total),
-                lastTransactionAt: serverTimestamp()
-            });
+           // 🔹 Update user
+batch.update(userRef, { 
+  totalSpent: increment(orderData.total),
+  orderCount: increment(1),
+  lastTransactionAt: serverTimestamp()
+});
+
+// 🔹 Update global maxTotalSpent
+const statsRef = doc(db, "stats", "global");
+const statsSnap = await getDoc(statsRef);
+
+const currentMax = statsSnap.exists()
+  ? statsSnap.data().maxTotalSpent || 0
+  : 0;
+
+const newUserTotal =
+  (userData.totalSpent || 0) + orderData.total;
+
+if (newUserTotal > currentMax) {
+  batch.set(statsRef, {
+    maxTotalSpent: newUserTotal
+  }, { merge: true });
+}
 
             // 3. Update Status Pesanan
             batch.update(orderRef, { status: "SELESAI" });
