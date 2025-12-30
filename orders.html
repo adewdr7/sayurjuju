@@ -74,11 +74,17 @@ import {
   writeBatch
 } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
-const ADMIN_UID = "XVmdoXxSptTlA8xHVmAIzeLgkru2";
+const firebaseConfig = {
+  apiKey: "AIzaSyBWkPqyh54IRccNz2YjuB1bL5r49YadAP4",
+  authDomain: "sayurjuju-bfe82.firebaseapp.com",
+  projectId: "sayurjuju-bfe82",
+};
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
+
+const ADMIN_UID = "XVmdoXxSptTlA8xHVmAIzeLgkru2";
 
 window.clearFinishedOrders = async () => {
     if (!confirm("Hapus semua pesanan dengan status 'SELESAI'? Tindakan ini tidak dapat dibatalkan.")) return;
@@ -97,12 +103,6 @@ window.clearFinishedOrders = async () => {
 window.deleteSingleOrder = async (id) => {
     if (!confirm("Hapus pesanan ini?")) return;
     await deleteDoc(doc(db, "orders", id));
-};
-
-const firebaseConfig = {
-  apiKey: "AIzaSyBWkPqyh54IRccNz2YjuB1bL5r49YadAP4",
-  authDomain: "sayurjuju-bfe82.firebaseapp.com",
-  projectId: "sayurjuju-bfe82",
 };
 
 const ordersList = document.getElementById("orders-list");
