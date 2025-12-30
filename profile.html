@@ -175,67 +175,65 @@ function loadMyOrders(uid) {
   );
 
   onSnapshot(
-  q,
-  (snap) => {
-    if (snap.empty) {
-      list.innerHTML = `<p class="text-slate-500 text-sm">Belum ada pesanan</p>`;
-      return;
-    }
+    q,
+    (snap) => {
+      if (snap.empty) {
+        list.innerHTML = `<p class="text-slate-500 text-sm">Belum ada pesanan</p>`;
+        return;
+      }
 
-    list.innerHTML = "";
+      list.innerHTML = "";
 
-    snap.forEach(docSnap => {
-      const o = docSnap.data();
-      const id = docSnap.id;
+      snap.forEach(docSnap => {
+        const o = docSnap.data();
+        const id = docSnap.id;
 
-      const now = Date.now();
-      const canCancel =
-        o.status === "MENUNGGU" &&
-        o.cancelableUntil &&
-        now <= o.cancelableUntil;
+        const now = Date.now();
+        const canCancel =
+          o.status === "MENUNGGU" &&
+          o.cancelableUntil &&
+          now <= o.cancelableUntil;
 
-      list.innerHTML += `
-        <div class="bg-slate-900 p-4 rounded-2xl border border-slate-800">
-          <div class="flex justify-between mb-2">
-            <span class="text-xs font-bold text-emerald-400">${o.status}</span>
-            <span class="text-xs text-slate-500">
-              Rp ${(o.total || 0).toLocaleString()}
-            </span>
+        list.innerHTML += `
+          <div class="bg-slate-900 p-4 rounded-2xl border border-slate-800">
+            <div class="flex justify-between mb-2">
+              <span class="text-xs font-bold text-emerald-400">${o.status}</span>
+              <span class="text-xs text-slate-500">
+                Rp ${(o.total || 0).toLocaleString()}
+              </span>
+            </div>
+
+            <ul class="text-xs text-slate-400 mb-3">
+              ${(o.items || []).map(i => `<li>${i.qty}x ${i.name}</li>`).join("")}
+            </ul>
+
+            ${
+              canCancel
+                ? `<button onclick="cancelOrder('${id}')"
+                      class="w-full py-2 bg-rose-500 text-white rounded-xl text-xs font-bold">
+                      Batalkan Pesanan
+                  </button>`
+                : `<p class="text-[10px] text-slate-500 text-center">
+                     ${o.status === "DIBATALKAN"
+                       ? "Pesanan dibatalkan"
+                       : "Tidak dapat dibatalkan"}
+                   </p>`
+            }
           </div>
-
-          <ul class="text-xs text-slate-400 mb-3">
-            ${(o.items || []).map(i => `<li>${i.qty}x ${i.name}</li>`).join("")}
-          </ul>
-
-          ${
-            canCancel
-              ? `<button onclick="cancelOrder('${id}')"
-                    class="w-full py-2 bg-rose-500 text-white rounded-xl text-xs font-bold">
-                    Batalkan Pesanan
-                </button>`
-              : `<p class="text-[10px] text-slate-500 text-center">
-                   ${o.status === "DIBATALKAN"
-                     ? "Pesanan dibatalkan"
-                     : "Tidak dapat dibatalkan"}
-                 </p>`
-          }
+        `;
+      });
+    },
+    (error) => {
+      console.error("❌ Gagal load orders:", error);
+      list.innerHTML = `
+        <div class="p-3 bg-rose-500/10 text-rose-400 text-xs rounded-xl">
+          Gagal memuat pesanan<br>
+          ${error.message}
         </div>
       `;
-    });
-  },
-  (error) => {
-    console.error("❌ Gagal load orders:", error);
-    list.innerHTML = `
-      <div class="p-3 bg-rose-500/10 text-rose-400 text-xs rounded-xl">
-        Gagal memuat pesanan<br>
-        ${error.message}
-      </div>
-    `;
-  }
-);
-  });
+    }
+  );
 }
-
         window.loadUsers = async (sortBy = 'shoppingFrequency') => {
             const listEl = document.getElementById('users-list');
             listEl.innerHTML = '<div class="text-center py-10 text-slate-600 text-xs">Mengambil data pelanggan...</div>';
