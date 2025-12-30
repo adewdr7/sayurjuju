@@ -262,6 +262,7 @@ if (canCancel) {
     clearInterval(countdownTimers[id]);
   }
 
+el.innerText = formatCountdown(remainingMs);
   countdownTimers[id] = setInterval(() => {
     const nowTick = Date.now();
     const left = o.cancelableUntil - nowTick;
