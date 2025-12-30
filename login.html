@@ -177,7 +177,7 @@
                     email: user.email,
                     address: "Alamat belum diatur",
                     photo: `https://ui-avatars.com/api/?name=${user.email}&background=random&size=128`,
-                    shoppingFrequency: 0,
+                    totalSpent: 0,
                     debt: 0,
                     role: user.uid === ADMIN_UID ? "admin" : "customer",
                     createdAt: new Date().toISOString()
@@ -190,5 +190,6 @@
     </script>
 </body>
 </html>
+
 
 
