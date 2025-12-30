@@ -326,18 +326,19 @@ window.loadUsers = (maxSpent) => {
     
     // Gunakan query untuk mengurutkan berdasarkan totalSpent secara menurun
     const q = query(collection(db, "users"), orderBy("totalSpent", "desc"));
+: query(collection(db, "users"), orderBy("debt", "desc"));
 
     // Gunakan onSnapshot agar data terupdate otomatis tanpa refresh
     onSnapshot(q, (snap) => {
         listEl.innerHTML = "";
         
         snap.forEach(userDoc => {
-            const u = userDoc.data();
-            // Lewati jika dokumen adalah milik Admin sendiri
-            if (userDoc.id === ADMIN_UID) return;
+      if (userDoc.id === ADMIN_UID) return;
 
-            // Hitung skor persentase belanja
-            const score = maxSpent > 0 ? Math.round((u.totalSpent || 0) / maxSpent * 100) : 0;
+      const u = userDoc.data();
+      const score = maxSpent > 0
+        ? Math.round((u.totalSpent || 0) / maxSpent * 100)
+        : 0;
 
             const card = document.createElement('div');
             card.className = "bg-slate-900/50 p-4 rounded-2xl border border-slate-800 flex items-center gap-4 mb-3";
