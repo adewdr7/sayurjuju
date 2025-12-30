@@ -120,48 +120,70 @@ let targetEditUid = null;
 let activeTimers = {};
 
 onAuthStateChanged(auth, async (user) => {
-    if (!user) {
-        window.location.href = "login.html";
-        return;
-    }
+  if (!user) {
+    window.location.href = "login.html";
+    return;
+  }
 
-    // 1. Ambil semua data user untuk mencari pengeluaran tertinggi (Max Spent)
+  // =============================
+  // 1. AMBIL DATA USER SENDIRI
+  // =============================
+  const userRef = doc(db, "users", user.uid);
+  const userSnap = await getDoc(userRef);
+
+  if (!userSnap.exists()) {
+    console.error("User document belum ada");
+    return;
+  }
+
+  const userData = userSnap.data();
+
+  // =============================
+  // 2. TAMPILKAN PROFIL DASAR
+  // =============================
+  document.getElementById('user-name').innerText = userData.name || "User";
+  document.getElementById('user-email').innerText = userData.email;
+  document.getElementById('user-address').innerText = userData.address || "Alamat belum diatur";
+  document.getElementById('user-photo').src =
+    userData.photo || `https://ui-avatars.com/api/?name=${userData.email}&background=random`;
+
+  document.getElementById('user-debt').innerText =
+    (userData.debt || 0).toLocaleString();
+
+  document.getElementById('user-role-badge').innerText =
+    user.uid === ADMIN_UID ? "Admin" : "Customer";
+
+  // =============================
+  // 3. LOGIKA ROLE
+  // =============================
+  if (user.uid === ADMIN_UID) {
+
+    // 🔥 ADMIN SAJA YANG BOLEH AMBIL SEMUA USERS
     const allUsersSnap = await getDocs(collection(db, "users"));
-    let maxSpent = 0;
-    let userData = null;
 
+    let maxSpent = 0;
     allUsersSnap.forEach(uDoc => {
-        const u = uDoc.data();
-        if (u.totalSpent > maxSpent) maxSpent = u.totalSpent;
-        if (uDoc.id === user.uid) userData = u;
+      maxSpent = Math.max(maxSpent, uDoc.data().totalSpent || 0);
     });
 
-    if (userData) {
-        // 2. Hitung Nilai Loyalitas (%)
-        const loyaltyScore = maxSpent > 0 ? Math.round((userData.totalSpent || 0) / maxSpent * 100) : 0;
+    document.getElementById('admin-section').classList.remove('hidden');
+    document.getElementById('orders-section').classList.add('hidden');
+    document.getElementById('user-stats').classList.add('hidden');
 
-        // 3. Isi Data ke UI
-        document.getElementById('user-name').innerText = userData.name || "User";
-        document.getElementById('user-email').innerText = userData.email;
-        document.getElementById('user-address').innerText = userData.address || "Alamat belum diatur";
-        document.getElementById('user-photo').src = userData.photo || `https://ui-avatars.com/api/?name=${userData.email}&background=random`;
-        document.getElementById('user-freq').innerText = loyaltyScore + "%";
-        document.getElementById('user-debt').innerText = (userData.debt || 0).toLocaleString();
-        document.getElementById('user-role-badge').innerText = (user.uid === ADMIN_UID) ? "Admin" : "Customer";
+    loadUsers(maxSpent);
 
-        // 4. Logika Tampilan Per Role
-        if (user.uid === ADMIN_UID) {
-            document.getElementById('admin-section').classList.remove('hidden');
-            document.getElementById('user-stats').classList.add('hidden'); // Sembunyikan stats pengeluaran untuk admin
-            document.getElementById('orders-section').classList.add('hidden'); // Sembunyikan kotak pesanan untuk admin
-            loadUsers(maxSpent);
-        } else {
-            document.getElementById('admin-section').classList.add('hidden');
-            document.getElementById('orders-section').classList.remove('hidden');
-            loadMyOrders(user.uid);
-        }
-    }
-    lucide.createIcons();
+  } else {
+
+    // 👤 PELANGGAN
+    document.getElementById('admin-section').classList.add('hidden');
+    document.getElementById('orders-section').classList.remove('hidden');
+    document.getElementById('user-stats').classList.remove('hidden');
+
+    document.getElementById('user-freq').innerText = "0%"; // default, akan naik setelah order selesai
+    loadMyOrders(user.uid);
+  }
+
+  lucide.createIcons();
 });
 
 function formatCountdown(ms) {
