@@ -248,8 +248,30 @@ const currentMax = statsSnap.exists()
   ? statsSnap.data().maxTotalSpent || 0
   : 0;
 
-const newUserTotal =
-  (userData.totalSpent || 0) + orderData.total;
+// 🔹 Ambil data user TERKINI
+const userRef = doc(db, "users", orderData.userId);
+const userSnap = await getDoc(userRef);
+
+const currentSpent = userSnap.exists()
+  ? userSnap.data().totalSpent || 0
+  : 0;
+
+const newUserTotal = currentSpent + orderData.total;
+
+// 🔹 Update user
+batch.update(userRef, { 
+  totalSpent: increment(orderData.total),
+  orderCount: increment(1),
+  lastTransactionAt: serverTimestamp()
+});
+
+// 🔹 Update global maxTotalSpent
+const statsRef = doc(db, "stats", "global");
+const statsSnap = await getDoc(statsRef);
+
+const currentMax = statsSnap.exists()
+  ? statsSnap.data().maxTotalSpent || 0
+  : 0;
 
 if (newUserTotal > currentMax) {
   batch.set(statsRef, {
