@@ -96,31 +96,36 @@
     </div>
 
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
-        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
-        import { getFirestore, doc, getDoc, getDocs, collection, updateDoc, query, orderBy, where, onSnapshot } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+        // Ganti seluruh isi tag <script type="module"> pada profile.html dengan kode ini:
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyBWkPqyh54IRccNz2YjuB1bL5r49YadAP4",
-            authDomain: "sayurjuju-bfe82.firebaseapp.com",
-            projectId: "sayurjuju-bfe82",
-            storageBucket: "sayurjuju-bfe82.firebasestorage.app",
-            messagingSenderId: "754413439458",
-            appId: "1:754413439458:web:341c9fe99fd9b1550551bb"
-        };
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
+import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
+import { getFirestore, doc, getDoc, getDocs, collection, updateDoc, query, orderBy, where, onSnapshot } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
+const firebaseConfig = {
+    apiKey: "AIzaSyBWkPqyh54IRccNz2YjuB1bL5r49YadAP4",
+    authDomain: "sayurjuju-bfe82.firebaseapp.com",
+    projectId: "sayurjuju-bfe82",
+    storageBucket: "sayurjuju-bfe82.firebasestorage.app",
+    messagingSenderId: "754413439458",
+    appId: "1:754413439458:web:341c9fe99fd9b1550551bb"
+};
 
-        const ADMIN_UID = "XVmdoXxSptTlA8xHVmAIzeLgkru2";
-        let targetEditUid = null;
-        let activeTimers = {}; // Menyimpan referensi interval agar tidak duplikat
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
 
-        onAuthStateChanged(auth, async (user) => {
-    if (!user) { window.location.href = "login.html"; return; }
+const ADMIN_UID = "XVmdoXxSptTlA8xHVmAIzeLgkru2";
+let targetEditUid = null;
+let activeTimers = {};
 
-    // Ambil semua user untuk mencari siapa yang paling banyak belanja
+onAuthStateChanged(auth, async (user) => {
+    if (!user) {
+        window.location.href = "login.html";
+        return;
+    }
+
+    // 1. Ambil semua data user untuk mencari pengeluaran tertinggi (Max Spent)
     const allUsersSnap = await getDocs(collection(db, "users"));
     let maxSpent = 0;
     let userData = null;
@@ -132,162 +137,171 @@
     });
 
     if (userData) {
-        // Hitung Persentase Loyalitas
-        // Jika maxSpent 1jt dan saya 800rb, maka (800k/1jt)*100 = 80%
+        // 2. Hitung Nilai Loyalitas (%)
         const loyaltyScore = maxSpent > 0 ? Math.round((userData.totalSpent || 0) / maxSpent * 100) : 0;
 
+        // 3. Isi Data ke UI
         document.getElementById('user-name').innerText = userData.name || "User";
         document.getElementById('user-email').innerText = userData.email;
-        document.getElementById('user-freq').innerText = loyaltyScore + "%"; // Tampilkan dalam %
+        document.getElementById('user-address').innerText = userData.address || "Alamat belum diatur";
+        document.getElementById('user-photo').src = userData.photo || `https://ui-avatars.com/api/?name=${userData.email}&background=random`;
+        document.getElementById('user-freq').innerText = loyaltyScore + "%";
         document.getElementById('user-debt').innerText = (userData.debt || 0).toLocaleString();
-        
-        // Sembunyikan/Tampilkan section sesuai role (sama seperti sebelumnya)
+        document.getElementById('user-role-badge').innerText = (user.uid === ADMIN_UID) ? "Admin" : "Customer";
+
+        // 4. Logika Tampilan Per Role
         if (user.uid === ADMIN_UID) {
             document.getElementById('admin-section').classList.remove('hidden');
-            document.getElementById('orders-section').classList.add('hidden');
-            loadUsers(maxSpent); // Kirim maxSpent ke fungsi loadUsers
+            document.getElementById('user-stats').classList.add('hidden'); // Sembunyikan stats pengeluaran untuk admin
+            document.getElementById('orders-section').classList.add('hidden'); // Sembunyikan kotak pesanan untuk admin
+            loadUsers(maxSpent);
         } else {
+            document.getElementById('admin-section').classList.add('hidden');
+            document.getElementById('orders-section').classList.remove('hidden');
             loadMyOrders(user.uid);
         }
     }
+    lucide.createIcons();
 });
 
+function formatCountdown(ms) {
+    const totalSec = Math.max(0, Math.floor(ms / 1000));
+    const min = Math.floor(totalSec / 60);
+    const sec = totalSec % 60;
+    return `${min}:${sec.toString().padStart(2, '0')}`;
+}
 
+function loadMyOrders(uid) {
+    const list = document.getElementById("my-orders");
+    const q = query(collection(db, "orders"), where("userId", "==", uid), orderBy("createdAt", "desc"));
 
-        function formatCountdown(ms) {
-            const totalSec = Math.max(0, Math.floor(ms / 1000));
-            const min = Math.floor(totalSec / 60);
-            const sec = totalSec % 60;
-            return `${min}:${sec.toString().padStart(2, '0')}`;
+    onSnapshot(q, (snap) => {
+        Object.values(activeTimers).forEach(clearInterval);
+        activeTimers = {};
+
+        if (snap.empty) {
+            list.innerHTML = `<p class="text-slate-500 text-sm">Belum ada pesanan</p>`;
+            return;
         }
 
-        function loadMyOrders(uid) {
-            const list = document.getElementById("my-orders");
-            const q = query(collection(db, "orders"), where("userId", "==", uid), orderBy("createdAt", "desc"));
+        list.innerHTML = "";
+        snap.forEach(docSnap => {
+            const o = docSnap.data();
+            const id = docSnap.id;
+            const now = Date.now();
+            const remainingMs = o.cancelableUntil ? o.cancelableUntil - now : 0;
+            const canCancel = o.status === "MENUNGGU" && remainingMs > 0;
 
-            onSnapshot(q, (snap) => {
-                // Bersihkan semua timer lama sebelum render ulang list
-                Object.values(activeTimers).forEach(clearInterval);
-                activeTimers = {};
-
-                if (snap.empty) {
-                    list.innerHTML = `<p class="text-slate-500 text-sm">Belum ada pesanan</p>`;
-                    return;
-                }
-
-                list.innerHTML = "";
-                snap.forEach(docSnap => {
-                    const o = docSnap.data();
-                    const id = docSnap.id;
-                    const now = Date.now();
-                    const remainingMs = o.cancelableUntil ? o.cancelableUntil - now : 0;
-                    const canCancel = o.status === "MENUNGGU" && remainingMs > 0;
-
-                    const card = document.createElement("div");
-                    card.className = "bg-slate-950/50 p-4 rounded-2xl border border-slate-800 mb-3";
-                    card.innerHTML = `
-                        <div class="flex justify-between mb-2">
-                            <span class="text-xs font-bold ${o.status === 'DIBATALKAN' ? 'text-rose-400' : 'text-emerald-400'}">${o.status}</span>
-                            <span class="text-xs text-slate-500">Rp ${(o.total || 0).toLocaleString()}</span>
-                        </div>
-                        <ul class="text-xs text-slate-400 mb-3">
-                            ${(o.items || []).map(i => `<li>${i.qty}x ${i.name}</li>`).join("")}
-                        </ul>
-                        ${canCancel ? `
-                            <div class="flex items-center justify-between text-[10px] text-amber-400 mb-2">
-                                <span>⏱ Bisa dibatalkan dalam <span id="timer-${id}" class="font-bold">${formatCountdown(remainingMs)}</span></span>
-                            </div>
-                            <button onclick="cancelOrder('${id}')" class="w-full py-2 bg-rose-500/10 text-rose-500 border border-rose-500/20 rounded-xl text-xs font-bold hover:bg-rose-500 hover:text-white transition-all">
-                                Batalkan Pesanan
-                            </button>
-                        ` : `
-                            <p class="text-[10px] text-slate-500 text-center py-2 bg-slate-900/50 rounded-lg">
-                                ${o.status === "DIBATALKAN" ? "Pesanan telah dibatalkan" : "Waktu pembatalan habis"}
-                            </p>
-                        `}
-                    `;
-                    list.appendChild(card);
-
-                    // Jalankan timer jika masih bisa dibatalkan
-                    if (canCancel) {
-                        activeTimers[id] = setInterval(() => {
-                            const currentNow = Date.now();
-                            const newRemaining = o.cancelableUntil - currentNow;
-                            const timerEl = document.getElementById(`timer-${id}`);
-                            
-                            if (newRemaining <= 0) {
-                                clearInterval(activeTimers[id]);
-                                if (timerEl) timerEl.innerText = "0:00";
-                                // Opsional: trigger render ulang atau biarkan Firebase onSnapshot yang menangani
-                            } else {
-                                if (timerEl) timerEl.innerText = formatCountdown(newRemaining);
-                            }
-                        }, 1000);
-                    }
-                });
-                lucide.createIcons();
-            });
-        }
-
-        window.loadUsers = async (maxSpent) => {
-    const q = query(collection(db, "users"), orderBy("totalSpent", "desc"));
-    const snap = await getDocs(q);
-    const listEl = document.getElementById('users-list');
-    listEl.innerHTML = "";
-
-    snap.forEach(uDoc => {
-        const u = uDoc.data();
-        if (uDoc.id === ADMIN_UID) return;
-        
-        const score = maxSpent > 0 ? Math.round((u.totalSpent || 0) / maxSpent * 100) : 0;
-        
-        const card = document.createElement('div');
-        card.innerHTML = `
-            <div class="flex-1">
-                <h4 class="text-sm font-bold text-slate-100">${u.name || u.email}</h4>
-                <div class="flex gap-3 mt-1">
-                    <span class="text-[10px] text-emerald-400 font-bold">Loyalitas: ${score}%</span>
-                    <span class="text-[10px] text-slate-400">Total: Rp ${(u.totalSpent || 0).toLocaleString()}</span>
+            const card = document.createElement("div");
+            card.className = "bg-slate-950/50 p-4 rounded-2xl border border-slate-800 mb-3";
+            card.innerHTML = `
+                <div class="flex justify-between mb-2">
+                    <span class="text-xs font-bold ${o.status === 'DIBATALKAN' ? 'text-rose-400' : 'text-emerald-400'}">${o.status}</span>
+                    <span class="text-xs text-slate-500">Rp ${(o.total || 0).toLocaleString()}</span>
                 </div>
-            </div>
+                <ul class="text-xs text-slate-400 mb-3">
+                    ${(o.items || []).map(i => `<li>${i.qty}x ${i.name}</li>`).join("")}
+                </ul>
+                ${canCancel ? `
+                    <div class="flex items-center justify-between text-[10px] text-amber-400 mb-2">
+                        <span>⏱ Bisa dibatalkan dalam <span id="timer-${id}" class="font-bold">${formatCountdown(remainingMs)}</span></span>
+                    </div>
+                    <button onclick="cancelOrder('${id}')" class="w-full py-2 bg-rose-500/10 text-rose-500 border border-rose-500/20 rounded-xl text-xs font-bold hover:bg-rose-500 hover:text-white transition-all">
+                        Batalkan Pesanan
+                    </button>
+                ` : `
+                    <p class="text-[10px] text-slate-500 text-center py-2 bg-slate-900/50 rounded-lg">
+                        ${o.status === "DIBATALKAN" ? "Pesanan telah dibatalkan" : (o.status === "SELESAI" ? "Pesanan Diterima" : "Waktu pembatalan habis")}
+                    </p>
+                `}
             `;
-        listEl.appendChild(card);
-    });
-};
-        window.openEditModal = (uid, freq, debt) => {
-            targetEditUid = uid;
-            document.getElementById('edit-freq').value = freq;
-            document.getElementById('edit-debt').value = debt;
-            document.getElementById('edit-modal').classList.remove('hidden');
-        };
+            list.appendChild(card);
 
-        window.closeEditModal = () => document.getElementById('edit-modal').classList.add('hidden');
-
-        window.saveUserEdit = async () => {
-            const freq = parseInt(document.getElementById('edit-freq').value);
-            const debt = parseInt(document.getElementById('edit-debt').value);
-            try {
-                await updateDoc(doc(db, "users", targetEditUid), { shoppingFrequency: freq, debt: debt });
-                closeEditModal();
-                loadUsers();
-            } catch (err) { alert(err.message); }
-        };
-
-        window.cancelOrder = async (orderId) => {
-            if (!confirm("Batalkan pesanan ini?")) return;
-            try {
-                await updateDoc(doc(db, "orders", orderId), { status: "DIBATALKAN" });
-            } catch (err) { alert("Gagal: " + err.message); }
-        };
-
-        window.handleLogout = async () => {
-            if (confirm("Keluar dari akun?")) {
-                await signOut(auth);
-                window.location.href = "login.html";
+            if (canCancel) {
+                activeTimers[id] = setInterval(() => {
+                    const currentNow = Date.now();
+                    const newRemaining = o.cancelableUntil - currentNow;
+                    const timerEl = document.getElementById(`timer-${id}`);
+                    if (newRemaining <= 0) {
+                        clearInterval(activeTimers[id]);
+                        if (timerEl) timerEl.innerText = "0:00";
+                    } else {
+                        if (timerEl) timerEl.innerText = formatCountdown(newRemaining);
+                    }
+                }, 1000);
             }
-        };
-
+        });
         lucide.createIcons();
+    });
+}
+
+window.loadUsers = async (maxSpent) => {
+    const listEl = document.getElementById('users-list');
+    try {
+        const q = query(collection(db, "users"), orderBy("totalSpent", "desc"));
+        const snap = await getDocs(q);
+        listEl.innerHTML = "";
+        snap.forEach(userDoc => {
+            const u = userDoc.data();
+            if (userDoc.id === ADMIN_UID) return;
+
+            const score = maxSpent > 0 ? Math.round((u.totalSpent || 0) / maxSpent * 100) : 0;
+
+            const card = document.createElement('div');
+            card.className = "bg-slate-900/50 p-4 rounded-2xl border border-slate-800 flex items-center gap-4";
+            card.innerHTML = `
+                <img src="${u.photo || 'https://ui-avatars.com/api/?name=' + u.email}" class="w-12 h-12 rounded-xl object-cover bg-slate-800">
+                <div class="flex-1">
+                    <h4 class="text-sm font-bold text-slate-100">${u.name || u.email.split('@')[0]}</h4>
+                    <div class="flex gap-3 mt-1">
+                        <span class="text-[10px] text-emerald-400 font-bold"><i data-lucide="star" class="w-3 h-3 inline"></i> ${score}%</span>
+                        <span class="text-[10px] text-rose-400 font-bold"><i data-lucide="banknote" class="w-3 h-3 inline"></i> Rp ${(u.debt || 0).toLocaleString()}</span>
+                    </div>
+                </div>
+                <button onclick="openEditModal('${userDoc.id}', ${u.totalSpent || 0}, ${u.debt || 0})" class="p-3 bg-slate-800 text-slate-400 rounded-xl">
+                    <i data-lucide="edit-3" class="w-4 h-4"></i>
+                </button>
+            `;
+            listEl.appendChild(card);
+        });
+        lucide.createIcons();
+    } catch (err) { console.error(err); }
+};
+
+window.openEditModal = (uid, totalSpent, debt) => {
+    targetEditUid = uid;
+    document.getElementById('edit-freq').value = totalSpent; // Input ini sekarang mewakili total pengeluaran
+    document.getElementById('edit-debt').value = debt;
+    document.getElementById('edit-modal').classList.remove('hidden');
+};
+
+window.closeEditModal = () => document.getElementById('edit-modal').classList.add('hidden');
+
+window.saveUserEdit = async () => {
+    const totalSpent = parseInt(document.getElementById('edit-freq').value);
+    const debt = parseInt(document.getElementById('edit-debt').value);
+    try {
+        await updateDoc(doc(db, "users", targetEditUid), { totalSpent: totalSpent, debt: debt });
+        closeEditModal();
+        location.reload(); // Reload untuk memperbarui perhitungan maxSpent
+    } catch (err) { alert(err.message); }
+};
+
+window.cancelOrder = async (orderId) => {
+    if (!confirm("Batalkan pesanan ini?")) return;
+    try {
+        await updateDoc(doc(db, "orders", orderId), { status: "DIBATALKAN" });
+    } catch (err) { alert("Gagal: " + err.message); }
+};
+
+window.handleLogout = async () => {
+    if (confirm("Keluar dari akun?")) {
+        await signOut(auth);
+        window.location.href = "login.html";
+    }
+};
+
+lucide.createIcons();
     </script>
 </body>
 </html>
