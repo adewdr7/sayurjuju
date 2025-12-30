@@ -29,15 +29,18 @@
 
     <main class="p-4 max-w-2xl mx-auto space-y-6">
         <!-- Kartu Profil User -->
-        <div class="bg-slate-900 rounded-[2rem] p-6 border border-slate-800 relative overflow-hidden">
-            <div class="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 blur-3xl rounded-full -mr-16 -mt-16"></div>
+        
+</div>
 <!-- Pesanan Saya -->
-<div class="space-y-4">
-  <h3 class="text-lg font-bold text-white">Pesanan Saya</h3>
-  <div id="my-orders" class="space-y-3">
+<section class="bg-slate-900 rounded-[2rem] p-5 border border-slate-800">
+  <h3 class="text-lg font-bold text-white mb-3">Pesanan Saya</h3>
+
+  <!-- area scroll mandiri -->
+  <div id="my-orders"
+       class="space-y-3 max-h-[60vh] overflow-y-auto hide-scrollbar pr-1">
     <p class="text-slate-500 text-sm">Memuat pesanan...</p>
   </div>
-</div>
+</section>
             
             <div class="flex items-center gap-5 relative z-10">
                 <div class="relative">
@@ -57,7 +60,7 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-2 gap-3 mt-8">
+            <div id="user-stats" class="grid grid-cols-2 gap-3 mt-8">
                 <div class="bg-slate-950/50 p-4 rounded-2xl border border-slate-800/50">
                     <p class="text-[10px] text-slate-500 uppercase font-bold mb-1">Frekuensi Belanja</p>
                     <p class="text-lg font-bold text-emerald-400"><span id="user-freq">0</span>x</p>
@@ -158,9 +161,10 @@ import {
                 
                 // Jika Admin, tampilkan bagian kelola pelanggan
                 if (user.uid === ADMIN_UID) {
-                    document.getElementById('admin-section').classList.remove('hidden');
-                    loadUsers();
-                }
+  document.getElementById('admin-section').classList.remove('hidden');
+  document.getElementById('user-stats').classList.add('hidden');
+  loadUsers();
+}
 loadMyOrders(user.uid);
             }
         });
