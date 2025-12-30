@@ -27,78 +27,82 @@
         </button>
     </nav>
 
-    <main class="p-4 max-w-2xl mx-auto space-y-6">
-       <!-- Kartu Profil User -->
-<div class="bg-slate-900 rounded-[2rem] p-6 border border-slate-800 relative overflow-hidden">
-<!-- Pesanan Saya -->
-<section class="bg-slate-900 rounded-[2rem] p-5 border border-slate-800">
-  <h3 class="text-lg font-bold text-white mb-3">Pesanan Saya</h3>
-<div id="my-orders"
-       class="space-y-3 max-h-[60vh] overflow-y-auto hide-scrollbar pr-1">
-    <p class="text-slate-500 text-sm">Memuat pesanan...</p>
-  </div>
-</section>
+<main class="p-4 max-w-2xl mx-auto space-y-6">
 
-  <!-- area scroll mandiri -->
-  <div id="my-orders"
-       class="space-y-3 max-h-[60vh] overflow-y-auto hide-scrollbar pr-1">
-    <p class="text-slate-500 text-sm">Memuat pesanan...</p>
-  </div>
-</section>
-            
-            <div class="flex items-center gap-5 relative z-10">
-                <div class="relative">
-                    <img id="user-photo" src="https://ui-avatars.com/api/?name=User&background=random" class="w-20 h-20 rounded-2xl object-cover border-2 border-slate-800 shadow-2xl">
-                    <div id="user-role-badge" class="absolute -bottom-2 -right-2 bg-emerald-500 text-slate-950 text-[10px] font-bold px-2 py-1 rounded-lg uppercase border-2 border-slate-900">
-                        Customer
-                    </div>
-                </div>
-                <div>
-                    <h2 id="user-name" class="text-xl font-bold text-white mb-1">Memuat...</h2>
-                    <p id="user-email" class="text-xs text-slate-500 mb-2">email@contoh.com</p>
-                    <div class="flex gap-2">
-                        <span class="text-[10px] bg-slate-800 text-slate-400 px-2 py-1 rounded-md border border-slate-700">
-                            <i data-lucide="map-pin" class="w-3 h-3 inline mr-1"></i> <span id="user-address">Alamat belum diatur</span>
-                        </span>
-                    </div>
-                </div>
-            </div>
+  <!-- ================= PROFIL USER ================= -->
+  <div class="bg-slate-900 rounded-[2rem] p-6 border border-slate-800 relative overflow-hidden">
 
-            <div id="user-stats" class="grid grid-cols-2 gap-3 mt-8">
-                <div class="bg-slate-950/50 p-4 rounded-2xl border border-slate-800/50">
-                    <p class="text-[10px] text-slate-500 uppercase font-bold mb-1">Frekuensi Belanja</p>
-                    <p class="text-lg font-bold text-emerald-400"><span id="user-freq">0</span>x</p>
-                </div>
-</div> <!-- user-stats -->
-                <div class="bg-slate-950/50 p-4 rounded-2xl border border-slate-800/50">
-                    <p class="text-[10px] text-slate-500 uppercase font-bold mb-1">Catatan Hutang</p>
-                    <p class="text-lg font-bold text-rose-400">Rp <span id="user-debt">0</span></p>
-                </div>
-            </div>
+    <div class="flex items-center gap-5 relative z-10">
+      <div class="relative">
+        <img id="user-photo"
+             src="https://ui-avatars.com/api/?name=User&background=random"
+             class="w-20 h-20 rounded-2xl object-cover border-2 border-slate-800 shadow-2xl">
+
+        <div id="user-role-badge"
+             class="absolute -bottom-2 -right-2 bg-emerald-500 text-slate-950 text-[10px] font-bold px-2 py-1 rounded-lg uppercase border-2 border-slate-900">
+          Customer
         </div>
+      </div>
 
-        <!-- Bagian Khusus Admin: Daftar Pelanggan -->
-        <div id="admin-section" class="hidden space-y-4">
-            <div class="flex justify-between items-end">
-                <div>
-                    <h3 class="text-lg font-bold text-white">Daftar Pelanggan</h3>
-                    <p class="text-xs text-slate-500">Kelola data frekuensi & hutang pelanggan</p>
-                </div>
-                <div class="flex gap-2">
-                    <button onclick="loadUsers('shoppingFrequency')" class="p-2 bg-slate-900 text-slate-400 rounded-lg border border-slate-800">
-                        <i data-lucide="sort-asc" class="w-4 h-4"></i>
-                    </button>
-                    <button onclick="confirmReset()" class="p-2 bg-rose-500/10 text-rose-500 rounded-lg border border-rose-500/20">
-                        <i data-lucide="refresh-cw" class="w-4 h-4"></i>
-                    </button>
-                </div>
-            </div>
+      <div>
+        <h2 id="user-name" class="text-xl font-bold text-white mb-1">Memuat...</h2>
+        <p id="user-email" class="text-xs text-slate-500 mb-2">email@contoh.com</p>
 
-            <div id="users-list" class="space-y-3">
-                <!-- User list items -->
-            </div>
-        </div>
-    </main>
+        <span class="text-[10px] bg-slate-800 text-slate-400 px-2 py-1 rounded-md border border-slate-700">
+          <i data-lucide="map-pin" class="w-3 h-3 inline mr-1"></i>
+          <span id="user-address">Alamat belum diatur</span>
+        </span>
+      </div>
+    </div>
+
+    <!-- Statistik user (disembunyikan untuk admin lewat JS) -->
+    <div id="user-stats" class="grid grid-cols-2 gap-3 mt-8">
+      <div class="bg-slate-950/50 p-4 rounded-2xl border border-slate-800/50">
+        <p class="text-[10px] text-slate-500 uppercase font-bold mb-1">Frekuensi Belanja</p>
+        <p class="text-lg font-bold text-emerald-400">
+          <span id="user-freq">0</span>x
+        </p>
+      </div>
+
+      <div class="bg-slate-950/50 p-4 rounded-2xl border border-slate-800/50">
+        <p class="text-[10px] text-slate-500 uppercase font-bold mb-1">Catatan Hutang</p>
+        <p class="text-lg font-bold text-rose-400">
+          Rp <span id="user-debt">0</span>
+        </p>
+      </div>
+    </div>
+  </div>
+  <!-- =============== END PROFIL USER =============== -->
+
+
+  <!-- ================= PESANAN SAYA ================= -->
+  <section class="bg-slate-900 rounded-[2rem] p-5 border border-slate-800">
+    <h3 class="text-lg font-bold text-white mb-3">Pesanan Saya</h3>
+
+    <!-- scroll mandiri -->
+    <div id="my-orders"
+         class="space-y-3 max-h-[60vh] overflow-y-auto hide-scrollbar pr-1">
+      <p class="text-slate-500 text-sm">Memuat pesanan...</p>
+    </div>
+  </section>
+  <!-- =============== END PESANAN ================= -->
+
+
+  <!-- ================= ADMIN SECTION ================= -->
+  <div id="admin-section" class="hidden space-y-4">
+    <div class="flex justify-between items-end">
+      <div>
+        <h3 class="text-lg font-bold text-white">Daftar Pelanggan</h3>
+        <p class="text-xs text-slate-500">
+          Kelola data frekuensi & hutang pelanggan
+        </p>
+      </div>
+    </div>
+
+    <div id="users-list" class="space-y-3"></div>
+  </div>
+
+</main>
 
     <!-- Modal Edit Admin -->
     <div id="edit-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
