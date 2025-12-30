@@ -223,67 +223,52 @@ window.updateStatus = async (id, current) => {
         const orderData = orderSnap.data();
 
         if (next === "SELESAI") {
-            const batch = writeBatch(db);
+  const batch = writeBatch(db);
 
-            // 1. Kurangi Stok Produk
-            for (const item of orderData.items) {
-                const pRef = doc(db, "products", item.productId);
-                batch.update(pRef, { stock: increment(-item.qty) });
-            }
+  // 1️⃣ Kurangi stok produk
+  for (const item of orderData.items) {
+    const pRef = doc(db, "products", item.productId);
+    batch.update(pRef, { stock: increment(-item.qty) });
+  }
 
-            // 2. Tambah Total Pengeluaran User (untuk hitung % frekuensi nanti)
-            const userRef = doc(db, "users", orderData.userId);
-           // 🔹 Update user
-batch.update(userRef, { 
-  totalSpent: increment(orderData.total),
-  orderCount: increment(1),
-  lastTransactionAt: serverTimestamp()
-});
+  // 2️⃣ Ambil user SEKALI SAJA
+  const userRef = doc(db, "users", orderData.userId);
+  const userSnap = await getDoc(userRef);
 
-// 🔹 Update global maxTotalSpent
-const statsRef = doc(db, "stats", "global");
-const statsSnap = await getDoc(statsRef);
+  const currentSpent = userSnap.exists()
+    ? userSnap.data().totalSpent || 0
+    : 0;
 
-const currentMax = statsSnap.exists()
-  ? statsSnap.data().maxTotalSpent || 0
-  : 0;
+  const newUserTotal = currentSpent + orderData.total;
 
-// 🔹 Ambil data user TERKINI
-const userRef = doc(db, "users", orderData.userId);
-const userSnap = await getDoc(userRef);
+  // 3️⃣ Update user
+  batch.update(userRef, {
+    totalSpent: increment(orderData.total),
+    orderCount: increment(1),
+    lastTransactionAt: serverTimestamp()
+  });
 
-const currentSpent = userSnap.exists()
-  ? userSnap.data().totalSpent || 0
-  : 0;
+  // 4️⃣ Update global maxTotalSpent
+  const statsRef = doc(db, "stats", "global");
+  const statsSnap = await getDoc(statsRef);
 
-const newUserTotal = currentSpent + orderData.total;
+  const currentMax = statsSnap.exists()
+    ? statsSnap.data().maxTotalSpent || 0
+    : 0;
 
-// 🔹 Update user
-batch.update(userRef, { 
-  totalSpent: increment(orderData.total),
-  orderCount: increment(1),
-  lastTransactionAt: serverTimestamp()
-});
-
-// 🔹 Update global maxTotalSpent
-const statsRef = doc(db, "stats", "global");
-const statsSnap = await getDoc(statsRef);
-
-const currentMax = statsSnap.exists()
-  ? statsSnap.data().maxTotalSpent || 0
-  : 0;
-
-if (newUserTotal > currentMax) {
-  batch.set(statsRef, {
-    maxTotalSpent: newUserTotal
-  }, { merge: true });
-}
-
+  if (newUserTotal > currentMax) {
+    batch.set(
+      statsRef,
+      { maxTotalSpent: newUserTotal },
+      { merge: true }
+    );
+  }
             // 3. Update Status Pesanan
             batch.update(orderRef, { status: "SELESAI" });
 
             await batch.commit();
-            alert("Pesanan Selesai! Stok berkurang & poin pelanggan bertambah.");
+            alert("Pesanan Selesai! Stok berkurang & frekuensi pelanggan diperbarui.");
+return ;
         } else {
             await updateDoc(orderRef, { status: next });
         }
