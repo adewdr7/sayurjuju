@@ -125,26 +125,38 @@
 
     const userRef = doc(db, "users", user.uid);
     const snap = await getDoc(userRef);
+    
     if (snap.exists()) {
         const data = snap.data();
-        // ... (kode pengisian data profil tetap sama) ...
+        
+        // --- BAGIAN PENGISIAN DATA PROFIL (WAJIB ADA) ---
+        document.getElementById('user-name').innerText = data.name || "Admin";
+        document.getElementById('user-email').innerText = data.email;
+        document.getElementById('user-address').innerText = data.address || "Alamat belum diatur";
+        document.getElementById('user-photo').src = data.photo || `https://ui-avatars.com/api/?name=${data.email}&background=random`;
+        document.getElementById('user-freq').innerText = data.shoppingFrequency || 0;
+        document.getElementById('user-debt').innerText = (data.debt || 0).toLocaleString();
+        document.getElementById('user-role-badge').innerText = data.role || "User";
+        // ------------------------------------------------
         
         if (user.uid === ADMIN_UID) {
             // Logika khusus Admin
             document.getElementById('admin-section').classList.remove('hidden');
-            document.getElementById('user-stats').classList.add('hidden');
+            document.getElementById('user-stats').classList.add('hidden'); // Sembunyikan statistik hutang admin
+            document.getElementById('orders-section').classList.add('hidden'); // Sembunyikan kotak pesanan
             
-            // TAMBAHKAN BARIS INI: menyembunyikan kotak pesanan
-            document.getElementById('orders-section').classList.add('hidden'); 
-            
-            loadUsers();
+            loadUsers(); // Memuat daftar pelanggan
         } else {
-            // Logika khusus Customer (Pastikan kotak pesanan tampil)
+            // Logika khusus Customer
+            document.getElementById('admin-section').classList.add('hidden');
+            document.getElementById('user-stats').classList.remove('hidden');
             document.getElementById('orders-section').classList.remove('hidden');
-            loadMyOrders(user.uid);
+            
+            loadMyOrders(user.uid); // Memuat pesanan milik customer
         }
     }
 });
+
 
         function formatCountdown(ms) {
             const totalSec = Math.max(0, Math.floor(ms / 1000));
@@ -288,6 +300,7 @@
     </script>
 </body>
 </html>
+
 
 
 
