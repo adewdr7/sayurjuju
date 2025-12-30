@@ -178,9 +178,16 @@ loadMyOrders(user.uid);
             }
         });
 
+const countdownTimers = {};
+function formatCountdown(ms) {
+  const totalSec = Math.max(0, Math.floor(ms / 1000));
+  const min = Math.floor(totalSec / 60);
+  const sec = totalSec % 60;
+  return `${min}:${sec.toString().padStart(2, '0')}`;
+}
+
 function loadMyOrders(uid) {
   const list = document.getElementById("my-orders");
-
   const q = query(
     collection(db, "orders"),
     where("userId", "==", uid),
@@ -202,10 +209,11 @@ function loadMyOrders(uid) {
         const id = docSnap.id;
 
         const now = Date.now();
-        const canCancel =
-          o.status === "MENUNGGU" &&
-          o.cancelableUntil &&
-          now <= o.cancelableUntil;
+const remainingMs = o.cancelableUntil ? o.cancelableUntil - now : 0;
+
+const canCancel =
+  o.status === "MENUNGGU" &&
+  remainingMs > 0;
 
         list.innerHTML += `
           <div class="bg-slate-900 p-4 rounded-2xl border border-slate-800">
@@ -221,19 +229,53 @@ function loadMyOrders(uid) {
             </ul>
 
             ${
-              canCancel
-                ? `<button onclick="cancelOrder('${id}')"
-                      class="w-full py-2 bg-rose-500 text-white rounded-xl text-xs font-bold">
-                      Batalkan Pesanan
-                  </button>`
-                : `<p class="text-[10px] text-slate-500 text-center">
-                     ${o.status === "DIBATALKAN"
-                       ? "Pesanan dibatalkan"
-                       : "Tidak dapat dibatalkan"}
-                   </p>`
-            }
+  canCancel
+    ? `
+      <div class="flex items-center justify-between text-[10px] text-amber-400 mb-2">
+        <span>
+          ⏱ Bisa dibatalkan dalam
+          <span id="cd-${id}" class="font-bold"></span>
+        </span>
+      </div>
+
+      <button onclick="cancelOrder('${id}')"
+        class="w-full py-2 bg-rose-500 text-white rounded-xl text-xs font-bold">
+        Batalkan Pesanan
+      </button>
+    `
+    : `
+      <p class="text-[10px] text-slate-500 text-center">
+        ${o.status === "DIBATALKAN"
+          ? "Pesanan dibatalkan"
+          : "Waktu pembatalan habis"}
+      </p>
+    `
+}
           </div>
         `;
+if (canCancel) {
+  const el = document.getElementById(`cd-${id}`);
+  if (!el) return;
+
+  // 🧹 bersihkan timer lama
+  if (countdownTimers[id]) {
+    clearInterval(countdownTimers[id]);
+  }
+
+  countdownTimers[id] = setInterval(() => {
+    const nowTick = Date.now();
+    const left = o.cancelableUntil - nowTick;
+
+    if (left <= 0) {
+      clearInterval(countdownTimers[id]);
+      delete countdownTimers[id];
+      el.innerText = "0:00";
+      return;
+    }
+
+    el.innerText = formatCountdown(left);
+  }, 1000);
+}
       });
     },
     (error) => {
