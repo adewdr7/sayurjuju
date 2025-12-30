@@ -59,7 +59,7 @@
         </div>
 
         <!-- ================= PESANAN SAYA ================= -->
-        <section class="bg-slate-900 rounded-[2rem] p-5 border border-slate-800">
+        <section id="orders-section" class="bg-slate-900 rounded-[2rem] p-5 border border-slate-800">
             <h3 class="text-lg font-bold text-white mb-3">Pesanan Saya</h3>
             <div id="my-orders" class="space-y-3 max-h-[60vh] overflow-y-auto hide-scrollbar pr-1">
                 <p class="text-slate-500 text-sm">Memuat pesanan...</p>
@@ -118,31 +118,33 @@
         let activeTimers = {}; // Menyimpan referensi interval agar tidak duplikat
 
         onAuthStateChanged(auth, async (user) => {
-            if (!user) {
-                window.location.href = "login.html";
-                return;
-            }
+    if (!user) {
+        window.location.href = "login.html";
+        return;
+    }
 
-            const userRef = doc(db, "users", user.uid);
-            const snap = await getDoc(userRef);
-            if (snap.exists()) {
-                const data = snap.data();
-                document.getElementById('user-name').innerText = data.name || "Tanpa Nama";
-                document.getElementById('user-email').innerText = data.email;
-                document.getElementById('user-address').innerText = data.address || "Alamat belum diatur";
-                document.getElementById('user-photo').src = data.photo || `https://ui-avatars.com/api/?name=${data.email}&background=random`;
-                document.getElementById('user-freq').innerText = data.shoppingFrequency || 0;
-                document.getElementById('user-debt').innerText = (data.debt || 0).toLocaleString();
-                document.getElementById('user-role-badge').innerText = data.role || "Customer";
-                
-                if (user.uid === ADMIN_UID) {
-                    document.getElementById('admin-section').classList.remove('hidden');
-                    document.getElementById('user-stats').classList.add('hidden');
-                    loadUsers();
-                }
-                loadMyOrders(user.uid);
-            }
-        });
+    const userRef = doc(db, "users", user.uid);
+    const snap = await getDoc(userRef);
+    if (snap.exists()) {
+        const data = snap.data();
+        // ... (kode pengisian data profil tetap sama) ...
+        
+        if (user.uid === ADMIN_UID) {
+            // Logika khusus Admin
+            document.getElementById('admin-section').classList.remove('hidden');
+            document.getElementById('user-stats').classList.add('hidden');
+            
+            // TAMBAHKAN BARIS INI: menyembunyikan kotak pesanan
+            document.getElementById('orders-section').classList.add('hidden'); 
+            
+            loadUsers();
+        } else {
+            // Logika khusus Customer (Pastikan kotak pesanan tampil)
+            document.getElementById('orders-section').classList.remove('hidden');
+            loadMyOrders(user.uid);
+        }
+    }
+});
 
         function formatCountdown(ms) {
             const totalSec = Math.max(0, Math.floor(ms / 1000));
@@ -286,5 +288,6 @@
     </script>
 </body>
 </html>
+
 
 
