@@ -260,50 +260,13 @@ function formatCountdown(ms) {
 
 function loadMyOrders(uid) {
     const list = document.getElementById("my-orders");
-    window.loadUsers = async (maxSpent) => {
-  const listEl = document.getElementById('users-list');
-
-  const field = currentSort === "spent" ? "totalSpent" : "debt";
-
-  const q = query(
-    collection(db, "users"),
-    orderBy(field, "desc")
-  );
-
-  const snap = await getDocs(q);
-  listEl.innerHTML = "";
-
-  snap.forEach(userDoc => {
-    if (userDoc.id === ADMIN_UID) return;
-
-    const u = userDoc.data();
-    const score = maxSpent > 0
-      ? Math.round((u.totalSpent || 0) / maxSpent * 100)
-      : 0;
-
-    const card = document.createElement('div');
-    card.className = "bg-slate-900/50 p-4 rounded-2xl border border-slate-800 flex items-center gap-4";
-
-    card.innerHTML = `
-      <img src="${u.photo || 'https://ui-avatars.com/api/?name=' + u.email}"
-        class="w-12 h-12 rounded-xl object-cover bg-slate-800">
-      <div class="flex-1">
-        <h4 class="text-sm font-bold">${u.name || u.email}</h4>
-        <div class="flex gap-3 mt-1">
-          <span class="text-[10px] text-emerald-400 font-bold">
-            ⭐ ${score}%
-          </span>
-          <span class="text-[10px] text-rose-400 font-bold">
-            💰 Rp ${(u.debt || 0).toLocaleString()}
-          </span>
-        </div>
-      </div>
-    `;
-    listEl.appendChild(card);
-  });
-
-  lucide.createIcons();
-};
+    
+    // Deklarasikan variabel q di sini
+    const q = query(
+        collection(db, "orders"), 
+        where("userId", "==", uid), 
+        orderBy("createdAt", "desc")
+    );
 
     onSnapshot(q, (snap) => {
         Object.values(activeTimers).forEach(clearInterval);
@@ -435,6 +398,7 @@ lucide.createIcons();
     </script>
 </body>
 </html>
+
 
 
 
