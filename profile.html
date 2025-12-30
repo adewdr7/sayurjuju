@@ -71,10 +71,11 @@
             <h3 class="text-lg font-bold text-white">Daftar Pelanggan</h3>
             <div class="flex gap-3 mb-4">
   <button
-    onclick="toggleSort()"
+    onclick="toggleSort(this)"
     class="flex-1 py-3 bg-slate-800 rounded-xl text-xs font-bold">
     🔁 Urutkan (Belanja)
-  </button>
+</button>
+
 
   <button
     onclick="resetAllFrequency()"
@@ -134,16 +135,15 @@ let currentSort = "spent"; // spent | debt
 let targetEditUid = null;
 let activeTimers = {};
 
-window.toggleSort = () => {
+window.toggleSort = (btn) => {
   currentSort = currentSort === "spent" ? "debt" : "spent";
 
-  const label = currentSort === "spent"
-    ? "🔁 Urutkan (Belanja)"
-    : "🔁 Urutkan (Hutang)";
+  btn.innerText =
+    currentSort === "spent"
+      ? "🔁 Urutkan (Belanja)"
+      : "🔁 Urutkan (Hutang)";
 
-  event.target.innerText = label;
-
-  location.reload();
+  loadUsers(window.__maxSpent);
 };
 
 window.resetAllFrequency = async () => {
@@ -211,32 +211,42 @@ onAuthStateChanged(auth, async (user) => {
   // 3. LOGIKA ROLE
   // =============================
   if (user.uid === ADMIN_UID) {
-    // Ambil nilai maxSpent sekali saja untuk referensi persentase awal
+
+    // 🔥 ADMIN SAJA YANG BOLEH AMBIL SEMUA USERS
     const allUsersSnap = await getDocs(collection(db, "users"));
+
     let maxSpent = 0;
     allUsersSnap.forEach(uDoc => {
-        maxSpent = Math.max(maxSpent, uDoc.data().totalSpent || 0);
+      maxSpent = Math.max(maxSpent, uDoc.data().totalSpent || 0);
     });
 
-    document.getElementById('admin-section').classList.remove('hidden');
-document.getElementById('orders-section').classList.add('hidden');
-document.getElementById('user-stats').classList.add('hidden');
+window.__maxSpent = maxSpent; 
 
-loadUsers(maxSpent);
+    document.getElementById('admin-section').classList.remove('hidden');
+    document.getElementById('orders-section').classList.add('hidden');
+    document.getElementById('user-stats').classList.add('hidden');
+
+    loadUsers(maxSpent);
 
   } else {
+
     // 👤 PELANGGAN
     document.getElementById('admin-section').classList.add('hidden');
     document.getElementById('orders-section').classList.remove('hidden');
     document.getElementById('user-stats').classList.remove('hidden');
 
     const statsSnap = await getDoc(doc(db, "stats", "global"));
-    const maxSpent = statsSnap.exists() ? statsSnap.data().maxTotalSpent || 0 : 0;
+const maxSpent = statsSnap.exists()
+  ? statsSnap.data().maxTotalSpent || 0
+  : 0;
 
-    const mySpent = userData.totalSpent || 0;
-    const percent = maxSpent > 0 ? Math.round((mySpent / maxSpent) * 100) : 0;
+const mySpent = userData.totalSpent || 0;
+const percent =
+  maxSpent > 0
+    ? Math.round((mySpent / maxSpent) * 100)
+    : 0;
 
-    document.getElementById("user-freq").innerText = percent + "%";
+document.getElementById("user-freq").innerText = percent + "%";
     loadMyOrders(user.uid);
   }
 
@@ -320,19 +330,17 @@ function loadMyOrders(uid) {
     });
 }
 
-// Fungsi Load Users secara Real-Time
 window.loadUsers = (maxSpent) => {
-    const listEl = document.getElementById('users-list');
-    
-    // Gunakan query untuk mengurutkan berdasarkan totalSpent secara menurun
-    const q = query(collection(db, "users"), orderBy("totalSpent", "desc"));
-: query(collection(db, "users"), orderBy("debt", "desc"));
+  const listEl = document.getElementById('users-list');
 
-    // Gunakan onSnapshot agar data terupdate otomatis tanpa refresh
-    onSnapshot(q, (snap) => {
-        listEl.innerHTML = "";
-        
-        snap.forEach(userDoc => {
+  const q = currentSort === "spent"
+    ? query(collection(db, "users"), orderBy("totalSpent", "desc"))
+    : query(collection(db, "users"), orderBy("debt", "desc"));
+
+  onSnapshot(q, (snap) => {
+    listEl.innerHTML = "";
+
+    snap.forEach(userDoc => {
       if (userDoc.id === ADMIN_UID) return;
 
       const u = userDoc.data();
@@ -341,7 +349,7 @@ window.loadUsers = (maxSpent) => {
         : 0;
 
             const card = document.createElement('div');
-            card.className = "bg-slate-900/50 p-4 rounded-2xl border border-slate-800 flex items-center gap-4 mb-3";
+            card.className = "bg-slate-900/50 p-4 rounded-2xl border border-slate-800 flex items-center gap-4";
             card.innerHTML = `
                 <img src="${u.photo || 'https://ui-avatars.com/api/?name=' + u.email}" class="w-12 h-12 rounded-xl object-cover bg-slate-800">
                 <div class="flex-1">
@@ -357,14 +365,9 @@ window.loadUsers = (maxSpent) => {
             `;
             listEl.appendChild(card);
         });
-        
-        // Refresh icon Lucide agar muncul di elemen baru
         lucide.createIcons();
-    }, (error) => {
-        console.error("Gagal memuat data user:", error);
-    });
+    } catch (err) { console.error(err); }
 };
-
 
 window.openEditModal = (uid, totalSpent, debt) => {
     targetEditUid = uid;
