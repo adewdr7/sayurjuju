@@ -94,6 +94,10 @@
             <h3 class="text-xl font-bold text-white mb-6">Edit Data Pelanggan</h3>
             <div class="space-y-5">
                 <div>
+ <label class="block text-[10px] text-slate-500 uppercase font-bold mb-2">Nama Pelanggan</label>
+                <input type="text" id="edit-name" class="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 text-sm outline-none focus:ring-2 focus:ring-blue-500 text-white">
+            </div>
+<div>
                     <label class="block text-[10px] text-slate-500 uppercase font-bold mb-2">Frekuensi Belanja</label>
                     <input type="number" id="edit-freq" class="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 text-sm outline-none focus:ring-2 focus:ring-emerald-500">
                 </div>
@@ -369,9 +373,9 @@ window.loadUsers = (maxSpent) => {
                     <span class="text-[10px] text-rose-400 font-bold"><i data-lucide="banknote" class="w-3 h-3 inline"></i> Rp ${(u.debt || 0).toLocaleString()}</span>
                 </div>
             </div>
-            <button onclick="openEditModal('${userDoc.id}', ${u.totalSpent || 0}, ${u.debt || 0})" class="p-3 bg-slate-800 text-slate-400 rounded-xl">
-                <i data-lucide="edit-3" class="w-4 h-4"></i>
-            </button>
+            <button onclick="openEditModal('${userDoc.id}', '${u.name || ''}', ${u.totalSpent || 0}, ${u.debt || 0})" class="p-3 bg-slate-800 text-slate-400 rounded-xl">
+    <i data-lucide="edit-3" class="w-4 h-4"></i>
+</button>
         `;
         listEl.appendChild(card);
       });
@@ -386,9 +390,11 @@ window.loadUsers = (maxSpent) => {
 };
 
 
-window.openEditModal = (uid, totalSpent, debt) => {
+window.openEditModal = (uid, name, totalSpent, debt) => {
     targetEditUid = uid;
-    document.getElementById('edit-freq').value = totalSpent; // Input ini sekarang mewakili total pengeluaran
+    // Set nilai input nama
+    document.getElementById('edit-name').value = name || ""; 
+    document.getElementById('edit-freq').value = totalSpent;
     document.getElementById('edit-debt').value = debt;
     document.getElementById('edit-modal').classList.remove('hidden');
 };
@@ -396,13 +402,27 @@ window.openEditModal = (uid, totalSpent, debt) => {
 window.closeEditModal = () => document.getElementById('edit-modal').classList.add('hidden');
 
 window.saveUserEdit = async () => {
-    const totalSpent = parseInt(document.getElementById('edit-freq').value);
-    const debt = parseInt(document.getElementById('edit-debt').value);
+    const newName = document.getElementById('edit-name').value; // Ambil nilai nama baru
+    const totalSpent = parseInt(document.getElementById('edit-freq').value) || 0;
+    const debt = parseInt(document.getElementById('edit-debt').value) || 0;
+
+    if (!newName.trim()) {
+        alert("Nama tidak boleh kosong!");
+        return;
+    }
+
     try {
-        await updateDoc(doc(db, "users", targetEditUid), { totalSpent: totalSpent, debt: debt });
+        await updateDoc(doc(db, "users", targetEditUid), { 
+            name: newName, // Simpan perubahan nama ke Firestore
+            totalSpent: totalSpent, 
+            debt: debt 
+        });
         closeEditModal();
-        location.reload(); // Reload untuk memperbarui perhitungan maxSpent
-    } catch (err) { alert(err.message); }
+        // Anda bisa mematikan location.reload() jika onSnapshot sudah berjalan lancar
+        location.reload(); 
+    } catch (err) { 
+        alert("Gagal menyimpan: " + err.message); 
+    }
 };
 
 window.cancelOrder = async (orderId) => {
@@ -423,6 +443,7 @@ lucide.createIcons();
     </script>
 </body>
 </html>
+
 
 
 
