@@ -56,6 +56,7 @@ import {
   getFirestore, collection, query, orderBy,
   onSnapshot, doc, updateDoc
 } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+import { increment, writeBatch } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBWkPqyh54IRccNz2YjuB1bL5r49YadAP4",
@@ -201,24 +202,45 @@ function getNextActionLabel(current) {
 }
 
 window.updateStatus = async (id, current) => {
-if (current === "DIBATALKAN") {
-  alert("Pesanan ini sudah dibatalkan pelanggan");
-  return;
-}
-  let next = "SELESAI";
-  if (current === "MENUNGGU") next = "DIANTAR";
-  else if (current === "DIANTAR" || current === "SIAP DIAMBIL") next = "SELESAI";
+    let next = "SELESAI";
+    if (current === "MENUNGGU") next = "DIANTAR";
+    else if (current === "DIANTAR" || current === "SIAP DIAMBIL") next = "SELESAI";
 
-  try {
-    await updateDoc(doc(db, "orders", id), { status: next });
-  } catch (err) {
-    console.error("Gagal update status:", err);
-  }
+    try {
+        const orderRef = doc(db, "orders", id);
+        const orderSnap = await getDoc(orderRef);
+        const orderData = orderSnap.data();
+
+        if (next === "SELESAI") {
+            const batch = writeBatch(db);
+
+            // 1. Kurangi Stok Produk
+            for (const item of orderData.items) {
+                const pRef = doc(db, "products", item.productId);
+                batch.update(pRef, { stock: increment(-item.qty) });
+            }
+
+            // 2. Tambah Total Pengeluaran User (untuk hitung % frekuensi nanti)
+            const userRef = doc(db, "users", orderData.userId);
+            batch.update(userRef, { 
+                totalSpent: increment(orderData.total),
+                lastTransactionAt: serverTimestamp()
+            });
+
+            // 3. Update Status Pesanan
+            batch.update(orderRef, { status: "SELESAI" });
+
+            await batch.commit();
+            alert("Pesanan Selesai! Stok berkurang & poin pelanggan bertambah.");
+        } else {
+            await updateDoc(orderRef, { status: next });
+        }
+    } catch (err) { alert("Error: " + err.message); }
 };
 </script>
-
 </body>
 </html>
+
 
 
 
