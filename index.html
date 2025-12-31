@@ -3,127 +3,134 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pasar Segar - Smart Inventory</title>
+    <title>Pasar Segar - Katalog & Manajemen</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap');
         body { font-family: 'Plus Jakarta Sans', sans-serif; }
         .hide-scrollbar::-webkit-scrollbar { display: none; }
-        .glass-card { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(12px); border: 1px border rgba(30, 41, 59, 1); }
+        .glass-card { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(12px); border: 1px solid rgba(30, 41, 59, 1); }
     </style>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen">
+<body class="bg-slate-950 text-slate-100">
 
     <div id="app" class="max-w-md mx-auto min-h-screen flex flex-col">
-        <!-- HEADER -->
+        <!-- NAVIGATION -->
         <nav class="p-4 flex justify-between items-center sticky top-0 bg-slate-950/90 backdrop-blur-md z-40 border-b border-slate-900">
-            <div class="flex items-center gap-3">
+            <div class="flex items-center gap-2">
+                <!-- Tombol Kelola (Admin Only) -->
                 <a href="kelola.html" id="btn-manage" class="hidden p-2 bg-slate-900 text-slate-400 rounded-xl border border-slate-800">
-                    <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
+                    <i data-lucide="menu" class="w-6 h-6"></i>
                 </a>
                 <div>
-                    <h1 class="text-lg font-bold bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">Pasar Segar</h1>
-                    <p class="text-[10px] text-slate-500 font-medium uppercase tracking-widest" id="user-role">Katalog Pelanggan</p>
+                    <h1 class="text-xl font-bold bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent leading-none">Pasar Segar</h1>
+                    <p id="user-role-text" class="text-[9px] text-slate-500 uppercase tracking-tighter mt-1 font-bold">Katalog Pelanggan</p>
                 </div>
             </div>
             
             <div class="flex items-center gap-2">
-                <button id="btn-cart-toggle" onclick="window.handleActionClick()" class="relative p-2.5 bg-slate-900 rounded-xl border border-slate-800 hover:border-emerald-500/50 transition-all">
-                    <i data-lucide="shopping-basket" class="w-6 h-6 text-emerald-400"></i>
-                    <span id="cart-badge" class="hidden absolute -top-1 -right-1 bg-rose-500 text-[10px] font-bold min-w-[20px] h-5 px-1 rounded-full flex items-center justify-center border-2 border-slate-950">0</span>
+                <!-- Tombol Tambah Produk (Admin Only) -->
+                <a href="tambahproduk.html" id="btn-admin-add" class="hidden p-2 bg-emerald-500/10 text-emerald-400 rounded-xl border border-emerald-500/20">
+                    <i data-lucide="plus-circle" class="w-6 h-6"></i>
+                </a>
+                <!-- Tombol Login/Profil -->
+                <a href="login.html" id="btn-login-nav" class="p-2 bg-slate-900 rounded-xl border border-slate-800 text-slate-400">
+                    <i data-lucide="user" class="w-6 h-6"></i>
+                </a>
+                <!-- Tombol Keranjang/Pesanan -->
+                <button id="btn-cart-toggle" onclick="window.handleActionClick()" class="relative p-2 bg-slate-900 rounded-xl border border-slate-800">
+                    <i data-lucide="shopping-cart" class="w-6 h-6 text-emerald-400"></i>
+                    <span id="cart-badge" class="hidden absolute -top-1 -right-1 bg-rose-500 text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center border-2 border-slate-950">0</span>
                 </button>
             </div>
         </nav>
 
-        <!-- SEARCH & FILTER -->
-        <div class="p-4 space-y-4">
+        <!-- SEARCH -->
+        <div class="px-4 mt-6">
             <div class="relative">
                 <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 w-4 h-4"></i>
-                <input type="text" id="search-input" oninput="window.renderProducts()" placeholder="Cari bumbu atau sayur segar..." 
-                    class="w-full bg-slate-900/50 border border-slate-800 rounded-2xl py-3.5 pl-10 pr-4 text-sm focus:ring-2 focus:ring-emerald-500/50 outline-none transition-all">
+                <input type="text" id="search-input" oninput="window.renderProducts()" placeholder="Cari bumbu, sayur, ikan..." 
+                    class="w-full bg-slate-900 border border-slate-800 rounded-2xl py-4 pl-10 pr-4 text-sm focus:ring-2 focus:ring-emerald-500 outline-none transition-all">
             </div>
-            <div class="flex gap-2 overflow-x-auto hide-scrollbar pb-2" id="category-list"></div>
         </div>
+
+        <!-- CATEGORIES -->
+        <div class="flex gap-2 overflow-x-auto px-4 mt-6 mb-4 hide-scrollbar" id="category-list"></div>
 
         <!-- PRODUCT GRID -->
         <div class="px-4 grid grid-cols-2 gap-4 pb-32" id="product-grid">
-            <!-- Shimmer effect loader could go here -->
-            <div class="col-span-2 text-center py-20 text-slate-600 italic">Memuat stok terbaru...</div>
+            <div class="col-span-2 text-center py-20 text-slate-600 italic">Menyinkronkan stok...</div>
         </div>
 
-        <!-- SMART CART MODAL -->
+        <!-- KERANJANG MODAL -->
         <div id="cart-modal" class="fixed inset-0 z-50 hidden">
-            <div class="absolute inset-0 bg-slate-950/60 backdrop-blur-sm" onclick="window.toggleCart()"></div>
+            <div class="absolute inset-0 bg-black/80 backdrop-blur-sm" onclick="window.toggleCart()"></div>
             <div class="absolute inset-y-0 right-0 w-full max-w-sm bg-slate-900 flex flex-col border-l border-slate-800">
                 <div class="p-5 border-b border-slate-800 flex justify-between items-center">
-                    <div class="flex items-center gap-2">
-                        <i data-lucide="shopping-cart" class="text-emerald-400"></i>
-                        <h2 class="font-bold text-lg">Keranjang Belanja</h2>
-                    </div>
-                    <button onclick="window.toggleCart()" class="p-2 hover:bg-slate-800 rounded-full transition-colors"><i data-lucide="x"></i></button>
+                    <h2 class="font-bold flex items-center gap-2"><i data-lucide="shopping-cart" class="text-emerald-400"></i> Keranjang</h2>
+                    <button onclick="window.toggleCart()" class="p-2 bg-slate-800 rounded-full"><i data-lucide="x" class="w-5 h-5"></i></button>
                 </div>
-                
-                <div id="cart-items" class="flex-1 overflow-y-auto p-5 space-y-4">
-                    <!-- Cart items here -->
-                </div>
-
-                <div class="p-5 border-t border-slate-800 bg-slate-900/80">
-                    <div class="flex justify-between items-center mb-6">
-                        <span class="text-slate-400 font-medium">Estimasi Total</span>
-                        <span id="cart-total" class="font-bold text-emerald-400 text-2xl">Rp 0</span>
+                <div id="cart-items" class="flex-1 overflow-y-auto p-5 space-y-4"></div>
+                <div class="p-5 border-t border-slate-800 space-y-4">
+                    <div class="space-y-2">
+                        <label class="flex items-center gap-3 p-4 bg-slate-800/50 rounded-2xl cursor-pointer border border-transparent has-[:checked]:border-emerald-500">
+                            <input type="radio" name="delivery" value="ANTAR" checked class="accent-emerald-500">
+                            <span class="text-xs font-semibold">🛵 Antarkan ke Rumah (Ongkir)</span>
+                        </label>
+                        <label class="flex items-center gap-3 p-4 bg-slate-800/50 rounded-2xl cursor-pointer border border-transparent has-[:checked]:border-emerald-500">
+                            <input type="radio" name="delivery" value="AMBIL" class="accent-emerald-500">
+                            <span class="text-xs font-semibold">🚶 Ambil pas Mama keliling</span>
+                        </label>
                     </div>
-                    <button onclick="window.checkout()" class="w-full bg-emerald-500 hover:bg-emerald-400 py-4 rounded-2xl font-bold text-slate-950 transition-all transform active:scale-95 shadow-lg shadow-emerald-500/20">
-                        Selesaikan Pesanan
+                    <div class="flex justify-between items-center py-2">
+                        <span class="text-slate-400 font-medium">Total Tagihan:</span>
+                        <span id="cart-total" class="font-black text-emerald-400 text-2xl">Rp 0</span>
+                    </div>
+                    <button onclick="window.checkout()" class="w-full bg-emerald-500 py-4 rounded-2xl font-bold text-slate-950 shadow-lg shadow-emerald-500/20 active:scale-95 transition-all">
+                        Pesan Sekarang
                     </button>
                 </div>
             </div>
         </div>
 
-        <!-- ADMIN STOCK REPLENISH MODAL -->
+        <!-- ADMIN STOCK UPDATE MODAL (SMART AUTO-SHIFT) -->
         <div id="admin-modal" class="fixed inset-0 z-50 hidden">
-            <div class="absolute inset-0 bg-slate-950/80 backdrop-blur-md" onclick="window.closeAdminModal()"></div>
-            <div class="absolute bottom-0 left-0 right-0 bg-slate-900 rounded-t-[2.5rem] p-8 border-t border-slate-800 animate-slide-up shadow-2xl">
-                <div class="w-12 h-1.5 bg-slate-800 rounded-full mx-auto mb-6"></div>
+            <div class="absolute inset-0 bg-black/80 backdrop-blur-md" onclick="window.closeAdminModal()"></div>
+            <div class="absolute bottom-0 left-0 right-0 bg-slate-900 rounded-t-[2.5rem] p-8 border-t border-slate-800">
                 <div class="flex justify-between items-start mb-6">
                     <div>
-                        <h3 id="modal-product-name" class="font-bold text-xl text-white">Produk</h3>
-                        <p class="text-xs text-slate-500">Input stok baru akan menggeser stok lama</p>
+                        <h3 id="modal-product-name" class="font-bold text-xl text-white">Update Produk</h3>
+                        <p class="text-xs text-slate-500 mt-1">Sisa stok segar saat ini akan digeser ke stok lama</p>
                     </div>
-                    <button onclick="window.closeAdminModal()" class="p-2 bg-slate-800 rounded-full"><i data-lucide="x" class="w-5 h-5 text-slate-400"></i></button>
+                    <button onclick="window.closeAdminModal()" class="p-2 bg-slate-800 rounded-full"><i data-lucide="x" class="w-5 h-5"></i></button>
                 </div>
 
-                <div class="grid grid-cols-1 gap-6">
-                    <!-- New Stock Input -->
-                    <div class="bg-slate-800/50 p-6 rounded-3xl border border-slate-700/50 text-center">
-                        <p class="text-xs font-bold text-emerald-400 uppercase tracking-widest mb-4">Tambah Stok Baru (Segar)</p>
+                <div class="space-y-6">
+                    <div class="bg-slate-800/50 p-6 rounded-3xl text-center border border-slate-700">
+                        <p class="text-[10px] font-bold text-emerald-400 uppercase tracking-widest mb-4">Input Stok Baru Masuk</p>
                         <div class="flex items-center justify-center gap-8">
-                            <button onclick="window.changeTempQty(-1)" class="w-12 h-12 bg-slate-700 hover:bg-slate-600 rounded-2xl flex items-center justify-center transition-colors">
-                                <i data-lucide="minus" class="w-6 h-6"></i>
-                            </button>
-                            <span id="temp-qty" class="text-4xl font-black w-20 tracking-tighter">0</span>
-                            <button onclick="window.changeTempQty(1)" class="w-12 h-12 bg-emerald-500 text-slate-950 rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-500/20">
-                                <i data-lucide="plus" class="w-6 h-6"></i>
-                            </button>
+                            <button onclick="window.changeTempQty(-1)" class="w-12 h-12 bg-slate-700 rounded-2xl flex items-center justify-center font-bold text-xl">-</button>
+                            <span id="temp-qty" class="text-4xl font-black w-20">0</span>
+                            <button onclick="window.changeTempQty(1)" class="w-12 h-12 bg-emerald-500 text-slate-950 rounded-2xl flex items-center justify-center font-bold text-xl">+</button>
                         </div>
                     </div>
 
-                    <!-- Current Summary -->
                     <div class="grid grid-cols-2 gap-4">
-                        <div class="p-4 bg-slate-950/50 rounded-2xl border border-slate-800">
-                            <p class="text-[10px] text-slate-500 uppercase font-bold mb-1">Stok Saat Ini</p>
-                            <div id="current-stock-info" class="font-bold text-sm">--</div>
+                        <div class="p-4 bg-slate-950 rounded-2xl border border-slate-800">
+                            <p class="text-[9px] text-slate-500 uppercase font-bold mb-1">Stok Segar Saat Ini</p>
+                            <div id="fresh-info" class="font-bold text-emerald-400 text-sm">0</div>
                         </div>
-                        <div class="p-4 bg-slate-950/50 rounded-2xl border border-slate-800">
-                            <p class="text-[10px] text-slate-500 uppercase font-bold mb-1">Satuan</p>
-                            <div id="unit-info" class="font-bold text-sm text-emerald-400">--</div>
+                        <div class="p-4 bg-slate-950 rounded-2xl border border-slate-800">
+                            <p class="text-[9px] text-slate-500 uppercase font-bold mb-1">Stok Lama Saat Ini</p>
+                            <div id="old-info" class="font-bold text-amber-400 text-sm">0</div>
                         </div>
                     </div>
-                </div>
 
-                <button onclick="window.updateInventory()" class="w-full mt-8 bg-gradient-to-r from-emerald-500 to-cyan-500 py-4 rounded-2xl font-bold text-slate-950 shadow-xl active:scale-95 transition-all">
-                    Konfirmasi & Update Stok
-                </button>
+                    <button onclick="window.updateInventory()" class="w-full bg-cyan-500 py-5 rounded-2xl font-bold text-white shadow-xl shadow-cyan-500/20 active:scale-95 transition-all">
+                        Konfirmasi Update Stok
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -136,7 +143,7 @@
             doc, updateDoc, increment, serverTimestamp, addDoc
         } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
-        // CONFIG (Gunakan config Anda yang sudah ada)
+        // CONFIG (Tetap sama)
         const firebaseConfig = {
             apiKey: "AIzaSyBWkPqyh54IRccNz2YjuB1bL5r49YadAP4",
             authDomain: "sayurjuju-bfe82.firebaseapp.com",
@@ -158,23 +165,7 @@
         let selectedProduct = null;
         let tempQty = 0;
 
-        // --- AUTH & DYNAMIC UI ---
-        onAuthStateChanged(auth, (user) => {
-            const roleEl = document.getElementById("user-role");
-            const manageBtn = document.getElementById("btn-manage");
-            
-            if (user && user.uid === ADMIN_UID) {
-                roleEl.innerText = "Mode Manajemen (Admin)";
-                roleEl.classList.add("text-cyan-400");
-                manageBtn.classList.remove("hidden");
-            } else {
-                roleEl.innerText = "Katalog Pelanggan";
-                roleEl.classList.remove("text-cyan-400");
-                manageBtn.classList.add("hidden");
-            }
-            window.renderProducts();
-        });
-
+        // --- GLOBAL WRAPPERS ---
         window.handleActionClick = () => {
             if (auth.currentUser?.uid === ADMIN_UID) {
                 window.location.href = "orders.html";
@@ -183,7 +174,41 @@
             }
         };
 
-        // --- FETCH DATA ---
+        // --- AUTH OBSERVER ---
+        onAuthStateChanged(auth, (user) => {
+            const btnManage = document.getElementById("btn-manage");
+            const btnAdminAdd = document.getElementById("btn-admin-add");
+            const btnLoginNav = document.getElementById("btn-login-nav");
+            const cartBtnIcon = document.querySelector("#btn-cart-toggle i");
+            const roleText = document.getElementById("user-role-text");
+
+            if (user) {
+                if (user.uid === ADMIN_UID) {
+                    btnManage.classList.remove("hidden");
+                    btnAdminAdd.classList.remove("hidden");
+                    roleText.innerText = "Panel Kontrol Admin";
+                    roleText.classList.replace("text-slate-500", "text-cyan-400");
+                    if(cartBtnIcon) cartBtnIcon.setAttribute("data-lucide", "clipboard-list");
+                } else {
+                    btnManage.classList.add("hidden");
+                    btnAdminAdd.classList.add("hidden");
+                    roleText.innerText = "Katalog Pelanggan";
+                    roleText.classList.replace("text-cyan-400", "text-slate-500");
+                    if(cartBtnIcon) cartBtnIcon.setAttribute("data-lucide", "shopping-cart");
+                }
+                btnLoginNav.innerHTML = `<i data-lucide="user-check" class="w-6 h-6 text-emerald-400"></i>`;
+                btnLoginNav.href = "profile.html";
+            } else {
+                btnManage.classList.add("hidden");
+                btnAdminAdd.classList.add("hidden");
+                btnLoginNav.innerHTML = `<i data-lucide="user" class="w-6 h-6"></i>`;
+                btnLoginNav.href = "login.html";
+            }
+            lucide.createIcons();
+            window.renderProducts();
+        });
+
+        // --- DATA REALTIME ---
         onSnapshot(query(productsRef, orderBy("name", "asc")), (snapshot) => {
             allProducts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             window.renderCategories();
@@ -191,11 +216,11 @@
         });
 
         window.renderCategories = () => {
-            const categories = ["Semua", "Sayur Mentah", "Buah", "Bumbu Dapur", "Ikan", "Daging", "Pangan", "Lainnya"];
+            const categories = ["Semua", "Sayur Mentah", "Buah", "Bumbu Dapur", "Ikan", "Daging", "Makanan", "Pangan", "Lainnya"];
             const list = document.getElementById('category-list');
             list.innerHTML = categories.map(cat => `
                 <button onclick="window.setCategory('${cat}')" 
-                    class="px-5 py-2.5 rounded-2xl whitespace-nowrap text-xs font-bold transition-all border ${currentCategory === cat ? 'bg-emerald-500 border-emerald-500 text-slate-950 shadow-lg shadow-emerald-500/20' : 'bg-slate-900 border-slate-800 text-slate-500 hover:border-slate-700'}">
+                    class="px-5 py-2.5 rounded-2xl whitespace-nowrap text-xs font-bold transition-all ${currentCategory === cat ? 'bg-emerald-500 text-slate-950 border-emerald-500 shadow-lg shadow-emerald-500/20' : 'bg-slate-900 text-slate-500 border-slate-800'}">
                     ${cat}
                 </button>
             `).join('');
@@ -207,7 +232,6 @@
             window.renderProducts();
         };
 
-        // --- CORE LOGIC: RENDER & STOCK CALCULATION ---
         window.renderProducts = () => {
             const searchTerm = document.getElementById('search-input').value.toLowerCase();
             const grid = document.getElementById('product-grid');
@@ -218,120 +242,119 @@
                 p.name.toLowerCase().includes(searchTerm)
             );
 
-            grid.innerHTML = filtered.map(p => {
-                // Logic Visual Stok: Jika ada freshCount, maka label Segar muncul
-                const isFresh = (p.freshCount || 0) > 0;
-                
-                return `
-                <div class="glass-card rounded-[2rem] overflow-hidden border border-slate-900 flex flex-col group transition-all hover:border-slate-700">
+            if (filtered.length === 0) {
+                grid.innerHTML = '<div class="col-span-2 text-center py-20 text-slate-600">Produk tidak ditemukan</div>';
+                return;
+            }
+
+            grid.innerHTML = filtered.map(p => `
+                <div class="glass-card rounded-[2.5rem] overflow-hidden flex flex-col group">
                     <div onclick="${isAdmin ? `window.openAdminModal('${p.id}')` : ''}" class="relative h-40 bg-slate-900 cursor-pointer overflow-hidden">
-                        <img src="${p.image}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
-                        <div class="absolute top-3 left-3 flex flex-col gap-1">
-                            ${isFresh ? '<span class="px-2 py-1 bg-emerald-500 text-slate-950 text-[8px] font-black uppercase rounded-lg shadow-lg">Segar</span>' : ''}
-                            ${(p.oldCount || 0) > 0 ? '<span class="px-2 py-1 bg-amber-500 text-slate-950 text-[8px] font-black uppercase rounded-lg shadow-lg">Cuci Gudang</span>' : ''}
+                        <img src="${p.image}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
+                        <div class="absolute top-3 right-3 flex flex-col gap-1 items-end">
+                            ${(p.freshCount || 0) > 0 ? `<span class="px-2 py-0.5 bg-emerald-500 text-slate-950 text-[8px] font-black rounded-lg">SEGAR</span>` : ''}
+                            ${(p.oldCount || 0) > 0 ? `<span class="px-2 py-0.5 bg-amber-500 text-slate-950 text-[8px] font-black rounded-lg">CUCI GUDANG</span>` : ''}
                         </div>
-                        ${isAdmin ? '<div class="absolute inset-0 bg-cyan-500/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-[10px] font-bold text-cyan-400 uppercase">Edit Stok</div>' : ''}
                     </div>
                     <div class="p-4 flex-1 flex flex-col">
-                        <h3 class="font-bold text-sm text-slate-100 mb-1 leading-tight">${p.name}</h3>
-                        <p class="text-[10px] text-slate-500 font-medium mb-3">Tersedia: <span class="text-slate-300">${p.stock} ${p.unit}</span></p>
-                        
-                        <div class="mt-auto flex justify-between items-center gap-2">
-                            <div class="flex flex-col">
-                                <span class="text-emerald-400 font-black text-sm">Rp ${Number(p.price).toLocaleString()}</span>
-                            </div>
+                        <h3 class="font-bold text-sm truncate text-slate-100">${p.name}</h3>
+                        <p class="text-[10px] text-slate-500 font-medium mb-3">Stok: ${p.stock} ${p.unit}</p>
+                        <div class="mt-auto flex justify-between items-center">
+                            <span class="text-emerald-400 font-black text-sm">Rp ${Number(p.price).toLocaleString()}</span>
                             <button onclick="window.addToCart('${p.id}')" class="bg-slate-800 hover:bg-emerald-500 hover:text-slate-950 p-2.5 rounded-xl transition-all active:scale-90">
-                                <i data-lucide="plus" class="w-4 h-4"></i>
+                                <i data-lucide="${isAdmin ? 'package-plus' : 'plus'}" class="w-4 h-4"></i>
                             </button>
                         </div>
                     </div>
                 </div>
-            `}).join('');
+            `).join('');
             lucide.createIcons();
         };
 
-        // --- CART SYSTEM ---
+        // --- KERANJANG & CHECKOUT ---
         window.addToCart = (id) => {
             const product = allProducts.find(p => p.id === id);
-            if (product.stock <= 0) {
-                alert("Waduh, stok lagi habis nih. Besok cek lagi ya!");
-                return;
-            }
-
-            const existing = cart.find(item => item.id === id);
+            if (product.stock <= 0) { alert("Habis, Mama lagi belanja lagi!"); return; }
+            const existing = cart.find(i => i.id === id);
             if (existing) {
-                if (existing.qty >= product.stock) {
-                    alert("Maaf, Mama cuma punya segitu stoknya.");
-                    return;
-                }
+                if (existing.qty >= product.stock) { alert("Stok gak cukup!"); return; }
                 existing.qty++;
             } else {
                 cart.push({ ...product, qty: 1 });
             }
             window.updateCartUI();
-            if (document.getElementById('cart-modal').classList.contains('hidden')) {
-                window.toggleCart();
-            }
+            if (document.getElementById('cart-modal').classList.contains('hidden')) window.toggleCart();
         };
 
         window.updateCartUI = () => {
             const badge = document.getElementById('cart-badge');
+            const list = document.getElementById('cart-items');
             const totalEl = document.getElementById('cart-total');
-            const itemsEl = document.getElementById('cart-items');
             
-            const count = cart.reduce((sum, item) => sum + item.qty, 0);
+            const count = cart.reduce((s, i) => s + i.qty, 0);
             badge.innerText = count;
             badge.classList.toggle('hidden', count === 0);
 
-            if (cart.length === 0) {
-                itemsEl.innerHTML = `<div class="flex flex-col items-center justify-center h-full text-slate-600 gap-4 opacity-50">
-                    <i data-lucide="shopping-basket" class="w-12 h-12"></i>
-                    <p class="text-sm font-medium">Keranjang masih kosong</p>
-                </div>`;
-            } else {
-                itemsEl.innerHTML = cart.map(item => `
-                    <div class="flex gap-4 bg-slate-800/30 p-4 rounded-3xl border border-slate-800/50">
-                        <img src="${item.image}" class="w-16 h-16 rounded-2xl object-cover">
-                        <div class="flex-1">
-                            <h4 class="text-xs font-bold text-slate-100">${item.name}</h4>
-                            <p class="text-[10px] text-emerald-400 font-bold mt-1">Rp ${Number(item.price).toLocaleString()}</p>
-                            <div class="flex items-center gap-3 mt-2">
-                                <button onclick="window.updateQty('${item.id}', -1)" class="w-6 h-6 rounded-lg bg-slate-800 flex items-center justify-center text-xs">-</button>
-                                <span class="text-xs font-bold">${item.qty}</span>
-                                <button onclick="window.updateQty('${item.id}', 1)" class="w-6 h-6 rounded-lg bg-slate-800 flex items-center justify-center text-xs">+</button>
-                            </div>
+            list.innerHTML = cart.map(item => `
+                <div class="flex gap-4 bg-slate-800/50 p-4 rounded-3xl border border-slate-800/50">
+                    <img src="${item.image}" class="w-14 h-14 rounded-2xl object-cover">
+                    <div class="flex-1">
+                        <h4 class="text-xs font-bold">${item.name}</h4>
+                        <p class="text-[10px] text-emerald-400 font-bold">@ Rp ${Number(item.price).toLocaleString()}</p>
+                        <div class="flex items-center gap-3 mt-2">
+                            <button onclick="window.adjustCartQty('${item.id}', -1)" class="w-7 h-7 bg-slate-800 rounded-lg text-xs">-</button>
+                            <span class="text-xs font-bold">${item.qty}</span>
+                            <button onclick="window.adjustCartQty('${item.id}', 1)" class="w-7 h-7 bg-slate-800 rounded-lg text-xs">+</button>
                         </div>
-                        <button onclick="window.removeFromCart('${item.id}')" class="text-slate-600 hover:text-rose-500"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                     </div>
-                `).join('');
-            }
+                    <button onclick="window.removeFromCart('${item.id}')" class="text-rose-500 self-start"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                </div>
+            `).join('');
 
-            const total = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+            const total = cart.reduce((s, i) => s + (i.price * i.qty), 0);
             totalEl.innerText = `Rp ${total.toLocaleString()}`;
             lucide.createIcons();
         };
 
-        window.updateQty = (id, delta) => {
+        window.adjustCartQty = (id, delta) => {
             const item = cart.find(i => i.id === id);
-            const product = allProducts.find(p => p.id === id);
+            const p = allProducts.find(prod => prod.id === id);
             if (item) {
-                const newQty = item.qty + delta;
-                if (newQty > 0 && newQty <= product.stock) {
-                    item.qty = newQty;
-                } else if (newQty <= 0) {
-                    window.removeFromCart(id);
-                    return;
-                }
+                if (item.qty + delta > p.stock) return;
+                item.qty += delta;
+                if (item.qty <= 0) cart = cart.filter(i => i.id !== id);
                 window.updateCartUI();
             }
         };
 
-        window.removeFromCart = (id) => {
-            cart = cart.filter(i => i.id !== id);
-            window.updateCartUI();
-        };
-
+        window.removeFromCart = (id) => { cart = cart.filter(i => i.id !== id); window.updateCartUI(); };
         window.toggleCart = () => document.getElementById('cart-modal').classList.toggle('hidden');
+
+        window.checkout = async () => {
+            const user = auth.currentUser;
+            if (!user) { alert("Login dulu ya Ma/Kak!"); return; }
+            if (cart.length === 0) return;
+
+            const method = document.querySelector('input[name="delivery"]:checked').value;
+            const subtotal = cart.reduce((s, i) => s + (i.price * i.qty), 0);
+            const shipping = method === "ANTAR" ? 3000 : 0;
+
+            try {
+                await addDoc(collection(db, "orders"), {
+                    userId: user.uid,
+                    userName: user.displayName || user.email,
+                    items: cart.map(i => ({ productId: i.id, name: i.name, qty: i.qty, price: i.price })),
+                    total: subtotal + shipping,
+                    deliveryMethod: method,
+                    status: "MENUNGGU",
+                    createdAt: serverTimestamp()
+                });
+                cart = [];
+                window.updateCartUI();
+                window.toggleCart();
+                window.location.href = "profile.html";
+            } catch (err) { alert("Gagal checkout"); }
+        };
 
         // --- ADMIN SMART UPDATE ---
         window.openAdminModal = (id) => {
@@ -339,8 +362,8 @@
             tempQty = 0;
             document.getElementById("modal-product-name").innerText = selectedProduct.name;
             document.getElementById("temp-qty").innerText = tempQty;
-            document.getElementById("current-stock-info").innerText = `${selectedProduct.stock} Unit`;
-            document.getElementById("unit-info").innerText = selectedProduct.unit;
+            document.getElementById("fresh-info").innerText = `${selectedProduct.freshCount || 0} ${selectedProduct.unit}`;
+            document.getElementById("old-info").innerText = `${selectedProduct.oldCount || 0} ${selectedProduct.unit}`;
             document.getElementById("admin-modal").classList.remove("hidden");
             lucide.createIcons();
         };
@@ -354,18 +377,18 @@
 
         window.updateInventory = async () => {
             if (!selectedProduct) return;
-
-            // STRATEGI INVENTORI BARU:
-            // Stok lama (oldCount) sekarang adalah gabungan stok lama sebelumnya + sisa stok segar yang tersisa.
-            // Stok baru (freshCount) adalah murni tempQty yang baru diinput.
             
-            const currentStockRemaining = selectedProduct.stock || 0;
-            const newFreshCount = tempQty; 
-            const newOldCount = currentStockRemaining; // Sisa barang sebelumnya dianggap stok lama
+            // Logika Smart FIFO:
+            // Stok lama baru = Stok Segar saat ini + Stok Lama saat ini (gabungan semua sisa stok lama)
+            // Stok segar baru = inputan tempQty yang baru datang
+            const currentFresh = selectedProduct.freshCount || 0;
+            const currentOld = selectedProduct.oldCount || 0;
+            
+            const newOldCount = currentFresh + currentOld; 
+            const newFreshCount = tempQty;
 
             try {
-                const ref = doc(db, "products", selectedProduct.id);
-                await updateDoc(ref, {
+                await updateDoc(doc(db, "products", selectedProduct.id), {
                     stock: increment(tempQty),
                     freshCount: newFreshCount,
                     oldCount: newOldCount,
@@ -373,36 +396,10 @@
                     lastInventoryUpdate: serverTimestamp()
                 });
                 window.closeAdminModal();
-            } catch (err) {
-                alert("Error update database: " + err.message);
-            }
+            } catch (err) { alert("Gagal update stok"); }
         };
 
-        // --- CHECKOUT ---
-        window.checkout = async () => {
-            const user = auth.currentUser;
-            if (!user) { alert("Login dulu ya Ma/Kak."); return; }
-            if (cart.length === 0) return;
-
-            try {
-                const subtotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
-                await addDoc(collection(db, "orders"), {
-                    userId: user.uid,
-                    userName: user.displayName || user.email,
-                    items: cart,
-                    total: subtotal,
-                    status: "MENUNGGU",
-                    createdAt: serverTimestamp()
-                });
-                cart = [];
-                window.updateCartUI();
-                window.toggleCart();
-                alert("Pesanan sudah dikirim ke Mama! Cek menu Profil ya.");
-            } catch (err) {
-                alert("Gagal mengirim pesanan.");
-            }
-        };
-
+        // First Load
         lucide.createIcons();
     </script>
 </body>
