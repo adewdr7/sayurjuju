@@ -23,6 +23,18 @@
                 </a>
                 <h1 class="text-xl font-bold bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">Pasar Segar</h1>
             </div>
+            <div class="flex items-center gap-2">
+                <a href="tambahproduk.html" id="btn-admin" class="hidden p-2 bg-emerald-500/10 text-emerald-400 rounded-xl border border-emerald-500/20">
+                    <i data-lucide="plus-circle" class="w-6 h-6"></i>
+                </a>
+                <a href="login.html" id="btn-login-nav" class="p-2 bg-slate-900 rounded-xl border border-slate-800 text-slate-400">
+                    <i data-lucide="user" class="w-6 h-6"></i>
+                </a>
+                <button id="btn-cart-toggle" onclick="toggleCart()" class="relative p-2 bg-slate-900 rounded-xl border border-slate-800">
+    </button>
+            </div>
+        </nav>
+
 <!-- ADMIN PRODUCT MODAL -->
 <div id="admin-modal" class="fixed inset-0 z-50 hidden">
   <div class="absolute inset-0 bg-black/70" onclick="closeAdminModal()"></div>
@@ -65,17 +77,6 @@
     </div>
   </div>
 </div>
-            <div class="flex items-center gap-2">
-                <a href="tambahproduk.html" id="btn-admin" class="hidden p-2 bg-emerald-500/10 text-emerald-400 rounded-xl border border-emerald-500/20">
-                    <i data-lucide="plus-circle" class="w-6 h-6"></i>
-                </a>
-                <a href="login.html" id="btn-login-nav" class="p-2 bg-slate-900 rounded-xl border border-slate-800 text-slate-400">
-                    <i data-lucide="user" class="w-6 h-6"></i>
-                </a>
-                <button id="btn-cart-toggle" onclick="toggleCart()" class="relative p-2 bg-slate-900 rounded-xl border border-slate-800">
-    </button>
-            </div>
-        </nav>
 
         <div class="px-4 mt-4 mb-4">
             <div class="relative">
