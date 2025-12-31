@@ -3,134 +3,126 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pasar Segar - Katalog & Manajemen</title>
+    <title>Pasar Segar - Katalog</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap');
         body { font-family: 'Plus Jakarta Sans', sans-serif; }
         .hide-scrollbar::-webkit-scrollbar { display: none; }
-        .glass-card { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(12px); border: 1px solid rgba(30, 41, 59, 1); }
     </style>
 </head>
 <body class="bg-slate-950 text-slate-100">
 
-    <div id="app" class="max-w-md mx-auto min-h-screen flex flex-col">
+    <div id="app">
         <!-- NAVIGATION -->
         <nav class="p-4 flex justify-between items-center sticky top-0 bg-slate-950/90 backdrop-blur-md z-40 border-b border-slate-900">
-            <div class="flex items-center gap-2">
-                <!-- Tombol Kelola (Admin Only) -->
-                <a href="kelola.html" id="btn-manage" class="hidden p-2 bg-slate-900 text-slate-400 rounded-xl border border-slate-800">
+            <div class="flex items-center gap-3">
+                <a href="kelola.html" id="btn-manage" class="hidden p-2 bg-slate-900 text-slate-400 rounded-xl border border-slate-800 hover:text-emerald-400 transition-colors">
                     <i data-lucide="menu" class="w-6 h-6"></i>
                 </a>
-                <div>
-                    <h1 class="text-xl font-bold bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent leading-none">Pasar Segar</h1>
-                    <p id="user-role-text" class="text-[9px] text-slate-500 uppercase tracking-tighter mt-1 font-bold">Katalog Pelanggan</p>
-                </div>
+                <h1 class="text-xl font-bold bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">Pasar Segar</h1>
             </div>
             
             <div class="flex items-center gap-2">
-                <!-- Tombol Tambah Produk (Admin Only) -->
                 <a href="tambahproduk.html" id="btn-admin-add" class="hidden p-2 bg-emerald-500/10 text-emerald-400 rounded-xl border border-emerald-500/20">
                     <i data-lucide="plus-circle" class="w-6 h-6"></i>
                 </a>
-                <!-- Tombol Login/Profil -->
                 <a href="login.html" id="btn-login-nav" class="p-2 bg-slate-900 rounded-xl border border-slate-800 text-slate-400">
                     <i data-lucide="user" class="w-6 h-6"></i>
                 </a>
-                <!-- Tombol Keranjang/Pesanan -->
                 <button id="btn-cart-toggle" onclick="window.handleActionClick()" class="relative p-2 bg-slate-900 rounded-xl border border-slate-800">
-                    <i data-lucide="shopping-cart" class="w-6 h-6 text-emerald-400"></i>
-                    <span id="cart-badge" class="hidden absolute -top-1 -right-1 bg-rose-500 text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center border-2 border-slate-950">0</span>
+                    <!-- Icon injected via JS -->
                 </button>
             </div>
         </nav>
 
         <!-- SEARCH -->
-        <div class="px-4 mt-6">
+        <div class="px-4 mt-4 mb-4">
             <div class="relative">
                 <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 w-4 h-4"></i>
-                <input type="text" id="search-input" oninput="window.renderProducts()" placeholder="Cari bumbu, sayur, ikan..." 
-                    class="w-full bg-slate-900 border border-slate-800 rounded-2xl py-4 pl-10 pr-4 text-sm focus:ring-2 focus:ring-emerald-500 outline-none transition-all">
+                <input type="text" id="search-input" oninput="window.renderProducts()" placeholder="Cari bumbu, sayur..." 
+                    class="w-full bg-slate-900 border border-slate-800 rounded-xl py-3 pl-10 pr-4 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
             </div>
         </div>
 
         <!-- CATEGORIES -->
-        <div class="flex gap-2 overflow-x-auto px-4 mt-6 mb-4 hide-scrollbar" id="category-list"></div>
+        <div class="flex gap-2 overflow-x-auto px-4 mb-6 hide-scrollbar" id="category-list"></div>
 
         <!-- PRODUCT GRID -->
-        <div class="px-4 grid grid-cols-2 gap-4 pb-32" id="product-grid">
-            <div class="col-span-2 text-center py-20 text-slate-600 italic">Menyinkronkan stok...</div>
+        <div class="px-4 grid grid-cols-2 gap-4 pb-24" id="product-grid">
+            <div class="col-span-2 text-center py-10 text-slate-500">Memuat produk...</div>
         </div>
 
-        <!-- KERANJANG MODAL -->
+        <!-- MODAL KERANJANG -->
         <div id="cart-modal" class="fixed inset-0 z-50 hidden">
             <div class="absolute inset-0 bg-black/80 backdrop-blur-sm" onclick="window.toggleCart()"></div>
-            <div class="absolute inset-y-0 right-0 w-full max-w-sm bg-slate-900 flex flex-col border-l border-slate-800">
-                <div class="p-5 border-b border-slate-800 flex justify-between items-center">
-                    <h2 class="font-bold flex items-center gap-2"><i data-lucide="shopping-cart" class="text-emerald-400"></i> Keranjang</h2>
-                    <button onclick="window.toggleCart()" class="p-2 bg-slate-800 rounded-full"><i data-lucide="x" class="w-5 h-5"></i></button>
+            <div class="absolute inset-y-0 right-0 w-full max-w-sm bg-slate-900 flex flex-col shadow-2xl border-l border-slate-800">
+                <div class="p-4 border-b border-slate-800 flex justify-between items-center">
+                    <h2 class="font-bold flex items-center gap-2"><i data-lucide="shopping-cart"></i> Keranjang</h2>
+                    <button onclick="window.toggleCart()" class="p-2"><i data-lucide="x"></i></button>
                 </div>
-                <div id="cart-items" class="flex-1 overflow-y-auto p-5 space-y-4"></div>
-                <div class="p-5 border-t border-slate-800 space-y-4">
-                    <div class="space-y-2">
-                        <label class="flex items-center gap-3 p-4 bg-slate-800/50 rounded-2xl cursor-pointer border border-transparent has-[:checked]:border-emerald-500">
-                            <input type="radio" name="delivery" value="ANTAR" checked class="accent-emerald-500">
-                            <span class="text-xs font-semibold">🛵 Antarkan ke Rumah (Ongkir)</span>
+                <div id="cart-items" class="flex-1 overflow-y-auto p-4 space-y-4"></div>
+                <div class="p-4 border-t border-slate-800 bg-slate-900/50">
+                    <div class="space-y-3 mb-4">
+                        <label class="flex items-center gap-3 p-3 bg-slate-800 rounded-xl cursor-pointer">
+                            <input type="radio" name="delivery" value="ANTAR" checked>
+                            <span class="text-sm">🛵 Antarkan (Ongkir)</span>
                         </label>
-                        <label class="flex items-center gap-3 p-4 bg-slate-800/50 rounded-2xl cursor-pointer border border-transparent has-[:checked]:border-emerald-500">
-                            <input type="radio" name="delivery" value="AMBIL" class="accent-emerald-500">
-                            <span class="text-xs font-semibold">🚶 Ambil pas Mama keliling</span>
+                        <label class="flex items-center gap-3 p-3 bg-slate-800 rounded-xl cursor-pointer">
+                            <input type="radio" name="delivery" value="AMBIL">
+                            <span class="text-sm">🚶 Ambil pas Mama keliling</span>
                         </label>
                     </div>
-                    <div class="flex justify-between items-center py-2">
-                        <span class="text-slate-400 font-medium">Total Tagihan:</span>
-                        <span id="cart-total" class="font-black text-emerald-400 text-2xl">Rp 0</span>
+                    <div class="flex justify-between mb-4">
+                        <span class="text-slate-400">Total:</span>
+                        <span id="cart-total" class="font-bold text-emerald-400 text-xl">Rp 0</span>
                     </div>
-                    <button onclick="window.checkout()" class="w-full bg-emerald-500 py-4 rounded-2xl font-bold text-slate-950 shadow-lg shadow-emerald-500/20 active:scale-95 transition-all">
-                        Pesan Sekarang
-                    </button>
+                    <button onclick="window.checkout()" class="w-full bg-emerald-500 py-4 rounded-xl font-bold">Checkout</button>
                 </div>
             </div>
         </div>
 
-        <!-- ADMIN STOCK UPDATE MODAL (SMART AUTO-SHIFT) -->
+        <!-- ADMIN UPDATE MODAL -->
         <div id="admin-modal" class="fixed inset-0 z-50 hidden">
-            <div class="absolute inset-0 bg-black/80 backdrop-blur-md" onclick="window.closeAdminModal()"></div>
-            <div class="absolute bottom-0 left-0 right-0 bg-slate-900 rounded-t-[2.5rem] p-8 border-t border-slate-800">
-                <div class="flex justify-between items-start mb-6">
-                    <div>
-                        <h3 id="modal-product-name" class="font-bold text-xl text-white">Update Produk</h3>
-                        <p class="text-xs text-slate-500 mt-1">Sisa stok segar saat ini akan digeser ke stok lama</p>
-                    </div>
-                    <button onclick="window.closeAdminModal()" class="p-2 bg-slate-800 rounded-full"><i data-lucide="x" class="w-5 h-5"></i></button>
+            <div class="absolute inset-0 bg-black/70" onclick="window.closeAdminModal()"></div>
+            <div class="absolute bottom-0 left-0 right-0 bg-slate-900 rounded-t-3xl p-6 space-y-6 border-t border-slate-800">
+                <div class="flex justify-between items-center">
+                    <h3 id="modal-product-name" class="font-bold text-lg">Nama Produk</h3>
+                    <button onclick="window.closeAdminModal()" class="text-slate-400"><i data-lucide="x"></i></button>
                 </div>
 
-                <div class="space-y-6">
-                    <div class="bg-slate-800/50 p-6 rounded-3xl text-center border border-slate-700">
-                        <p class="text-[10px] font-bold text-emerald-400 uppercase tracking-widest mb-4">Input Stok Baru Masuk</p>
-                        <div class="flex items-center justify-center gap-8">
-                            <button onclick="window.changeTempQty(-1)" class="w-12 h-12 bg-slate-700 rounded-2xl flex items-center justify-center font-bold text-xl">-</button>
-                            <span id="temp-qty" class="text-4xl font-black w-20">0</span>
-                            <button onclick="window.changeTempQty(1)" class="w-12 h-12 bg-emerald-500 text-slate-950 rounded-2xl flex items-center justify-center font-bold text-xl">+</button>
-                        </div>
+                <div class="space-y-2">
+                    <p class="text-xs text-slate-400 uppercase tracking-wider">Tambah Stok Baru</p>
+                    <div class="flex items-center justify-center gap-6 bg-slate-800 p-3 rounded-2xl">
+                        <button onclick="window.changeTempQty(-1)" class="w-10 h-10 bg-slate-700 rounded-full flex items-center justify-center font-bold">-</button>
+                        <span id="temp-qty" class="text-xl font-bold w-12 text-center">0</span>
+                        <button onclick="window.changeTempQty(1)" class="w-10 h-10 bg-slate-700 rounded-full flex items-center justify-center font-bold">+</button>
                     </div>
-
-                    <div class="grid grid-cols-2 gap-4">
-                        <div class="p-4 bg-slate-950 rounded-2xl border border-slate-800">
-                            <p class="text-[9px] text-slate-500 uppercase font-bold mb-1">Stok Segar Saat Ini</p>
-                            <div id="fresh-info" class="font-bold text-emerald-400 text-sm">0</div>
-                        </div>
-                        <div class="p-4 bg-slate-950 rounded-2xl border border-slate-800">
-                            <p class="text-[9px] text-slate-500 uppercase font-bold mb-1">Stok Lama Saat Ini</p>
-                            <div id="old-info" class="font-bold text-amber-400 text-sm">0</div>
-                        </div>
-                    </div>
-
-                    <button onclick="window.updateInventory()" class="w-full bg-cyan-500 py-5 rounded-2xl font-bold text-white shadow-xl shadow-cyan-500/20 active:scale-95 transition-all">
-                        Konfirmasi Update Stok
-                    </button>
                 </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="space-y-2">
+                        <p class="text-[10px] text-emerald-400 font-bold uppercase">Stok Segar</p>
+                        <div class="flex items-center justify-between bg-slate-800 p-2 rounded-xl">
+                            <button onclick="window.changeFresh(-1)">-</button>
+                            <span id="fresh-count" class="font-bold">0</span>
+                            <button onclick="window.changeFresh(1)">+</button>
+                        </div>
+                    </div>
+                    <div class="space-y-2">
+                        <p class="text-[10px] text-amber-400 font-bold uppercase">Stok Lama</p>
+                        <div class="flex items-center justify-between bg-slate-800 p-2 rounded-xl">
+                            <button onclick="window.changeOld(-1)">-</button>
+                            <span id="old-count" class="font-bold">0</span>
+                            <button onclick="window.changeOld(1)">+</button>
+                        </div>
+                    </div>
+                </div>
+
+                <button onclick="window.updatePurchase()" class="w-full bg-cyan-500 py-4 rounded-xl font-bold text-white shadow-lg shadow-cyan-500/20">
+                    Update Produk
+                </button>
             </div>
         </div>
     </div>
@@ -140,10 +132,9 @@
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
         import {
             getFirestore, collection, onSnapshot, query, orderBy,
-            doc, updateDoc, increment, serverTimestamp, addDoc
+            addDoc, doc, updateDoc, increment, serverTimestamp
         } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
-        // CONFIG (Tetap sama)
         const firebaseConfig = {
             apiKey: "AIzaSyBWkPqyh54IRccNz2YjuB1bL5r49YadAP4",
             authDomain: "sayurjuju-bfe82.firebaseapp.com",
@@ -165,7 +156,42 @@
         let selectedProduct = null;
         let tempQty = 0;
 
-        // --- GLOBAL WRAPPERS ---
+        // --- AUTH & UI STATE ---
+        onAuthStateChanged(auth, (user) => {
+            const adminAddBtn = document.getElementById("btn-admin-add");
+            const manageBtn = document.getElementById("btn-manage");
+            const loginBtn = document.getElementById("btn-login-nav");
+            const cartBtn = document.getElementById("btn-cart-toggle");
+            
+            if (user) {
+                if (user.uid === ADMIN_UID) {
+                    adminAddBtn.classList.remove("hidden");
+                    manageBtn.classList.remove("hidden");
+                    cartBtn.innerHTML = `<i data-lucide="clipboard-list" class="w-6 h-6 text-cyan-400"></i>`;
+                } else {
+                    adminAddBtn.classList.add("hidden");
+                    manageBtn.classList.add("hidden");
+                    setDefaultCartUI(cartBtn);
+                }
+                loginBtn.innerHTML = '<i data-lucide="user-check" class="w-6 h-6 text-emerald-400"></i>';
+                loginBtn.href = "profile.html";
+            } else {
+                adminAddBtn.classList.add("hidden");
+                manageBtn.classList.add("hidden");
+                setDefaultCartUI(cartBtn);
+                loginBtn.innerHTML = '<i data-lucide="user" class="w-6 h-6"></i>';
+                loginBtn.href = "login.html";
+            }
+            lucide.createIcons();
+        });
+
+        function setDefaultCartUI(btn) {
+            btn.innerHTML = `
+                <i data-lucide="shopping-cart" class="w-6 h-6 text-emerald-400"></i>
+                <span id="cart-badge" class="hidden absolute -top-1 -right-1 bg-rose-500 text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center">0</span>
+            `;
+        }
+
         window.handleActionClick = () => {
             if (auth.currentUser?.uid === ADMIN_UID) {
                 window.location.href = "orders.html";
@@ -174,41 +200,7 @@
             }
         };
 
-        // --- AUTH OBSERVER ---
-        onAuthStateChanged(auth, (user) => {
-            const btnManage = document.getElementById("btn-manage");
-            const btnAdminAdd = document.getElementById("btn-admin-add");
-            const btnLoginNav = document.getElementById("btn-login-nav");
-            const cartBtnIcon = document.querySelector("#btn-cart-toggle i");
-            const roleText = document.getElementById("user-role-text");
-
-            if (user) {
-                if (user.uid === ADMIN_UID) {
-                    btnManage.classList.remove("hidden");
-                    btnAdminAdd.classList.remove("hidden");
-                    roleText.innerText = "Panel Kontrol Admin";
-                    roleText.classList.replace("text-slate-500", "text-cyan-400");
-                    if(cartBtnIcon) cartBtnIcon.setAttribute("data-lucide", "clipboard-list");
-                } else {
-                    btnManage.classList.add("hidden");
-                    btnAdminAdd.classList.add("hidden");
-                    roleText.innerText = "Katalog Pelanggan";
-                    roleText.classList.replace("text-cyan-400", "text-slate-500");
-                    if(cartBtnIcon) cartBtnIcon.setAttribute("data-lucide", "shopping-cart");
-                }
-                btnLoginNav.innerHTML = `<i data-lucide="user-check" class="w-6 h-6 text-emerald-400"></i>`;
-                btnLoginNav.href = "profile.html";
-            } else {
-                btnManage.classList.add("hidden");
-                btnAdminAdd.classList.add("hidden");
-                btnLoginNav.innerHTML = `<i data-lucide="user" class="w-6 h-6"></i>`;
-                btnLoginNav.href = "login.html";
-            }
-            lucide.createIcons();
-            window.renderProducts();
-        });
-
-        // --- DATA REALTIME ---
+        // --- PRODUCT LOGIC ---
         onSnapshot(query(productsRef, orderBy("name", "asc")), (snapshot) => {
             allProducts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             window.renderCategories();
@@ -220,7 +212,7 @@
             const list = document.getElementById('category-list');
             list.innerHTML = categories.map(cat => `
                 <button onclick="window.setCategory('${cat}')" 
-                    class="px-5 py-2.5 rounded-2xl whitespace-nowrap text-xs font-bold transition-all ${currentCategory === cat ? 'bg-emerald-500 text-slate-950 border-emerald-500 shadow-lg shadow-emerald-500/20' : 'bg-slate-900 text-slate-500 border-slate-800'}">
+                    class="px-4 py-2 rounded-full whitespace-nowrap text-xs font-semibold transition-all ${currentCategory === cat ? 'bg-emerald-500 text-white' : 'bg-slate-900 text-slate-400 border border-slate-800'}">
                     ${cat}
                 </button>
             `).join('');
@@ -243,25 +235,22 @@
             );
 
             if (filtered.length === 0) {
-                grid.innerHTML = '<div class="col-span-2 text-center py-20 text-slate-600">Produk tidak ditemukan</div>';
+                grid.innerHTML = '<div class="col-span-2 text-center py-10 text-slate-500">Produk tidak ditemukan</div>';
                 return;
             }
 
             grid.innerHTML = filtered.map(p => `
-                <div class="glass-card rounded-[2.5rem] overflow-hidden flex flex-col group">
-                    <div onclick="${isAdmin ? `window.openAdminModal('${p.id}')` : ''}" class="relative h-40 bg-slate-900 cursor-pointer overflow-hidden">
-                        <img src="${p.image}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
-                        <div class="absolute top-3 right-3 flex flex-col gap-1 items-end">
-                            ${(p.freshCount || 0) > 0 ? `<span class="px-2 py-0.5 bg-emerald-500 text-slate-950 text-[8px] font-black rounded-lg">SEGAR</span>` : ''}
-                            ${(p.oldCount || 0) > 0 ? `<span class="px-2 py-0.5 bg-amber-500 text-slate-950 text-[8px] font-black rounded-lg">CUCI GUDANG</span>` : ''}
-                        </div>
+                <div class="bg-slate-900 rounded-2xl overflow-hidden border border-slate-800 flex flex-col shadow-lg">
+                    <div onclick="window.openAdminModal('${p.id}')" class="relative h-32 bg-slate-800 cursor-pointer">
+                        <img src="${p.image}" class="w-full h-full object-cover">
+                        <span class="absolute top-2 right-2 px-1.5 py-0.5 rounded text-[8px] font-bold uppercase ${p.status === 'Segar' ? 'bg-emerald-500 text-white' : 'bg-amber-500 text-white'}">${p.status}</span>
                     </div>
-                    <div class="p-4 flex-1 flex flex-col">
+                    <div class="p-3 flex-1 flex flex-col">
                         <h3 class="font-bold text-sm truncate text-slate-100">${p.name}</h3>
-                        <p class="text-[10px] text-slate-500 font-medium mb-3">Stok: ${p.stock} ${p.unit}</p>
+                        <p class="text-[10px] text-slate-500 mb-2">Stok: ${p.stock} • ${p.unit}</p>
                         <div class="mt-auto flex justify-between items-center">
-                            <span class="text-emerald-400 font-black text-sm">Rp ${Number(p.price).toLocaleString()}</span>
-                            <button onclick="window.addToCart('${p.id}')" class="bg-slate-800 hover:bg-emerald-500 hover:text-slate-950 p-2.5 rounded-xl transition-all active:scale-90">
+                            <span class="text-emerald-400 font-bold text-xs">Rp ${Number(p.price).toLocaleString()}</span>
+                            <button onclick="window.addToCart('${p.id}')" class="${isAdmin ? 'bg-cyan-500' : 'bg-emerald-500'} p-2 rounded-xl text-white">
                                 <i data-lucide="${isAdmin ? 'package-plus' : 'plus'}" class="w-4 h-4"></i>
                             </button>
                         </div>
@@ -271,72 +260,68 @@
             lucide.createIcons();
         };
 
-        // --- KERANJANG & CHECKOUT ---
-        window.addToCart = (id) => {
-            const product = allProducts.find(p => p.id === id);
-            if (product.stock <= 0) { alert("Habis, Mama lagi belanja lagi!"); return; }
-            const existing = cart.find(i => i.id === id);
-            if (existing) {
-                if (existing.qty >= product.stock) { alert("Stok gak cukup!"); return; }
-                existing.qty++;
+        // --- CART LOGIC ---
+        window.addToCart = async (id) => {
+            const isAdmin = auth.currentUser?.uid === ADMIN_UID;
+            if (isAdmin) {
+                try {
+                    await updateDoc(doc(db, "products", id), { stock: increment(1) });
+                } catch (e) { console.error(e); }
             } else {
-                cart.push({ ...product, qty: 1 });
+                const product = allProducts.find(p => p.id === id);
+                if (product.stock <= 0) { alert("Stok habis!"); return; }
+                const existing = cart.find(item => item.id === id);
+                if (existing) {
+                    if (existing.qty >= product.stock) { alert("Melebihi stok!"); return; }
+                    existing.qty++;
+                } else {
+                    cart.push({ ...product, qty: 1 });
+                }
+                window.updateCartUI();
+                if (document.getElementById('cart-modal').classList.contains('hidden')) {
+                    window.toggleCart();
+                }
             }
-            window.updateCartUI();
-            if (document.getElementById('cart-modal').classList.contains('hidden')) window.toggleCart();
         };
 
         window.updateCartUI = () => {
+            const count = cart.reduce((sum, item) => sum + item.qty, 0);
             const badge = document.getElementById('cart-badge');
-            const list = document.getElementById('cart-items');
-            const totalEl = document.getElementById('cart-total');
-            
-            const count = cart.reduce((s, i) => s + i.qty, 0);
-            badge.innerText = count;
-            badge.classList.toggle('hidden', count === 0);
+            if (badge) {
+                badge.innerText = count;
+                badge.classList.toggle('hidden', count === 0);
+            }
 
-            list.innerHTML = cart.map(item => `
-                <div class="flex gap-4 bg-slate-800/50 p-4 rounded-3xl border border-slate-800/50">
-                    <img src="${item.image}" class="w-14 h-14 rounded-2xl object-cover">
+            document.getElementById('cart-items').innerHTML = cart.map(item => `
+                <div class="flex gap-3 bg-slate-800/50 p-3 rounded-2xl border border-slate-800/50">
+                    <img src="${item.image}" class="w-12 h-12 rounded-lg object-cover">
                     <div class="flex-1">
-                        <h4 class="text-xs font-bold">${item.name}</h4>
-                        <p class="text-[10px] text-emerald-400 font-bold">@ Rp ${Number(item.price).toLocaleString()}</p>
-                        <div class="flex items-center gap-3 mt-2">
-                            <button onclick="window.adjustCartQty('${item.id}', -1)" class="w-7 h-7 bg-slate-800 rounded-lg text-xs">-</button>
-                            <span class="text-xs font-bold">${item.qty}</span>
-                            <button onclick="window.adjustCartQty('${item.id}', 1)" class="w-7 h-7 bg-slate-800 rounded-lg text-xs">+</button>
-                        </div>
+                        <h4 class="text-xs font-bold text-slate-100">${item.name}</h4>
+                        <p class="text-[10px] text-emerald-400">${item.qty} x Rp ${Number(item.price).toLocaleString()}</p>
                     </div>
-                    <button onclick="window.removeFromCart('${item.id}')" class="text-rose-500 self-start"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                    <button onclick="window.removeFromCart('${item.id}')" class="text-rose-500 p-2"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                 </div>
             `).join('');
-
-            const total = cart.reduce((s, i) => s + (i.price * i.qty), 0);
-            totalEl.innerText = `Rp ${total.toLocaleString()}`;
+            
+            const total = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+            document.getElementById('cart-total').innerText = `Rp ${total.toLocaleString()}`;
             lucide.createIcons();
         };
 
-        window.adjustCartQty = (id, delta) => {
-            const item = cart.find(i => i.id === id);
-            const p = allProducts.find(prod => prod.id === id);
-            if (item) {
-                if (item.qty + delta > p.stock) return;
-                item.qty += delta;
-                if (item.qty <= 0) cart = cart.filter(i => i.id !== id);
-                window.updateCartUI();
-            }
+        window.removeFromCart = (id) => {
+            cart = cart.filter(i => i.id !== id);
+            window.updateCartUI();
         };
 
-        window.removeFromCart = (id) => { cart = cart.filter(i => i.id !== id); window.updateCartUI(); };
         window.toggleCart = () => document.getElementById('cart-modal').classList.toggle('hidden');
 
         window.checkout = async () => {
             const user = auth.currentUser;
-            if (!user) { alert("Login dulu ya Ma/Kak!"); return; }
-            if (cart.length === 0) return;
+            if (!user) { alert("Silakan login dulu"); return; }
+            if (cart.length === 0) { alert("Keranjang kosong"); return; }
 
             const method = document.querySelector('input[name="delivery"]:checked').value;
-            const subtotal = cart.reduce((s, i) => s + (i.price * i.qty), 0);
+            const subtotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
             const shipping = method === "ANTAR" ? 3000 : 0;
 
             try {
@@ -353,17 +338,19 @@
                 window.updateCartUI();
                 window.toggleCart();
                 window.location.href = "profile.html";
-            } catch (err) { alert("Gagal checkout"); }
+            } catch (err) { alert("Gagal: " + err.message); }
         };
 
-        // --- ADMIN SMART UPDATE ---
+        // --- ADMIN MODAL LOGIC ---
         window.openAdminModal = (id) => {
+            if (auth.currentUser?.uid !== ADMIN_UID) return;
             selectedProduct = allProducts.find(p => p.id === id);
             tempQty = 0;
+
             document.getElementById("modal-product-name").innerText = selectedProduct.name;
             document.getElementById("temp-qty").innerText = tempQty;
-            document.getElementById("fresh-info").innerText = `${selectedProduct.freshCount || 0} ${selectedProduct.unit}`;
-            document.getElementById("old-info").innerText = `${selectedProduct.oldCount || 0} ${selectedProduct.unit}`;
+            document.getElementById("fresh-count").innerText = selectedProduct.freshCount || 0;
+            document.getElementById("old-count").innerText = selectedProduct.oldCount || 0;
             document.getElementById("admin-modal").classList.remove("hidden");
             lucide.createIcons();
         };
@@ -375,31 +362,39 @@
             document.getElementById("temp-qty").innerText = tempQty;
         };
 
-        window.updateInventory = async () => {
+        window.changeFresh = (val) => {
+            let f = parseInt(document.getElementById("fresh-count").innerText) + val;
+            let o = parseInt(document.getElementById("old-count").innerText);
+            if (f >= 0 && f + o <= selectedProduct.stock) {
+                document.getElementById("fresh-count").innerText = f;
+            }
+        };
+
+        window.changeOld = (val) => {
+            let f = parseInt(document.getElementById("fresh-count").innerText);
+            let o = parseInt(document.getElementById("old-count").innerText) + val;
+            if (o >= 0 && f + o <= selectedProduct.stock) {
+                document.getElementById("old-count").innerText = o;
+            }
+        };
+
+        window.updatePurchase = async () => {
             if (!selectedProduct) return;
-            
-            // Logika Smart FIFO:
-            // Stok lama baru = Stok Segar saat ini + Stok Lama saat ini (gabungan semua sisa stok lama)
-            // Stok segar baru = inputan tempQty yang baru datang
-            const currentFresh = selectedProduct.freshCount || 0;
-            const currentOld = selectedProduct.oldCount || 0;
-            
-            const newOldCount = currentFresh + currentOld; 
-            const newFreshCount = tempQty;
+            const fresh = parseInt(document.getElementById("fresh-count").innerText);
+            const old = parseInt(document.getElementById("old-count").innerText);
 
             try {
                 await updateDoc(doc(db, "products", selectedProduct.id), {
                     stock: increment(tempQty),
-                    freshCount: newFreshCount,
-                    oldCount: newOldCount,
-                    status: newFreshCount > 0 ? "Segar" : "Lama",
-                    lastInventoryUpdate: serverTimestamp()
+                    freshCount: fresh,
+                    oldCount: old,
+                    status: fresh > 0 ? "Segar" : "Lama",
+                    lastUpdate: serverTimestamp()
                 });
                 window.closeAdminModal();
-            } catch (err) { alert("Gagal update stok"); }
+            } catch (err) { alert("Gagal update"); }
         };
 
-        // First Load
         lucide.createIcons();
     </script>
 </body>
