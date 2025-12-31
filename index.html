@@ -214,11 +214,16 @@ window.updatePurchase = async () => {
     return;
   }
 
-  const fresh = parseInt(document.getElementById("fresh-count").innerText);
-  const old = parseInt(document.getElementById("old-count").innerText);
+  // ambil nilai dari UI
+  let fresh = parseInt(document.getElementById("fresh-count").innerText);
+  let old = parseInt(document.getElementById("old-count").innerText);
 
+  // tambahkan pembelian baru ke SEGAR
+  fresh += tempQty;
+
+  // validasi stok
   if (!canUpdate(fresh, old, selectedProduct.stock)) {
-    alert("Distribusi SEGAR & LAMA tidak valid");
+    alert("Pembelian baru melebihi stok. Tambah stok dulu.");
     return;
   }
 
@@ -326,7 +331,7 @@ function setDefaultCartBtn(btn) {
             }
 
             grid.innerHTML = filtered.map(p => `
-                <div onclick="openAdminModal('${p.id}')" class="bg-slate-900 rounded-2xl overflow-hidden border border-slate-800 flex flex-col shadow-lg">
+                <div onclick="${auth.currentUser?.uid === ADMIN_UID ? `openAdminModal('${p.id}')` : ''}">
                     <div class="relative h-32 bg-slate-800">
                         <img src="${p.image}" class="w-full h-full object-cover">
                         <span class="absolute top-2 right-2 px-1.5 py-0.5 rounded text-[8px] font-bold uppercase ${p.status === 'Segar' ? 'bg-emerald-500 text-white' : 'bg-amber-500 text-white'}">${p.status}</span>
@@ -459,6 +464,7 @@ window.closeAdminModal = () => {
     </script>
 </body>
 </html>
+
 
 
 
