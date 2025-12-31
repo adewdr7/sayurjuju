@@ -23,6 +23,48 @@
                 </a>
                 <h1 class="text-xl font-bold bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">Pasar Segar</h1>
             </div>
+<!-- ADMIN PRODUCT MODAL -->
+<div id="admin-modal" class="fixed inset-0 z-50 hidden">
+  <div class="absolute inset-0 bg-black/70" onclick="closeAdminModal()"></div>
+
+  <div class="absolute bottom-0 left-0 right-0 bg-slate-900 rounded-t-3xl p-5 space-y-4 border-t border-slate-800">
+    <h3 id="modal-product-name" class="font-bold text-lg"></h3>
+
+    <!-- Pembelian Baru -->
+    <div class="space-y-1">
+      <p class="text-xs text-slate-400">Pembelian baru</p>
+      <div class="flex items-center justify-center gap-4">
+        <button onclick="changeTempQty(-1)" class="px-3 py-1 bg-slate-800 rounded">-</button>
+        <span id="temp-qty" class="w-8 text-center">0</span>
+        <button onclick="changeTempQty(1)" class="px-3 py-1 bg-slate-800 rounded">+</button>
+      </div>
+    </div>
+
+    <button onclick="updatePurchase()" class="w-full bg-emerald-500 py-3 rounded-xl font-bold">
+      Update
+    </button>
+
+    <!-- Segar -->
+    <div>
+      <p class="text-sm font-bold text-emerald-400">SEGAR</p>
+      <div class="flex items-center gap-4">
+        <button onclick="changeFresh(-1)">-</button>
+        <span id="fresh-count">0</span>
+        <button onclick="changeFresh(1)">+</button>
+      </div>
+    </div>
+
+    <!-- Lama -->
+    <div>
+      <p class="text-sm font-bold text-amber-400">LAMA</p>
+      <div class="flex items-center gap-4">
+        <button onclick="changeOld(-1)">-</button>
+        <span id="old-count">0</span>
+        <button onclick="changeOld(1)">+</button>
+      </div>
+    </div>
+  </div>
+</div>
             <div class="flex items-center gap-2">
                 <a href="tambahproduk.html" id="btn-admin" class="hidden p-2 bg-emerald-500/10 text-emerald-400 rounded-xl border border-emerald-500/20">
                     <i data-lucide="plus-circle" class="w-6 h-6"></i>
@@ -114,6 +156,89 @@
         let allProducts = [];
         let cart = [];
         let currentCategory = "Semua";
+let selectedProduct = null;
+let tempQty = 0;
+
+/* ===============================
+   VALIDASI STOK SEGAR & LAMA
+================================ */
+function canUpdate(fresh, old, stock) {
+  return fresh >= 0 && old >= 0 && fresh + old <= stock;
+}
+
+window.changeTempQty = (delta) => {
+  tempQty += delta;
+  if (tempQty < 0) tempQty = 0;
+  document.getElementById("temp-qty").innerText = tempQty;
+};
+
+window.changeFresh = (delta) => {
+  if (!selectedProduct) return;
+
+  let fresh = parseInt(document.getElementById("fresh-count").innerText);
+  let old = parseInt(document.getElementById("old-count").innerText);
+  const stock = selectedProduct.stock;
+
+  const newFresh = fresh + delta;
+
+  if (!canUpdate(newFresh, old, stock)) {
+    alert("Total SEGAR + LAMA tidak boleh melebihi stok");
+    return;
+  }
+
+  document.getElementById("fresh-count").innerText = newFresh;
+};
+
+window.changeOld = (delta) => {
+  if (!selectedProduct) return;
+
+  let fresh = parseInt(document.getElementById("fresh-count").innerText);
+  let old = parseInt(document.getElementById("old-count").innerText);
+  const stock = selectedProduct.stock;
+
+  const newOld = old + delta;
+
+  if (!canUpdate(fresh, newOld, stock)) {
+    alert("Total SEGAR + LAMA tidak boleh melebihi stok");
+    return;
+  }
+
+  document.getElementById("old-count").innerText = newOld;
+};
+
+window.updatePurchase = async () => {
+  if (!selectedProduct) return;
+
+  if (tempQty === 0) {
+    alert("Jumlah pembelian baru masih 0");
+    return;
+  }
+
+  const fresh = parseInt(document.getElementById("fresh-count").innerText);
+  const old = parseInt(document.getElementById("old-count").innerText);
+
+  if (!canUpdate(fresh, old, selectedProduct.stock)) {
+    alert("Distribusi SEGAR & LAMA tidak valid");
+    return;
+  }
+
+  try {
+    const productRef = doc(db, "products", selectedProduct.id);
+
+    await updateDoc(productRef, {
+      purchaseTime: new Date().toISOString(),
+      status: "Segar",
+      freshCount: fresh,
+      oldCount: old
+    });
+
+    closeAdminModal();
+  } catch (err) {
+    alert("Gagal update produk");
+    console.error(err);
+  }
+};
+
 function getShippingCost(method) {
   return method === "ANTAR" ? 3000 : 0;
 }
@@ -201,7 +326,7 @@ function setDefaultCartBtn(btn) {
             }
 
             grid.innerHTML = filtered.map(p => `
-                <div class="bg-slate-900 rounded-2xl overflow-hidden border border-slate-800 flex flex-col shadow-lg">
+                <div onclick="openAdminModal('${p.id}')" class="bg-slate-900 rounded-2xl overflow-hidden border border-slate-800 flex flex-col shadow-lg">
                     <div class="relative h-32 bg-slate-800">
                         <img src="${p.image}" class="w-full h-full object-cover">
                         <span class="absolute top-2 right-2 px-1.5 py-0.5 rounded text-[8px] font-bold uppercase ${p.status === 'Segar' ? 'bg-emerald-500 text-white' : 'bg-amber-500 text-white'}">${p.status}</span>
@@ -255,6 +380,24 @@ function setDefaultCartBtn(btn) {
         }
         updateCartUI();
     }
+};
+
+window.openAdminModal = (id) => {
+  if (auth.currentUser?.uid !== ADMIN_UID) return;
+
+  selectedProduct = allProducts.find(p => p.id === id);
+  tempQty = 0;
+
+  document.getElementById("modal-product-name").innerText = selectedProduct.name;
+  document.getElementById("temp-qty").innerText = tempQty;
+  document.getElementById("fresh-count").innerText = selectedProduct.freshCount || 0;
+  document.getElementById("old-count").innerText = selectedProduct.oldCount || 0;
+
+  document.getElementById("admin-modal").classList.remove("hidden");
+};
+
+window.closeAdminModal = () => {
+  document.getElementById("admin-modal").classList.add("hidden");
 };
 
         window.updateCartUI = () => {
@@ -316,6 +459,7 @@ function setDefaultCartBtn(btn) {
     </script>
 </body>
 </html>
+
 
 
 
