@@ -76,10 +76,10 @@
 </div>
 
         <!-- SEARCH + FILTER (STICKY, SATU BLOK) -->
-<div class="sticky top-[72px] z-30 bg-slate-950/95 backdrop-blur-md">
+<div class="sticky top-[72px] z-30 bg-slate-950/95 backdrop-blur-md pointer-events-none">
 
   <!-- SEARCH -->
-  <div class="px-4 pt-4">
+  <div class="px-4 pt-4 pointer-events-auto">
     <div class="relative">
       <i data-lucide="search"
          class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 w-4 h-4"></i>
@@ -97,9 +97,9 @@
 
   <!-- FILTER -->
   <div
-    id="category-list"
-    class="flex gap-2 overflow-x-auto px-4 py-3 hide-scrollbar">
-  </div>
+  id="category-list"
+  class="flex gap-2 overflow-x-auto px-4 py-3 hide-scrollbar pointer-events-auto">
+</div>
 
 </div>
 <!-- PRODUCT GRID -->
@@ -354,7 +354,7 @@ class="bg-slate-900 rounded-2xl overflow-hidden border border-slate-800 flex fle
                         <p class="text-[10px] text-slate-500">Stok: ${p.stock} • ${p.unit}</p>
                         <div class="mt-auto flex justify-between items-center">
                             <span class="text-emerald-400 font-bold text-xs">Rp ${Number(p.price).toLocaleString()}</span>
-                           <button onclick="addToCart('${p.id}')" class="${auth.currentUser?.uid === ADMIN_UID ? 'bg-cyan-500' : 'bg-emerald-500'} p-2 rounded-xl text-white">
+                           <button onclick="event.stopPropagation(); addToCart('${p.id}')" class="${auth.currentUser?.uid === ADMIN_UID ? 'bg-cyan-500' : 'bg-emerald-500'} p-2 rounded-xl text-white">
     <i data-lucide="${auth.currentUser?.uid === ADMIN_UID ? 'package-plus' : 'plus'}" class="w-4 h-4"></i>
 </button>
                         </div>
