@@ -48,10 +48,13 @@
     </div>
 
     <!-- Tombol hanya muncul untuk ADMIN -->
-    <button id="btn-change-status"
-            class="hidden text-xs px-3 py-2 rounded-xl bg-emerald-500 text-black font-bold">
-      Ubah
-    </button>
+    <select id="admin-status-select"
+        class="hidden text-xs px-3 py-2 rounded-xl bg-slate-800 text-slate-200 border border-slate-700">
+  <option value="BERJUALAN">🟢 BERJUALAN</option>
+  <option value="DI PASAR">🧺 DI PASAR</option>
+  <option value="LIBUR">🔴 LIBUR</option>
+  <option value="SELESAI">⏹ SELESAI</option>
+</select>
   </div>
 </div>
 
@@ -148,7 +151,7 @@ function getShippingCost(method) {
     
     if (user) {
         if (user.uid === ADMIN_UID) {
-document.getElementById("btn-change-status").classList.remove("hidden");
+document.getElementById("admin-status-select").classList.remove("hidden");
 
             // Tampilan JIKA ADMIN
             adminBtn.classList.remove("hidden");
@@ -162,7 +165,7 @@ document.getElementById("btn-change-status").classList.remove("hidden");
             // Alihkan fungsi klik jika admin ingin langsung ke halaman orders
             cartBtn.onclick = () => window.location.href = "orders.html";
         } else {
-document.getElementById("btn-change-status").classList.add("hidden");
+document.getElementById("admin-status-select").classList.add("hidden");
             // Tampilan JIKA PELANGGAN BIASA
             setDefaultCartBtn(cartBtn);
         }
@@ -182,29 +185,21 @@ document.getElementById("btn-change-status").classList.add("hidden");
 });
 
 // ===============================
-// ADMIN: UBAH STATUS
+// ADMIN: DROPDOWN UBAH STATUS
 // ===============================
-const btnChangeStatus = document.getElementById("btn-change-status");
+const statusSelect = document.getElementById("admin-status-select");
 
-btnChangeStatus.onclick = async () => {
-  const user = auth.currentUser;
-  if (!user || user.uid !== ADMIN_UID) return;
+if (statusSelect) {
+  statusSelect.onchange = async () => {
+    const user = auth.currentUser;
+    if (!user || user.uid !== ADMIN_UID) return;
 
-  const next = prompt(
-    "Pilih status:\nBERJUALAN\nDI PASAR\nLIBUR\nSELESAI",
-    "BERJUALAN"
-  );
-
-  if (!next) return;
-
-  const note = prompt("Catatan (opsional):", "");
-
-  await updateDoc(statusRef, {
-    status: next.toUpperCase(),
-    note: note,
-    updatedAt: serverTimestamp()
-  });
-};
+    await updateDoc(statusRef, {
+      status: statusSelect.value,
+      updatedAt: serverTimestamp()
+    });
+  };
+}
 
 // ===============================
 // STATUS DAGANG HARI INI
@@ -213,6 +208,10 @@ onSnapshot(statusRef, (snap) => {
   if (!snap.exists()) return;
 
   const data = snap.data();
+const select = document.getElementById("admin-status-select");
+if (select && !select.classList.contains("hidden")) {
+  select.value = data.status;
+}
   const statusText = document.getElementById("status-text");
   const statusNote = document.getElementById("status-note");
 
