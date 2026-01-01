@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Detail Produk</title>
+
+  <!-- Tailwind -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Icon -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    body { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }
+  </style>
+</head>
+
+<body class="bg-slate-950 text-slate-100">
+
+<!-- NAVBAR -->
+<nav class="sticky top-0 z-40 bg-slate-950/90 backdrop-blur border-b border-slate-900 px-4 py-3 flex items-center gap-3">
+  <button onclick="history.back()"
+          class="p-2 rounded-xl bg-slate-900 border border-slate-800">
+    <i data-lucide="arrow-left" class="w-5 h-5"></i>
+  </button>
+  <h1 class="font-semibold text-lg">Detail Produk</h1>
+</nav>
+
+<!-- CONTENT -->
+<main class="p-4 space-y-4 pb-28" id="content">
+
+  <!-- IMAGE -->
+  <div class="rounded-2xl overflow-hidden border border-slate-800 bg-slate-900">
+    <img id="product-image"
+         class="w-full h-56 object-cover"
+         alt="Produk">
+  </div>
+
+  <!-- NAME + STATUS -->
+  <div>
+    <h2 id="product-name" class="text-xl font-bold"></h2>
+
+    <div id="product-status" class="mt-1 text-sm"></div>
+  </div>
+
+  <!-- PRICE & STOCK -->
+  <div class="grid grid-cols-2 gap-3">
+    <div class="bg-slate-900 border border-slate-800 rounded-xl p-4">
+      <p class="text-xs text-slate-400">Harga</p>
+      <p id="product-price" class="text-lg font-bold text-emerald-400"></p>
+    </div>
+
+    <div class="bg-slate-900 border border-slate-800 rounded-xl p-4">
+      <p class="text-xs text-slate-400">Stok</p>
+      <p id="product-stock" class="text-sm"></p>
+    </div>
+  </div>
+
+  <!-- DESCRIPTION -->
+  <div class="bg-slate-900 border border-slate-800 rounded-xl p-4">
+    <p class="text-xs text-slate-400 mb-1">Keterangan</p>
+    <p id="product-desc" class="text-sm text-slate-300">
+      Tidak ada keterangan tambahan.
+    </p>
+  </div>
+
+</main>
+
+<!-- ACTION BAR -->
+<div class="fixed bottom-0 left-0 right-0 z-40 bg-slate-950/95 backdrop-blur border-t border-slate-900 p-4">
+  <button id="btn-action"
+          class="w-full py-4 rounded-xl font-bold bg-emerald-500 text-slate-950">
+    Tambah ke Keranjang
+  </button>
+</div>
+
+<!-- SCRIPT -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
+  import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+
+  /* 🔥 SAMAKAN DENGAN INDEX / TAMBAHPRODUK */
+  const firebaseConfig = {
+    apiKey: "API_KEY_KAMU",
+    authDomain: "AUTH_DOMAIN_KAMU",
+    projectId: "PROJECT_ID_KAMU",
+    storageBucket: "STORAGE_BUCKET_KAMU",
+    messagingSenderId: "SENDER_ID_KAMU",
+    appId: "APP_ID_KAMU"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  /* AMBIL ID DARI URL */
+  const params = new URLSearchParams(location.search);
+  const productId = params.get("id");
+
+  if (!productId) {
+    alert("Produk tidak ditemukan");
+    history.back();
+  }
+
+  const ref = doc(db, "products", productId);
+  const snap = await getDoc(ref);
+
+  if (!snap.exists()) {
+    alert("Produk sudah tidak tersedia");
+    history.back();
+  }
+
+  const p = snap.data();
+
+  /* ELEMENT */
+  const img = document.getElementById("product-image");
+  const name = document.getElementById("product-name");
+  const price = document.getElementById("product-price");
+  const stock = document.getElementById("product-stock");
+  const status = document.getElementById("product-status");
+  const desc = document.getElementById("product-desc");
+  const btn = document.getElementById("btn-action");
+
+  /* ISI DATA */
+  img.src = p.image;
+  name.innerText = p.name;
+  price.innerText = `Rp ${Number(p.price).toLocaleString()} / ${p.unit}`;
+  stock.innerText = p.stock > 0 ? `${p.stock} tersedia` : "Stok habis";
+  desc.innerText = p.desc || "Tidak ada keterangan tambahan.";
+
+  /* STATUS STOK */
+  let statusText = "🟢 Segar";
+  let statusColor = "text-emerald-400";
+
+  if (p.stock <= 0) {
+    statusText = "🔴 Pre Order";
+    statusColor = "text-rose-400";
+    btn.innerText = "Pre Order";
+    btn.classList.replace("bg-emerald-500", "bg-cyan-500");
+  }
+
+  /* KESGARAN DARI purchaseTime */
+  let freshnessHTML = "";
+  if (p.purchaseTime) {
+    const buyTime = new Date(p.purchaseTime);
+    const now = new Date();
+    const diffH = (now - buyTime) / 36e5;
+
+    if (diffH < 12) {
+      freshnessHTML = `<div class="text-xs text-emerald-400">🟢 Dibeli hari ini</div>`;
+    } else if (diffH < 36) {
+      freshnessHTML = `<div class="text-xs text-amber-400">🟡 Dibeli kemarin</div>`;
+    } else {
+      freshnessHTML = `<div class="text-xs text-rose-400">🔴 Stok lama (disarankan Pre Order)</div>`;
+    }
+  }
+
+  status.innerHTML = `
+    <div class="space-y-1">
+      <div class="${statusColor} font-semibold">${statusText}</div>
+      ${freshnessHTML}
+    </div>
+  `;
+
+  /* ACTION */
+  btn.onclick = () => {
+    alert("Aksi keranjang / preorder akan disambungkan di tahap berikutnya");
+  };
+
+  lucide.createIcons();
+</script>
+
+</body>
+</html>
