@@ -327,42 +327,45 @@ function setDefaultCartBtn(btn) {
         };
 
         window.renderProducts = () => {
-            const searchTerm = document.getElementById('search-input').value.toLowerCase();
-            const grid = document.getElementById('product-grid');
-            const filtered = allProducts.filter(p => (currentCategory === "Semua" || p.category === currentCategory) && p.name.toLowerCase().includes(searchTerm));
+    const searchTerm = document.getElementById('search-input').value.toLowerCase();
+    const grid = document.getElementById('product-grid');
+    const filtered = allProducts.filter(p => (currentCategory === "Semua" || p.category === currentCategory) && p.name.toLowerCase().includes(searchTerm));
 
-            if (filtered.length === 0) {
-                grid.innerHTML = '<div class="col-span-2 text-center py-10 text-slate-500">Produk tidak ditemukan</div>';
-                return;
-            }
+    if (filtered.length === 0) {
+        grid.innerHTML = '<div class="col-span-2 text-center py-10 text-slate-500">Produk tidak ditemukan</div>';
+        return;
+    }
 
-            grid.innerHTML = filtered.map(p => `
-                <div onclick="
-  if (auth.currentUser?.uid === ADMIN_UID) {
-    location.href = 'edit-product.html?id=${p.id}'
-  } else {
-    location.href = 'product.html?id=${p.id}'
-  }
-"
-class="bg-slate-900 rounded-2xl overflow-hidden border border-slate-800 flex flex-col shadow-lg cursor-pointer">
-                    <div class="relative h-32 bg-slate-800">
-                        <img src="${p.image}" class="w-full h-full object-cover">
-                        <span class="absolute top-2 right-2 px-1.5 py-0.5 rounded text-[8px] font-bold uppercase ${p.status === 'Segar' ? 'bg-emerald-500 text-white' : 'bg-amber-500 text-white'}">${p.status}</span>
-                    </div>
-                    <div class="p-3 flex-1 flex flex-col">
-                        <h3 class="font-bold text-sm truncate text-slate-100">${p.name}</h3>
-                        <p class="text-[10px] text-slate-500">Stok: ${p.stock} • ${p.unit}</p>
-                        <div class="mt-auto flex justify-between items-center">
-                            <span class="text-emerald-400 font-bold text-xs">Rp ${Number(p.price).toLocaleString()}</span>
-                           <button onclick="event.stopPropagation(); addToCart('${p.id}')" class="${auth.currentUser?.uid === ADMIN_UID ? 'bg-cyan-500' : 'bg-emerald-500'} p-2 rounded-xl text-white">
-    <i data-lucide="${auth.currentUser?.uid === ADMIN_UID ? 'package-plus' : 'plus'}" class="w-4 h-4"></i>
-</button>
-                        </div>
+    // Ambil UID user saat ini untuk pengecekan admin
+    const user = auth.currentUser;
+
+    grid.innerHTML = filtered.map(p => {
+        // Tentukan link tujuan berdasarkan status admin
+        const targetPage = (user && user.uid === ADMIN_UID) ? 'edit-product.html' : 'product.html';
+        
+        return `
+            <div onclick="location.href='${targetPage}?id=${p.id}'"
+                 class="bg-slate-900 rounded-2xl overflow-hidden border border-slate-800 flex flex-col shadow-lg cursor-pointer">
+                <div class="relative h-32 bg-slate-800">
+                    <img src="${p.image}" class="w-full h-full object-cover">
+                    <span class="absolute top-2 right-2 px-1.5 py-0.5 rounded text-[8px] font-bold uppercase ${p.status === 'Segar' ? 'bg-emerald-500 text-white' : 'bg-amber-500 text-white'}">${p.status}</span>
+                </div>
+                <div class="p-3 flex-1 flex flex-col">
+                    <h3 class="font-bold text-sm truncate text-slate-100">${p.name}</h3>
+                    <p class="text-[10px] text-slate-500">Stok: ${p.stock} • ${p.unit}</p>
+                    <div class="mt-auto flex justify-between items-center">
+                        <span class="text-emerald-400 font-bold text-xs">Rp ${Number(p.price).toLocaleString()}</span>
+                        <button onclick="event.stopPropagation(); addToCart('${p.id}')" 
+                                class="${(user && user.uid === ADMIN_UID) ? 'bg-cyan-500' : 'bg-emerald-500'} p-2 rounded-xl text-white">
+                            <i data-lucide="${(user && user.uid === ADMIN_UID) ? 'package-plus' : 'plus'}" class="w-4 h-4"></i>
+                        </button>
                     </div>
                 </div>
-            `).join('');
-            lucide.createIcons();
-        };
+            </div>
+        `;
+    }).join('');
+    lucide.createIcons();
+};
 
         window.addToCart = async (id) => {
     const user = auth.currentUser;
