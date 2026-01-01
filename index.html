@@ -45,6 +45,11 @@
         Memuat status...
       </p>
       <p id="status-note" class="text-xs text-slate-500"></p>
+<input id="admin-status-note"
+  type="text"
+  placeholder="Catatan (admin)"
+  class="hidden mt-2 w-full text-xs px-3 py-2 rounded-xl
+         bg-slate-800 text-slate-200 border border-slate-700" />
     </div>
 
     <!-- Tombol hanya muncul untuk ADMIN -->
@@ -152,6 +157,7 @@ function getShippingCost(method) {
     if (user) {
         if (user.uid === ADMIN_UID) {
 document.getElementById("admin-status-select").classList.remove("hidden");
+document.getElementById("admin-status-note").classList.remove("hidden");
 
             // Tampilan JIKA ADMIN
             adminBtn.classList.remove("hidden");
@@ -166,6 +172,7 @@ document.getElementById("admin-status-select").classList.remove("hidden");
             cartBtn.onclick = () => window.location.href = "orders.html";
         } else {
 document.getElementById("admin-status-select").classList.add("hidden");
+document.getElementById("admin-status-note").classList.add("hidden");
             // Tampilan JIKA PELANGGAN BIASA
             setDefaultCartBtn(cartBtn);
         }
@@ -202,6 +209,23 @@ if (statusSelect) {
 }
 
 // ===============================
+// ADMIN: UPDATE CATATAN STATUS
+// ===============================
+const noteInput = document.getElementById("admin-status-note");
+
+if (noteInput) {
+  noteInput.onchange = async () => {
+    const user = auth.currentUser;
+    if (!user || user.uid !== ADMIN_UID) return;
+
+    await updateDoc(statusRef, {
+      note: noteInput.value,
+      updatedAt: serverTimestamp()
+    });
+  };
+}
+
+// ===============================
 // STATUS DAGANG HARI INI
 // ===============================
 onSnapshot(statusRef, (snap) => {
@@ -231,6 +255,10 @@ if (select && !select.classList.contains("hidden")) {
 
   statusText.innerHTML = `<span class="${color}">${icon} ${data.status}</span>`;
   statusNote.innerText = data.note || "";
+const noteInput = document.getElementById("admin-status-note");
+if (noteInput && !noteInput.classList.contains("hidden")) {
+  noteInput.value = data.note || "";
+}
 });
 
 // Fungsi pembantu untuk mengembalikan tampilan Keranjang Belanja
