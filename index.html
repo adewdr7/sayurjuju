@@ -34,6 +34,26 @@
     </button>
             </div>
         </nav>
+<!-- STATUS DAGANG HARI INI -->
+<div class="px-4 mt-4">
+  <div id="daily-status"
+       class="flex items-center justify-between gap-3 p-4 rounded-2xl border border-slate-800 bg-slate-900">
+       
+    <div>
+      <p class="text-xs text-slate-400">Status Dagang Hari Ini</p>
+      <p id="status-text" class="font-bold text-sm text-slate-200">
+        Memuat status...
+      </p>
+      <p id="status-note" class="text-xs text-slate-500"></p>
+    </div>
+
+    <!-- Tombol hanya muncul untuk ADMIN -->
+    <button id="btn-change-status"
+            class="hidden text-xs px-3 py-2 rounded-xl bg-emerald-500 text-black font-bold">
+      Ubah
+    </button>
+  </div>
+</div>
 
         <div class="px-4 mt-4 mb-4">
             <div class="relative">
@@ -110,6 +130,7 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
         const productsRef = collection(db, "products");
+const statusRef = doc(db, "settings", "dailyStatus");
 
         let allProducts = [];
         let cart = [];
@@ -127,6 +148,8 @@ function getShippingCost(method) {
     
     if (user) {
         if (user.uid === ADMIN_UID) {
+document.getElementById("btn-change-status").classList.remove("hidden");
+
             // Tampilan JIKA ADMIN
             adminBtn.classList.remove("hidden");
             manageBtn.classList.remove("hidden");
@@ -139,6 +162,7 @@ function getShippingCost(method) {
             // Alihkan fungsi klik jika admin ingin langsung ke halaman orders
             cartBtn.onclick = () => window.location.href = "orders.html";
         } else {
+document.getElementById("btn-change-status").classList.add("hidden");
             // Tampilan JIKA PELANGGAN BIASA
             setDefaultCartBtn(cartBtn);
         }
@@ -155,6 +179,59 @@ function getShippingCost(method) {
         loginBtn.href = "login.html";
     }
     lucide.createIcons();
+});
+
+// ===============================
+// ADMIN: UBAH STATUS
+// ===============================
+const btnChangeStatus = document.getElementById("btn-change-status");
+
+btnChangeStatus.onclick = async () => {
+  const user = auth.currentUser;
+  if (!user || user.uid !== ADMIN_UID) return;
+
+  const next = prompt(
+    "Pilih status:\nBERJUALAN\nDI PASAR\nLIBUR\nSELESAI",
+    "BERJUALAN"
+  );
+
+  if (!next) return;
+
+  const note = prompt("Catatan (opsional):", "");
+
+  await updateDoc(statusRef, {
+    status: next.toUpperCase(),
+    note: note,
+    updatedAt: serverTimestamp()
+  });
+};
+
+// ===============================
+// STATUS DAGANG HARI INI
+// ===============================
+onSnapshot(statusRef, (snap) => {
+  if (!snap.exists()) return;
+
+  const data = snap.data();
+  const statusText = document.getElementById("status-text");
+  const statusNote = document.getElementById("status-note");
+
+  let icon = "🟢";
+  let color = "text-emerald-400";
+
+  if (data.status === "LIBUR") {
+    icon = "🔴";
+    color = "text-rose-400";
+  } else if (data.status === "DI PASAR") {
+    icon = "🧺";
+    color = "text-amber-400";
+  } else if (data.status === "SELESAI") {
+    icon = "⏹";
+    color = "text-slate-400";
+  }
+
+  statusText.innerHTML = `<span class="${color}">${icon} ${data.status}</span>`;
+  statusNote.innerText = data.note || "";
 });
 
 // Fungsi pembantu untuk mengembalikan tampilan Keranjang Belanja
@@ -316,6 +393,7 @@ function setDefaultCartBtn(btn) {
     </script>
 </body>
 </html>
+
 
 
 
