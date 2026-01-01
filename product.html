@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Detail Produk</title>
+  <title>Detail Produk - Pasar Segar</title>
 
   <!-- Tailwind -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -11,163 +11,255 @@
   <script src="https://unpkg.com/lucide@latest"></script>
 
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap');
     body { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }
+    .hide-scrollbar::-webkit-scrollbar { display: none; }
   </style>
 </head>
 
-<body class="bg-slate-950 text-slate-100">
+<body class="bg-slate-950 text-slate-100 min-h-screen">
 
 <!-- NAVBAR -->
 <nav class="sticky top-0 z-40 bg-slate-950/90 backdrop-blur border-b border-slate-900 px-4 py-3 flex items-center gap-3">
   <button onclick="history.back()"
-          class="p-2 rounded-xl bg-slate-900 border border-slate-800">
+          class="p-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:text-emerald-400 transition-colors">
     <i data-lucide="arrow-left" class="w-5 h-5"></i>
   </button>
-  <h1 class="font-semibold text-lg">Detail Produk</h1>
+  <h1 class="font-semibold text-lg text-white">Detail Produk</h1>
 </nav>
 
+<!-- LOADING STATE -->
+<div id="loading" class="flex flex-col items-center justify-center py-20 space-y-4">
+    <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-emerald-500"></div>
+    <p class="text-slate-500 text-sm italic">Memuat info produk...</p>
+</div>
+
 <!-- CONTENT -->
-<main class="p-4 space-y-4 pb-28" id="content">
+<main class="hidden p-4 space-y-6 pb-32 max-w-md mx-auto" id="main-content">
 
-  <!-- IMAGE -->
-  <div class="rounded-2xl overflow-hidden border border-slate-800 bg-slate-900">
+  <!-- IMAGE & BADGE -->
+  <div class="relative rounded-3xl overflow-hidden border border-slate-800 bg-slate-900 aspect-square shadow-2xl">
     <img id="product-image"
-         class="w-full h-56 object-cover"
-         alt="Produk">
-  </div>
-
-  <!-- NAME + STATUS -->
-  <div>
-    <h2 id="product-name" class="text-xl font-bold"></h2>
-
-    <div id="product-status" class="mt-1 text-sm"></div>
-  </div>
-
-  <!-- PRICE & STOCK -->
-  <div class="grid grid-cols-2 gap-3">
-    <div class="bg-slate-900 border border-slate-800 rounded-xl p-4">
-      <p class="text-xs text-slate-400">Harga</p>
-      <p id="product-price" class="text-lg font-bold text-emerald-400"></p>
-    </div>
-
-    <div class="bg-slate-900 border border-slate-800 rounded-xl p-4">
-      <p class="text-xs text-slate-400">Stok</p>
-      <p id="product-stock" class="text-sm"></p>
+         class="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
+         alt="Gambar Produk">
+    <div id="freshness-badge" class="absolute top-4 left-4 px-3 py-1.5 rounded-full text-[10px] font-bold uppercase shadow-lg backdrop-blur-md">
+      <!-- Freshness status injected here -->
     </div>
   </div>
 
-  <!-- DESCRIPTION -->
-  <div class="bg-slate-900 border border-slate-800 rounded-xl p-4">
-    <p class="text-xs text-slate-400 mb-1">Keterangan</p>
-    <p id="product-desc" class="text-sm text-slate-300">
-      Tidak ada keterangan tambahan.
+  <!-- INFO UTAMA -->
+  <div class="space-y-4 bg-slate-900/50 p-6 rounded-3xl border border-slate-800">
+    <div class="flex justify-between items-start">
+        <div>
+            <h2 id="product-name" class="text-2xl font-bold text-white tracking-tight leading-tight uppercase">Nama Produk</h2>
+            <p id="product-category" class="text-[10px] text-slate-500 font-bold tracking-widest uppercase mt-1">Kategori</p>
+        </div>
+        <div id="product-price-container" class="text-right">
+            <p id="product-price" class="text-xl font-bold text-emerald-400">Rp 0</p>
+            <p id="product-unit" class="text-[10px] text-slate-500">per unit</p>
+        </div>
+    </div>
+
+    <div class="flex items-center gap-3 pt-2">
+        <div class="flex-1 p-3 bg-slate-950 border border-slate-800 rounded-2xl text-center">
+            <p class="text-[10px] text-slate-500 font-bold uppercase mb-1">Status</p>
+            <p id="product-status" class="text-xs font-semibold">Memuat...</p>
+        </div>
+        <div class="flex-1 p-3 bg-slate-950 border border-slate-800 rounded-2xl text-center">
+            <p class="text-[10px] text-slate-500 font-bold uppercase mb-1">Stok</p>
+            <p id="product-stock" class="text-xs font-semibold">Memuat...</p>
+        </div>
+    </div>
+  </div>
+
+  <!-- DESKRIPSI -->
+  <div class="space-y-2 px-2">
+    <h3 class="text-sm font-bold text-white flex items-center gap-2">
+        <i data-lucide="info" class="w-4 h-4 text-emerald-400"></i>
+        Informasi Produk
+    </h3>
+    <p id="product-desc" class="text-sm text-slate-400 leading-relaxed">
+      Sangat cocok untuk kebutuhan dapur Anda. Produk dipilih dengan kualitas terbaik.
     </p>
   </div>
 
 </main>
 
-<!-- ACTION BAR -->
-<div class="fixed bottom-0 left-0 right-0 z-40 bg-slate-950/95 backdrop-blur border-t border-slate-900 p-4">
-  <button id="btn-action"
-          class="w-full py-4 rounded-xl font-bold bg-emerald-500 text-slate-950">
-    Tambah ke Keranjang
-  </button>
+<!-- BOTTOM ACTION BAR -->
+<div id="action-bar" class="hidden fixed bottom-0 left-0 right-0 p-4 bg-slate-950/80 backdrop-blur-xl border-t border-slate-900 z-50">
+    <div class="max-w-md mx-auto flex items-center gap-3">
+        <div class="flex items-center bg-slate-900 border border-slate-800 rounded-2xl p-1">
+            <button onclick="updateQty(-1)" class="p-3 text-slate-400 hover:text-white transition-colors">
+                <i data-lucide="minus" class="w-4 h-4"></i>
+            </button>
+            <span id="qty-count" class="px-4 font-bold text-sm min-w-[40px] text-center">1</span>
+            <button onclick="updateQty(1)" class="p-3 text-emerald-400 hover:text-white transition-colors">
+                <i data-lucide="plus" class="w-4 h-4"></i>
+            </button>
+        </div>
+        <button id="btn-action" 
+                class="flex-1 py-4 bg-emerald-500 hover:bg-emerald-400 active:scale-95 text-slate-950 font-bold rounded-2xl transition-all shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2">
+            <i data-lucide="shopping-cart" class="w-5 h-5"></i>
+            Tambah ke Keranjang
+        </button>
+    </div>
 </div>
 
-<!-- SCRIPT -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
   import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
-  /* 🔥 SAMAKAN DENGAN INDEX / TAMBAHPRODUK */
   const firebaseConfig = {
-    apiKey: "API_KEY_KAMU",
-    authDomain: "AUTH_DOMAIN_KAMU",
-    projectId: "PROJECT_ID_KAMU",
-    storageBucket: "STORAGE_BUCKET_KAMU",
-    messagingSenderId: "SENDER_ID_KAMU",
-    appId: "APP_ID_KAMU"
+    apiKey: "AIzaSyBWkPqyh54IRccNz2YjuB1bL5r49YadAP4",
+    authDomain: "sayurjuju-bfe82.firebaseapp.com",
+    projectId: "sayurjuju-bfe82",
+    storageBucket: "sayurjuju-bfe82.firebasestorage.app",
+    messagingSenderId: "754413439458",
+    appId: "1:754413439458:web:341c9fe99fd9b1550551bb"
   };
 
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
 
-  /* AMBIL ID DARI URL */
-  const params = new URLSearchParams(location.search);
+  let productData = null;
+  let quantity = 1;
+
+  // AMBIL ID DARI URL
+  const params = new URLSearchParams(window.location.search);
   const productId = params.get("id");
 
   if (!productId) {
-    alert("Produk tidak ditemukan");
-    history.back();
+    alert("Produk tidak ditemukan!");
+    window.location.href = "index.html";
   }
 
-  const ref = doc(db, "products", productId);
-  const snap = await getDoc(ref);
+  // FUNGSI LOAD DATA
+  async function loadProduct() {
+    try {
+      const snap = await getDoc(doc(db, "products", productId));
+      
+      if (!snap.exists()) {
+        alert("Produk tidak tersedia.");
+        window.location.href = "index.html";
+        return;
+      }
 
-  if (!snap.exists()) {
-    alert("Produk sudah tidak tersedia");
-    history.back();
-  }
-
-  const p = snap.data();
-
-  /* ELEMENT */
-  const img = document.getElementById("product-image");
-  const name = document.getElementById("product-name");
-  const price = document.getElementById("product-price");
-  const stock = document.getElementById("product-stock");
-  const status = document.getElementById("product-status");
-  const desc = document.getElementById("product-desc");
-  const btn = document.getElementById("btn-action");
-
-  /* ISI DATA */
-  img.src = p.image;
-  name.innerText = p.name;
-  price.innerText = `Rp ${Number(p.price).toLocaleString()} / ${p.unit}`;
-  stock.innerText = p.stock > 0 ? `${p.stock} tersedia` : "Stok habis";
-  desc.innerText = p.desc || "Tidak ada keterangan tambahan.";
-
-  /* STATUS STOK */
-  let statusText = "🟢 Segar";
-  let statusColor = "text-emerald-400";
-
-  if (p.stock <= 0) {
-    statusText = "🔴 Pre Order";
-    statusColor = "text-rose-400";
-    btn.innerText = "Pre Order";
-    btn.classList.replace("bg-emerald-500", "bg-cyan-500");
-  }
-
-  /* KESGARAN DARI purchaseTime */
-  let freshnessHTML = "";
-  if (p.purchaseTime) {
-    const buyTime = new Date(p.purchaseTime);
-    const now = new Date();
-    const diffH = (now - buyTime) / 36e5;
-
-    if (diffH < 12) {
-      freshnessHTML = `<div class="text-xs text-emerald-400">🟢 Dibeli hari ini</div>`;
-    } else if (diffH < 36) {
-      freshnessHTML = `<div class="text-xs text-amber-400">🟡 Dibeli kemarin</div>`;
-    } else {
-      freshnessHTML = `<div class="text-xs text-rose-400">🔴 Stok lama (disarankan Pre Order)</div>`;
+      productData = { id: snap.id, ...snap.data() };
+      renderProduct();
+    } catch (err) {
+      console.error(err);
+      alert("Gagal memuat data: " + err.message);
     }
   }
 
-  status.innerHTML = `
-    <div class="space-y-1">
-      <div class="${statusColor} font-semibold">${statusText}</div>
-      ${freshnessHTML}
-    </div>
-  `;
+  function renderProduct() {
+    const p = productData;
+    
+    // Elements
+    document.getElementById("loading").classList.add("hidden");
+    document.getElementById("main-content").classList.remove("hidden");
+    document.getElementById("action-bar").classList.remove("hidden");
 
-  /* ACTION */
-  btn.onclick = () => {
-    alert("Aksi keranjang / preorder akan disambungkan di tahap berikutnya");
+    document.getElementById("product-image").src = p.image;
+    document.getElementById("product-name").innerText = p.name;
+    document.getElementById("product-category").innerText = p.category || "Segar";
+    document.getElementById("product-price").innerText = `Rp ${Number(p.price).toLocaleString()}`;
+    document.getElementById("product-unit").innerText = `per ${p.unit}`;
+    document.getElementById("product-stock").innerText = p.stock > 0 ? `${p.stock} ${p.unit}` : "Habis";
+    document.getElementById("product-status").innerText = p.status;
+    
+    // Status color
+    const statusEl = document.getElementById("product-status");
+    if(p.status === "Segar") {
+        statusEl.className = "text-xs font-semibold text-emerald-400";
+    } else {
+        statusEl.className = "text-xs font-semibold text-amber-400";
+    }
+
+    // Freshness Logic (Berdasarkan purchaseTime)
+    const freshnessBadge = document.getElementById("freshness-badge");
+    if (p.purchaseTime) {
+      const buyTime = new Date(p.purchaseTime);
+      const diffH = (new Date() - buyTime) / 36e5;
+
+      if (diffH < 12) {
+        freshnessBadge.innerHTML = "🟢 Baru Datang";
+        freshnessBadge.className += " bg-emerald-500 text-white";
+      } else if (diffH < 36) {
+        freshnessBadge.innerHTML = "🟡 Stok Kemarin";
+        freshnessBadge.className += " bg-amber-500 text-white";
+      } else {
+        freshnessBadge.innerHTML = "⚪ Stok Lama";
+        freshnessBadge.className += " bg-slate-700 text-slate-300";
+      }
+    } else {
+        freshnessBadge.classList.add("hidden");
+    }
+
+    // Stok Habis Logic
+    const btnAction = document.getElementById("btn-action");
+    if (p.stock <= 0) {
+      btnAction.innerHTML = `<i data-lucide="clock" class="w-5 h-5"></i> Pre Order (Besok)`;
+      btnAction.classList.replace("bg-emerald-500", "bg-cyan-500");
+      btnAction.onclick = () => window.location.href = "preorder.html";
+    } else {
+      btnAction.onclick = () => addToCart();
+    }
+
+    lucide.createIcons();
+  }
+
+  // GLOBAL ACTIONS
+  window.updateQty = (val) => {
+    quantity = Math.max(1, quantity + val);
+    // Batasi stok jika ada
+    if(productData && productData.stock > 0 && quantity > productData.stock) {
+        quantity = productData.stock;
+    }
+    document.getElementById("qty-count").innerText = quantity;
   };
 
-  lucide.createIcons();
-</script>
+  window.addToCart = () => {
+    // Ambil data keranjang dari localStorage agar sinkron dengan index.html
+    let cart = JSON.parse(localStorage.getItem('cart') || '[]');
+    
+    const existing = cart.find(item => item.id === productData.id);
+    if (existing) {
+        existing.qty += quantity;
+    } else {
+        cart.push({
+            id: productData.id,
+            name: productData.name,
+            price: productData.price,
+            image: productData.image,
+            unit: productData.unit,
+            qty: quantity
+        });
+    }
 
+    localStorage.setItem('cart', JSON.stringify(cart));
+    
+    // Beri Feedback
+    const btn = document.getElementById("btn-action");
+    const originalText = btn.innerHTML;
+    btn.innerHTML = `<i data-lucide="check" class="w-5 h-5"></i> Berhasil!`;
+    btn.classList.replace("bg-emerald-500", "bg-white");
+    btn.classList.replace("text-slate-950", "text-emerald-600");
+    
+    setTimeout(() => {
+        btn.innerHTML = originalText;
+        btn.classList.replace("bg-white", "bg-emerald-500");
+        btn.classList.replace("text-emerald-600", "text-slate-950");
+        lucide.createIcons();
+        window.location.href = "index.html"; // Kembali ke katalog
+    }, 1000);
+  };
+
+  // Start
+  loadProduct();
+
+</script>
 </body>
 </html>
+
+
