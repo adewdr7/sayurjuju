@@ -182,9 +182,9 @@ let cart = JSON.parse(localStorage.getItem(CART_KEY)) || [];
             // Image & Status
             document.getElementById('p-image').src = p.image || 'https://images.unsplash.com/photo-1542831371-29b0f74f9713?w=500';
             const statusTag = document.getElementById('p-status-tag');
-            statusTag.innerText = p.status === 'SEGAR' ? 'Segar' : 'Lama';
+            statusTag.innerText = p.status === 'Segar' ? 'Segar' : 'Lama';
             statusTag.className = `absolute top-4 left-4 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest shadow-lg ${
-                p.status === 'SEGAR' ? 'bg-emerald-500 text-white' : 'bg-orange-500 text-white'
+                p.status === 'Segar' ? 'bg-emerald-500 text-white' : 'bg-orange-500 text-white'
             }`;
 
             // Basic Info
