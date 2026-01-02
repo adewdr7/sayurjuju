@@ -416,24 +416,76 @@ function setDefaultCartBtn(btn) {
     updateCartUI();
 };
 
-        window.updateCartUI = () => {
-            const count = cart.reduce((sum, item) => sum + item.qty, 0);
-            document.getElementById('cart-badge').innerText = count;
-            document.getElementById('cart-badge').classList.toggle('hidden', count === 0);
-            document.getElementById('cart-items').innerHTML = cart.map(item => `
-                <div class="flex gap-3 bg-slate-800/50 p-3 rounded-2xl border border-slate-800/50">
-                    <img src="${item.image}" class="w-12 h-12 rounded-lg object-cover">
-                    <div class="flex-1">
-                        <h4 class="text-xs font-bold text-slate-100">${item.name}</h4>
-                        <p class="text-[10px] text-emerald-400">${item.qty} x Rp ${Number(item.price).toLocaleString()}</p>
-                    </div>
-                    <button onclick="removeFromCart('${item.id}')" class="text-rose-500 p-2"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+        // Perbaikan fungsi updateCartUI agar tidak error saat element null
+window.updateCartUI = () => {
+    const badge = document.getElementById('cart-badge');
+    const cartItems = document.getElementById('cart-items');
+    const cartTotal = document.getElementById('cart-total');
+
+    const count = cart.reduce((sum, item) => sum + item.qty, 0);
+    
+    // Gunakan optional chaining atau cek eksistensi
+    if (badge) {
+        badge.innerText = count;
+        badge.classList.toggle('hidden', count === 0);
+    }
+
+    if (cartItems) {
+        cartItems.innerHTML = cart.map(item => `
+            <div class="flex gap-3 bg-slate-800/50 p-3 rounded-2xl border border-slate-800/50">
+                <img src="${item.image}" class="w-12 h-12 rounded-lg object-cover">
+                <div class="flex-1">
+                    <h4 class="text-xs font-bold text-slate-100">${item.name}</h4>
+                    <p class="text-[10px] text-emerald-400">${item.qty} x Rp ${Number(item.price).toLocaleString()}</p>
                 </div>
-            `).join('');
-            const total = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
-            document.getElementById('cart-total').innerText = `Rp ${total.toLocaleString()}`;
-            lucide.createIcons();
-        };
+                <button onclick="removeFromCart('${item.id}')" class="text-rose-500 p-2"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+            </div>
+        `).join('');
+    }
+
+    if (cartTotal) {
+        const total = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+        cartTotal.innerText = `Rp ${total.toLocaleString()}`;
+    }
+    lucide.createIcons();
+};
+
+// Perbaikan fungsi checkout agar mengambil nama langsung dari Firebase Auth
+window.checkout = async function () {
+    const user = auth.currentUser;
+    if (!user) { alert("Silakan login dulu"); return; }
+    if (cart.length === 0) { alert("Keranjang kosong"); return; }
+
+    const method = document.querySelector('input[name="delivery"]:checked').value;
+    const subtotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
+    const total = subtotal + getShippingCost(method);
+
+    try {
+        await addDoc(collection(db, "orders"), {
+            userId: user.uid,
+            // AMBIL NAMA LANGSUNG DARI AUTH, BUKAN DARI DOM
+            userName: user.displayName || user.email, 
+            items: cart.map(i => ({
+                productId: i.id,
+                name: i.name,
+                qty: i.qty,
+                price: i.price
+            })),
+            total,
+            deliveryMethod: method,
+            status: "MENUNGGU",
+            createdAt: serverTimestamp(),
+            cancelableUntil: Date.now() + (5 * 60 * 1000)
+        });
+
+        cart = [];
+        localStorage.setItem(CART_KEY, JSON.stringify(cart));
+        updateCartUI();
+        toggleCart();
+        window.location.href = "profile.html";
+    } catch (err) { alert("Gagal checkout: " + err.message); }
+};
+
 
         window.toggleCart = () => document.getElementById('cart-modal').classList.toggle('hidden');
         window.removeFromCart = (id) => { cart = cart.filter(i => i.id !== id); updateCartUI(); };
