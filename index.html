@@ -454,44 +454,6 @@ window.updateCartUI = () => {
     lucide.createIcons();
 };
 
-
-// Perbaikan fungsi checkout agar mengambil nama langsung dari Firebase Auth
-window.checkout = async function () {
-    const user = auth.currentUser;
-    if (!user) { alert("Silakan login dulu"); return; }
-    if (cart.length === 0) { alert("Keranjang kosong"); return; }
-
-    const method = document.querySelector('input[name="delivery"]:checked').value;
-    const subtotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
-    const total = subtotal + getShippingCost(method);
-
-    try {
-        await addDoc(collection(db, "orders"), {
-            userId: user.uid,
-            // AMBIL NAMA LANGSUNG DARI AUTH, BUKAN DARI DOM
-            userName: user.displayName || user.email, 
-            items: cart.map(i => ({
-                productId: i.id,
-                name: i.name,
-                qty: i.qty,
-                price: i.price
-            })),
-            total,
-            deliveryMethod: method,
-            status: "MENUNGGU",
-            createdAt: serverTimestamp(),
-            cancelableUntil: Date.now() + (5 * 60 * 1000)
-        });
-
-        cart = [];
-        localStorage.setItem(CART_KEY, JSON.stringify(cart));
-        updateCartUI();
-        toggleCart();
-        window.location.href = "profile.html";
-    } catch (err) { alert("Gagal checkout: " + err.message); }
-};
-
-
         window.toggleCart = () => document.getElementById('cart-modal').classList.toggle('hidden');
         window.removeFromCart = (id) => { cart = cart.filter(i => i.id !== id); updateCartUI(); };
         window.checkout = async function () {
@@ -529,7 +491,7 @@ window.checkout = async function () {
 };
 
         lucide.createIcons();
-});
+
 window.addEventListener('load', () => {
         const params = new URLSearchParams(window.location.search);
         if (params.get('action') === 'checkout') {
@@ -548,3 +510,15 @@ window.addEventListener('load', () => {
     </script>
 </body>
 </html>
+
+
+
+
+
+
+
+
+
+
+
+
