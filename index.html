@@ -499,9 +499,11 @@ updateCartUI(); };
 
         // HAPUS LOGIKA PENGURANGAN STOK DI SINI
         cart = [];
-        updateCartUI();
-        toggleCart();
-        window.location.href = "profile.html";
+localStorage.removeItem(CART_KEY); // 🔥 INI KUNCI UTAMA
+updateCartUI();
+toggleCart();
+alert("Pesanan berhasil dibuat 🎉");
+window.location.href = "profile.html";
     } catch (err) { alert("Gagal checkout: " + err.message); }
 };
 
