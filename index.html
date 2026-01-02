@@ -450,9 +450,21 @@ window.updateCartUI = () => {
 
 
 // Jalankan saat pertama kali buka halaman
+// Jalankan saat pertama kali buka halaman
 window.addEventListener('DOMContentLoaded', () => {
     updateCartUI();
+    
+    // PERBAIKAN: Cek jika ada hash #open-cart di URL, maka buka modal keranjang
+    if (window.location.hash === '#open-cart') {
+        // Beri sedikit delay agar transisi mulus
+        setTimeout(() => {
+            document.getElementById('cart-modal').classList.remove('hidden');
+            // Hapus hash agar saat refresh tidak terbuka terus
+            history.replaceState(null, null, ' ');
+        }, 300);
+    }
 });
+
 
 // Listener untuk radio button pengiriman agar total update otomatis
 document.querySelectorAll('input[name="delivery"]').forEach(radio => {
@@ -512,6 +524,7 @@ window.checkout = async function () {
     </script>
 </body>
 </html>
+
 
 
 
