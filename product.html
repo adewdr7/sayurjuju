@@ -26,11 +26,6 @@
     <i data-lucide="arrow-left" class="w-5 h-5"></i>
   </button>
   <h1 class="font-semibold text-lg text-white">Detail Produk</h1>
-<button onclick="goToCart()"
-  class="ml-auto relative p-2 rounded-xl bg-slate-900 border border-slate-800 text-emerald-400">
-  <i data-lucide="shopping-cart" class="w-5 h-5"></i>
-  <span id="cart-badge" class="hidden absolute -top-1 -right-1 bg-rose-500 text-[10px] font-bold text-white w-5 h-5 rounded-full flex items-center justify-center">0</span>
-</button>
 </nav>
 
 <!-- LOADING STATE -->
@@ -128,22 +123,6 @@
 
   let productData = null;
   let quantity = 1;
-// Fungsi untuk memperbarui angka di badge keranjang
-const updateCartBadge = () => {
-    const cart = JSON.parse(localStorage.getItem('cart') || '[]');
-    const totalItems = cart.reduce((sum, item) => sum + item.qty, 0);
-    const badge = document.getElementById('cart-badge');
-    
-    if (badge) {
-        badge.innerText = totalItems;
-        // Sembunyikan badge jika keranjang kosong
-        badge.classList.toggle('hidden', totalItems === 0);
-    }
-};
-
-// Jalankan saat halaman pertama kali dimuat agar badge muncul
-window.addEventListener('DOMContentLoaded', updateCartBadge);
-
 
   // AMBIL ID DARI URL
   const params = new URLSearchParams(window.location.search);
@@ -226,10 +205,9 @@ window.addEventListener('DOMContentLoaded', updateCartBadge);
     } else {
       btnAction.onclick = () => addToCart();
     }
-    updateCartBadge(); // Pastikan badge terupdate setelah data produk muncul
+
     lucide.createIcons();
   }
-
 
   // GLOBAL ACTIONS
   window.updateQty = (val) => {
@@ -242,16 +220,11 @@ window.addEventListener('DOMContentLoaded', updateCartBadge);
   };
 
   window.addToCart = () => {
-    // 1. Selalu ambil data terbaru dari localStorage sebelum push
+    // Ambil data keranjang dari localStorage agar sinkron dengan index.html
     let cart = JSON.parse(localStorage.getItem('cart') || '[]');
     
     const existing = cart.find(item => item.id === productData.id);
     if (existing) {
-        // Cek stok sebelum menambah
-        if (existing.qty + quantity > productData.stock) {
-            alert(`Stok tidak mencukupi! Sisa stok: ${productData.stock}`);
-            return;
-        }
         existing.qty += quantity;
     } else {
         cart.push({
@@ -264,12 +237,9 @@ window.addEventListener('DOMContentLoaded', updateCartBadge);
         });
     }
 
-    // 2. Simpan kembali ke localStorage
     localStorage.setItem('cart', JSON.stringify(cart));
-
-updateCartBadge();
     
-    // Feedback Berhasil
+    // Beri Feedback
     const btn = document.getElementById("btn-action");
     const originalText = btn.innerHTML;
     btn.innerHTML = `<i data-lucide="check" class="w-5 h-5"></i> Berhasil!`;
@@ -281,17 +251,9 @@ updateCartBadge();
         btn.classList.replace("bg-white", "bg-emerald-500");
         btn.classList.replace("text-emerald-600", "text-slate-950");
         lucide.createIcons();
-        // Reset qty ke 1 setelah sukses
-        quantity = 1;
-        document.getElementById("qty-count").innerText = quantity;
+        window.location.href = "index.html"; // Kembali ke katalog
     }, 1000);
-};
-
-
-window.goToCart = () => {
-  // Mengarahkan ke index.html dan memicu modal keranjang terbuka otomatis
-  window.location.href = "index.html#open-cart";
-};
+  };
 
   // Start
   loadProduct();
@@ -299,7 +261,5 @@ window.goToCart = () => {
 </script>
 </body>
 </html>
-
-
 
 
