@@ -107,11 +107,20 @@
         import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { getAuth, onAuthStateChanged, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
-        const firebaseConfig = JSON.parse(__firebase_config);
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        const auth = getAuth(app);
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = {
+  apiKey: "AIzaSyBWkPqyh54IRccNz2YjuB1bL5r49YadAP4",
+  authDomain: "sayurjuju-bfe82.firebaseapp.com",
+  projectId: "sayurjuju-bfe82",
+  storageBucket: "sayurjuju-bfe82.firebasestorage.app",
+  messagingSenderId: "754413439458",
+  appId: "1:754413439458:web:341c9fe99fd9b1550551bb"
+};
+
+const appId = firebaseConfig.appId;
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth(app);
+const params = new URLSearchParams(window.location.search);
 
         let currentProduct = null;
         let selectedQty = 1;
@@ -135,7 +144,6 @@
 
         // Load Product Data
         async function loadProduct() {
-            const params = new URLSearchParams(window.location.search);
             const productId = params.get('id');
 
             if (!productId) {
@@ -280,12 +288,12 @@
         }
 
         // Sync with index.html open cart request
-        const params = new URLSearchParams(window.location.search);
         if (params.get('added') === 'true') {
             updateCartBadge();
         }
     </script>
 </body>
 </html>
+
 
 
