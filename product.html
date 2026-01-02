@@ -233,6 +233,10 @@ let cart = JSON.parse(localStorage.getItem(CART_KEY)) || [];
             document.getElementById('btn-plus').disabled = selectedQty >= currentProduct.stock;
         }
 
+function syncCart() {
+    cart = JSON.parse(localStorage.getItem(CART_KEY)) || [];
+}
+
         // Cart Logic
         function addToCart() {
             const existingIndex = cart.findIndex(item => item.id === currentProduct.id);
@@ -301,6 +305,7 @@ let cart = JSON.parse(localStorage.getItem(CART_KEY)) || [];
     </script>
 </body>
 </html>
+
 
 
 
