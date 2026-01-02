@@ -493,8 +493,9 @@ updateCartUI(); };
             total,
             deliveryMethod: method,
             status: "MENUNGGU",
-            createdAt: serverTimestamp(),
-            cancelableUntil: Date.now() + (5 * 60 * 1000)
+            createdAt: serverTimestamp(),          // untuk server (valid jangka panjang)
+createdAtClient: Date.now(),            // 🔥 untuk UI & sorting langsung
+cancelableUntil: Date.now() + (5 * 60 * 1000)
         });
 
         // HAPUS LOGIKA PENGURANGAN STOK DI SINI
