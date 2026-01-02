@@ -379,38 +379,41 @@ function setDefaultCartBtn(btn) {
         window.addToCart = async (id) => {
     const user = auth.currentUser;
 
-    // JIKA ADMIN: Tambah Stok di Database
+    // ADMIN → tambah stok
     if (user && user.uid === ADMIN_UID) {
         try {
             const productRef = doc(db, "products", id);
             await updateDoc(productRef, {
-                stock: increment(1) // Tambah stok +1
+                stock: increment(1)
             });
-            // Tidak perlu render manual karena onSnapshot akan otomatis update tampilan
         } catch (err) {
             console.error("Gagal update stok:", err);
         }
-    } 
-    // JIKA PELANGGAN: Masukkan ke Keranjang
-    else {
-        const product = allProducts.find(p => p.id === id);
-        if (product.stock <= 0) {
-            alert("Stok habis!");
+        return;
+    }
+
+    // PELANGGAN → tambah ke cart
+    const product = allProducts.find(p => p.id === id);
+    if (!product || product.stock <= 0) {
+        alert("Stok habis!");
+        return;
+    }
+
+    const existing = cart.find(item => item.id === id);
+
+    if (existing) {
+        if (existing.qty >= product.stock) {
+            alert("Tidak bisa melebihi stok yang tersedia");
             return;
         }
-        const existing = cart.find(item => item.id === id);
-        if (existing) {
-            if (existing.qty >= product.stock) {
-                alert("Tidak bisa melebihi stok yang tersedia");
-                return;
-            }
-            existing.qty++;
-localStorage.setItem(CART_KEY, JSON.stringify(cart));
-        } else {
-            cart.push({ ...product, qty: 1 });
-localStorage.setItem(CART_KEY, JSON.stringify(cart));
-updateCartUI();
+        existing.qty++;
+    } else {
+        cart.push({ ...product, qty: 1 });
     }
+
+    // 🔑 WAJIB: simpan & update UI
+    localStorage.setItem(CART_KEY, JSON.stringify(cart));
+    updateCartUI();
 };
 
         window.updateCartUI = () => {
