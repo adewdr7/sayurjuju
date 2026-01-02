@@ -226,7 +226,9 @@ window.addEventListener('DOMContentLoaded', updateCartBadge);
     } else {
       btnAction.onclick = () => addToCart();
     }
-
+    updateCartBadge(); // Pastikan badge terupdate setelah data produk muncul
+    lucide.createIcons();
+  }
     lucide.createIcons();
   }
 
@@ -298,6 +300,7 @@ window.goToCart = () => {
 </script>
 </body>
 </html>
+
 
 
 
