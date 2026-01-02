@@ -1,264 +1,290 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Detail Produk - Pasar Segar</title>
-
-  <!-- Tailwind -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Icon -->
-  <script src="https://unpkg.com/lucide@latest"></script>
-
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap');
-    body { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }
-    .hide-scrollbar::-webkit-scrollbar { display: none; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detail Produk - Pasar Segar</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+    </style>
 </head>
+<body class="bg-slate-950 text-slate-100 min-h-screen pb-24">
 
-<body class="bg-slate-950 text-slate-100 min-h-screen">
-
-<!-- NAVBAR -->
-<nav class="sticky top-0 z-40 bg-slate-950/90 backdrop-blur border-b border-slate-900 px-4 py-3 flex items-center gap-3">
-  <button onclick="history.back()"
-          class="p-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:text-emerald-400 transition-colors">
-    <i data-lucide="arrow-left" class="w-5 h-5"></i>
-  </button>
-  <h1 class="font-semibold text-lg text-white">Detail Produk</h1>
-</nav>
-
-<!-- LOADING STATE -->
-<div id="loading" class="flex flex-col items-center justify-center py-20 space-y-4">
-    <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-emerald-500"></div>
-    <p class="text-slate-500 text-sm italic">Memuat info produk...</p>
-</div>
-
-<!-- CONTENT -->
-<main class="hidden p-4 space-y-6 pb-32 max-w-md mx-auto" id="main-content">
-
-  <!-- IMAGE & BADGE -->
-  <div class="relative rounded-3xl overflow-hidden border border-slate-800 bg-slate-900 aspect-square shadow-2xl">
-    <img id="product-image"
-         class="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
-         alt="Gambar Produk">
-    <div id="freshness-badge" class="absolute top-4 left-4 px-3 py-1.5 rounded-full text-[10px] font-bold uppercase shadow-lg backdrop-blur-md">
-      <!-- Freshness status injected here -->
-    </div>
-  </div>
-
-  <!-- INFO UTAMA -->
-  <div class="space-y-4 bg-slate-900/50 p-6 rounded-3xl border border-slate-800">
-    <div class="flex justify-between items-start">
-        <div>
-            <h2 id="product-name" class="text-2xl font-bold text-white tracking-tight leading-tight uppercase">Nama Produk</h2>
-            <p id="product-category" class="text-[10px] text-slate-500 font-bold tracking-widest uppercase mt-1">Kategori</p>
+    <!-- Navigasi Atas -->
+    <nav class="p-4 flex justify-between items-center sticky top-0 bg-slate-950/90 backdrop-blur-md z-40 border-b border-slate-900">
+        <div class="flex items-center gap-3">
+            <a href="index.html" class="p-2 bg-slate-900 text-slate-400 rounded-xl border border-slate-800 hover:text-emerald-400 transition-colors">
+                <i data-lucide="arrow-left" class="w-6 h-6"></i>
+            </a>
+            <h1 class="text-xl font-bold">Detail Produk</h1>
         </div>
-        <div id="product-price-container" class="text-right">
-            <p id="product-price" class="text-xl font-bold text-emerald-400">Rp 0</p>
-            <p id="product-unit" class="text-[10px] text-slate-500">per unit</p>
-        </div>
-    </div>
-
-    <div class="flex items-center gap-3 pt-2">
-        <div class="flex-1 p-3 bg-slate-950 border border-slate-800 rounded-2xl text-center">
-            <p class="text-[10px] text-slate-500 font-bold uppercase mb-1">Status</p>
-            <p id="product-status" class="text-xs font-semibold">Memuat...</p>
-        </div>
-        <div class="flex-1 p-3 bg-slate-950 border border-slate-800 rounded-2xl text-center">
-            <p class="text-[10px] text-slate-500 font-bold uppercase mb-1">Stok</p>
-            <p id="product-stock" class="text-xs font-semibold">Memuat...</p>
-        </div>
-    </div>
-  </div>
-
-  <!-- DESKRIPSI -->
-  <div class="space-y-2 px-2">
-    <h3 class="text-sm font-bold text-white flex items-center gap-2">
-        <i data-lucide="info" class="w-4 h-4 text-emerald-400"></i>
-        Informasi Produk
-    </h3>
-    <p id="product-desc" class="text-sm text-slate-400 leading-relaxed">
-      Sangat cocok untuk kebutuhan dapur Anda. Produk dipilih dengan kualitas terbaik.
-    </p>
-  </div>
-
-</main>
-
-<!-- BOTTOM ACTION BAR -->
-<div id="action-bar" class="hidden fixed bottom-0 left-0 right-0 p-4 bg-slate-950/80 backdrop-blur-xl border-t border-slate-900 z-50">
-    <div class="max-w-md mx-auto flex items-center gap-3">
-        <div class="flex items-center bg-slate-900 border border-slate-800 rounded-2xl p-1">
-            <button onclick="updateQty(-1)" class="p-3 text-slate-400 hover:text-white transition-colors">
-                <i data-lucide="minus" class="w-4 h-4"></i>
-            </button>
-            <span id="qty-count" class="px-4 font-bold text-sm min-w-[40px] text-center">1</span>
-            <button onclick="updateQty(1)" class="p-3 text-emerald-400 hover:text-white transition-colors">
-                <i data-lucide="plus" class="w-4 h-4"></i>
-            </button>
-        </div>
-        <button id="btn-action" 
-                class="flex-1 py-4 bg-emerald-500 hover:bg-emerald-400 active:scale-95 text-slate-950 font-bold rounded-2xl transition-all shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2">
-            <i data-lucide="shopping-cart" class="w-5 h-5"></i>
-            Tambah ke Keranjang
+        
+        <!-- Ikon Troli (Sama dengan Index) -->
+        <button onclick="location.href='index.html?openCart=true'" class="relative p-2 bg-slate-900 text-slate-400 rounded-xl border border-slate-800">
+            <i data-lucide="shopping-cart" class="w-6 h-6"></i>
+            <span id="cart-count-badge" class="absolute -top-1 -right-1 bg-emerald-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full hidden">0</span>
         </button>
+    </nav>
+
+    <main id="product-container" class="max-w-2xl mx-auto p-4 space-y-6">
+        <!-- Loading State -->
+        <div id="loading" class="flex flex-col items-center justify-center py-20 gap-4">
+            <div class="w-10 h-10 border-4 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin"></div>
+            <p class="text-slate-400">Memuat data produk...</p>
+        </div>
+
+        <!-- Product Content (Hidden initially) -->
+        <div id="product-content" class="hidden space-y-6">
+            <!-- Gambar Produk -->
+            <div class="relative aspect-square w-full overflow-hidden rounded-3xl border border-slate-800 bg-slate-900">
+                <img id="p-image" src="" alt="Produk" class="w-full h-full object-cover">
+                <div id="p-status-tag" class="absolute top-4 left-4 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider shadow-lg">
+                    <!-- Status Segar/Lama -->
+                </div>
+            </div>
+
+            <!-- Info Produk -->
+            <div class="space-y-4">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <h2 id="p-name" class="text-2xl font-bold text-white leading-tight"></h2>
+                        <p id="p-category" class="text-emerald-400 font-medium"></p>
+                    </div>
+                    <div class="text-right">
+                        <p id="p-price" class="text-2xl font-bold text-emerald-400"></p>
+                        <p id="p-unit" class="text-slate-500 text-sm"></p>
+                    </div>
+                </div>
+
+                <!-- Stok Info -->
+                <div class="flex items-center gap-2 p-3 bg-slate-900/50 rounded-2xl border border-slate-800">
+                    <i data-lucide="box" class="w-5 h-5 text-slate-400"></i>
+                    <span class="text-slate-300">Stok Tersedia:</span>
+                    <span id="p-stock" class="font-bold text-white"></span>
+                </div>
+
+                <!-- Deskripsi -->
+                <div class="space-y-2">
+                    <h3 class="font-bold text-white flex items-center gap-2">
+                        <i data-lucide="align-left" class="w-4 h-4"></i> Deskripsi Produk
+                    </h3>
+                    <p id="p-description" class="text-slate-400 leading-relaxed italic">
+                        Belum ada deskripsi untuk produk ini.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Bottom Action Bar -->
+    <div id="action-bar" class="fixed bottom-0 left-0 right-0 p-4 bg-slate-950/80 backdrop-blur-xl border-t border-slate-900 z-50 hidden">
+        <div class="max-w-2xl mx-auto flex items-center gap-4">
+            <!-- Counter Menu -->
+            <div id="counter-group" class="flex items-center bg-slate-900 border border-slate-800 rounded-2xl p-1">
+                <button onclick="changeQty(-1)" class="p-2 text-slate-400 hover:text-white disabled:opacity-30" id="btn-minus">
+                    <i data-lucide="minus" class="w-5 h-5"></i>
+                </button>
+                <span id="qty-display" class="w-10 text-center font-bold text-emerald-400">1</span>
+                <button onclick="changeQty(1)" class="p-2 text-slate-400 hover:text-white disabled:opacity-30" id="btn-plus">
+                    <i data-lucide="plus" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <!-- Tombol Utama -->
+            <button id="btn-main-action" class="flex-1 py-4 rounded-2xl font-bold transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/10">
+                <!-- Text Button -->
+            </button>
+        </div>
     </div>
-</div>
 
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
-  import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+    <!-- Firebase -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, onAuthStateChanged, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyBWkPqyh54IRccNz2YjuB1bL5r49YadAP4",
-    authDomain: "sayurjuju-bfe82.firebaseapp.com",
-    projectId: "sayurjuju-bfe82",
-    storageBucket: "sayurjuju-bfe82.firebasestorage.app",
-    messagingSenderId: "754413439458",
-    appId: "1:754413439458:web:341c9fe99fd9b1550551bb"
-  };
+        const firebaseConfig = JSON.parse(__firebase_config);
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
 
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
+        let currentProduct = null;
+        let selectedQty = 1;
+        let cart = JSON.parse(localStorage.getItem(`cart_${appId}`)) || [];
 
-  let productData = null;
-  let quantity = 1;
+        // Auth Init
+        const initAuth = async () => {
+            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                await signInWithCustomToken(auth, __initial_auth_token);
+            } else {
+                await signInAnonymously(auth);
+            }
+        };
 
-  // AMBIL ID DARI URL
-  const params = new URLSearchParams(window.location.search);
-  const productId = params.get("id");
-
-  if (!productId) {
-    alert("Produk tidak ditemukan!");
-    window.location.href = "index.html";
-  }
-
-  // FUNGSI LOAD DATA
-  async function loadProduct() {
-    try {
-      const snap = await getDoc(doc(db, "products", productId));
-      
-      if (!snap.exists()) {
-        alert("Produk tidak tersedia.");
-        window.location.href = "index.html";
-        return;
-      }
-
-      productData = { id: snap.id, ...snap.data() };
-      renderProduct();
-    } catch (err) {
-      console.error(err);
-      alert("Gagal memuat data: " + err.message);
-    }
-  }
-
-  function renderProduct() {
-    const p = productData;
-    
-    // Elements
-    document.getElementById("loading").classList.add("hidden");
-    document.getElementById("main-content").classList.remove("hidden");
-    document.getElementById("action-bar").classList.remove("hidden");
-
-    document.getElementById("product-image").src = p.image;
-    document.getElementById("product-name").innerText = p.name;
-    document.getElementById("product-category").innerText = p.category || "Segar";
-    document.getElementById("product-price").innerText = `Rp ${Number(p.price).toLocaleString()}`;
-    document.getElementById("product-unit").innerText = `per ${p.unit}`;
-    document.getElementById("product-stock").innerText = p.stock > 0 ? `${p.stock} ${p.unit}` : "Habis";
-    document.getElementById("product-status").innerText = p.status;
-    
-    // Status color
-    const statusEl = document.getElementById("product-status");
-    if(p.status === "Segar") {
-        statusEl.className = "text-xs font-semibold text-emerald-400";
-    } else {
-        statusEl.className = "text-xs font-semibold text-amber-400";
-    }
-
-    // Freshness Logic (Berdasarkan purchaseTime)
-    const freshnessBadge = document.getElementById("freshness-badge");
-    if (p.purchaseTime) {
-      const buyTime = new Date(p.purchaseTime);
-      const diffH = (new Date() - buyTime) / 36e5;
-
-      if (diffH < 12) {
-        freshnessBadge.innerHTML = "🟢 Baru Datang";
-        freshnessBadge.className += " bg-emerald-500 text-white";
-      } else if (diffH < 36) {
-        freshnessBadge.innerHTML = "🟡 Stok Kemarin";
-        freshnessBadge.className += " bg-amber-500 text-white";
-      } else {
-        freshnessBadge.innerHTML = "⚪ Stok Lama";
-        freshnessBadge.className += " bg-slate-700 text-slate-300";
-      }
-    } else {
-        freshnessBadge.classList.add("hidden");
-    }
-
-    // Stok Habis Logic
-    const btnAction = document.getElementById("btn-action");
-    if (p.stock <= 0) {
-      btnAction.innerHTML = `<i data-lucide="clock" class="w-5 h-5"></i> Pre Order (Besok)`;
-      btnAction.classList.replace("bg-emerald-500", "bg-cyan-500");
-      btnAction.onclick = () => window.location.href = "preorder.html";
-    } else {
-      btnAction.onclick = () => addToCart();
-    }
-
-    lucide.createIcons();
-  }
-
-  // GLOBAL ACTIONS
-  window.updateQty = (val) => {
-    quantity = Math.max(1, quantity + val);
-    // Batasi stok jika ada
-    if(productData && productData.stock > 0 && quantity > productData.stock) {
-        quantity = productData.stock;
-    }
-    document.getElementById("qty-count").innerText = quantity;
-  };
-
-  window.addToCart = () => {
-    // Ambil data keranjang dari localStorage agar sinkron dengan index.html
-    let cart = JSON.parse(localStorage.getItem('cart') || '[]');
-    
-    const existing = cart.find(item => item.id === productData.id);
-    if (existing) {
-        existing.qty += quantity;
-    } else {
-        cart.push({
-            id: productData.id,
-            name: productData.name,
-            price: productData.price,
-            image: productData.image,
-            unit: productData.unit,
-            qty: quantity
+        onAuthStateChanged(auth, (user) => {
+            updateCartBadge();
+            loadProduct();
         });
-    }
 
-    localStorage.setItem('cart', JSON.stringify(cart));
-    
-    // Beri Feedback
-    const btn = document.getElementById("btn-action");
-    const originalText = btn.innerHTML;
-    btn.innerHTML = `<i data-lucide="check" class="w-5 h-5"></i> Berhasil!`;
-    btn.classList.replace("bg-emerald-500", "bg-white");
-    btn.classList.replace("text-slate-950", "text-emerald-600");
-    
-    setTimeout(() => {
-        btn.innerHTML = originalText;
-        btn.classList.replace("bg-white", "bg-emerald-500");
-        btn.classList.replace("text-emerald-600", "text-slate-950");
-        lucide.createIcons();
-        window.location.href = "index.html"; // Kembali ke katalog
-    }, 1000);
-  };
+        initAuth();
 
-  // Start
-  loadProduct();
+        // Load Product Data
+        async function loadProduct() {
+            const params = new URLSearchParams(window.location.search);
+            const productId = params.get('id');
 
-</script>
+            if (!productId) {
+                document.getElementById('product-container').innerHTML = `<div class="text-center py-20 text-slate-500">Produk tidak ditemukan</div>`;
+                return;
+            }
+
+            try {
+                const docRef = doc(db, "products", productId);
+                const docSnap = await getDoc(docRef);
+
+                if (docSnap.exists()) {
+                    currentProduct = { id: docSnap.id, ...docSnap.data() };
+                    renderProduct();
+                } else {
+                    document.getElementById('product-container').innerHTML = `<div class="text-center py-20 text-slate-500">Produk telah dihapus</div>`;
+                }
+            } catch (err) {
+                console.error(err);
+                document.getElementById('product-container').innerHTML = `<div class="text-center py-20 text-red-400">Gagal memuat data</div>`;
+            }
+        }
+
+        function renderProduct() {
+            document.getElementById('loading').classList.add('hidden');
+            document.getElementById('product-content').classList.remove('hidden');
+            document.getElementById('action-bar').classList.remove('hidden');
+
+            const p = currentProduct;
+            
+            // Image & Status
+            document.getElementById('p-image').src = p.image || 'https://images.unsplash.com/photo-1542831371-29b0f74f9713?w=500';
+            const statusTag = document.getElementById('p-status-tag');
+            statusTag.innerText = p.status === 'SEGAR' ? 'Segar' : 'Lama';
+            statusTag.className = `absolute top-4 left-4 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest shadow-lg ${
+                p.status === 'SEGAR' ? 'bg-emerald-500 text-white' : 'bg-orange-500 text-white'
+            }`;
+
+            // Basic Info
+            document.getElementById('p-name').innerText = p.name;
+            document.getElementById('p-category').innerText = p.category;
+            document.getElementById('p-price').innerText = `Rp ${p.price.toLocaleString('id-ID')}`;
+            document.getElementById('p-unit').innerText = `per ${p.unit}`;
+            document.getElementById('p-stock').innerText = `${p.stock} ${p.unit}`;
+            
+            if (p.description) {
+                document.getElementById('p-description').innerText = p.description;
+                document.getElementById('p-description').classList.remove('italic', 'text-slate-500');
+            }
+
+            // Button Logic
+            const mainBtn = document.getElementById('btn-main-action');
+            if (p.stock > 0) {
+                mainBtn.innerHTML = `<i data-lucide="shopping-cart" class="w-5 h-5"></i> Tambah ke Keranjang`;
+                mainBtn.className = "flex-1 py-4 rounded-2xl font-bold bg-emerald-500 text-white hover:bg-emerald-600 transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20";
+                mainBtn.onclick = addToCart;
+                selectedQty = 1;
+                updateQtyUI();
+            } else {
+                mainBtn.innerHTML = `<i data-lucide="calendar-clock" class="w-5 h-5"></i> Pre-Order Sekarang`;
+                mainBtn.className = "flex-1 py-4 rounded-2xl font-bold bg-blue-600 text-white hover:bg-blue-700 transition-all flex items-center justify-center gap-2 shadow-lg shadow-blue-500/20";
+                mainBtn.onclick = () => window.location.href = `preorder.html?id=${p.id}`;
+                document.getElementById('counter-group').classList.add('hidden');
+            }
+            
+            lucide.createIcons();
+        }
+
+        // Counter Logic
+        window.changeQty = (val) => {
+            if (!currentProduct) return;
+            const newQty = selectedQty + val;
+            if (newQty >= 1 && newQty <= currentProduct.stock) {
+                selectedQty = newQty;
+                updateQtyUI();
+            }
+        };
+
+        function updateQtyUI() {
+            document.getElementById('qty-display').innerText = selectedQty;
+            document.getElementById('btn-minus').disabled = selectedQty <= 1;
+            document.getElementById('btn-plus').disabled = selectedQty >= currentProduct.stock;
+        }
+
+        // Cart Logic
+        function addToCart() {
+            const existingIndex = cart.findIndex(item => item.id === currentProduct.id);
+            
+            if (existingIndex > -1) {
+                // Update produk yang sama
+                const newTotalQty = cart[existingIndex].qty + selectedQty;
+                if (newTotalQty > currentProduct.stock) {
+                    cart[existingIndex].qty = currentProduct.stock;
+                    alert("Jumlah disesuaikan dengan stok maksimal");
+                } else {
+                    cart[existingIndex].qty = newTotalQty;
+                }
+            } else {
+                // Tambah baru
+                cart.push({
+                    id: currentProduct.id,
+                    name: currentProduct.name,
+                    price: currentProduct.price,
+                    image: currentProduct.image,
+                    qty: selectedQty,
+                    unit: currentProduct.unit
+                });
+            }
+
+            saveCart();
+            updateCartBadge();
+            
+            // Feedback visual
+            const btn = document.getElementById('btn-main-action');
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = `<i data-lucide="check" class="w-5 h-5"></i> Berhasil Ditambah!`;
+            btn.classList.replace('bg-emerald-500', 'bg-slate-700');
+            
+            setTimeout(() => {
+                btn.innerHTML = originalHTML;
+                btn.classList.replace('bg-slate-700', 'bg-emerald-500');
+                lucide.createIcons();
+            }, 2000);
+            
+            lucide.createIcons();
+        }
+
+        function saveCart() {
+            localStorage.setItem(`cart_${appId}`, JSON.stringify(cart));
+        }
+
+        function updateCartBadge() {
+            const badge = document.getElementById('cart-count-badge');
+            const count = cart.reduce((total, item) => total + item.qty, 0);
+            
+            if (count > 0) {
+                badge.innerText = count;
+                badge.classList.remove('hidden');
+            } else {
+                badge.classList.add('hidden');
+            }
+        }
+
+        // Sync with index.html open cart request
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('added') === 'true') {
+            updateCartBadge();
+        }
+    </script>
 </body>
 </html>
 
