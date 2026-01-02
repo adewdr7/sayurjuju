@@ -173,7 +173,7 @@
 const statusRef = doc(db, "settings", "dailyStatus");
 
         let allProducts = [];
-        let cart = [];
+        let cart = JSON.parse(localStorage.getItem("cart") || "[]");
         let currentCategory = "Semua";
 function getShippingCost(method) {
   return method === "ANTAR" ? 3000 : 0;
@@ -420,6 +420,7 @@ function setDefaultCartBtn(btn) {
             const total = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
             document.getElementById('cart-total').innerText = `Rp ${total.toLocaleString()}`;
             lucide.createIcons();
+localStorage.setItem("cart", JSON.stringify(cart));
         };
 
         window.toggleCart = () => document.getElementById('cart-modal').classList.toggle('hidden');
@@ -453,15 +454,23 @@ function setDefaultCartBtn(btn) {
         // HAPUS LOGIKA PENGURANGAN STOK DI SINI
         cart = [];
         updateCartUI();
+localStorage.removeItem("cart");
         toggleCart();
         window.location.href = "profile.html";
     } catch (err) { alert("Gagal checkout: " + err.message); }
 };
+// AUTO OPEN CART JIKA DARI PRODUCT
+if (window.location.hash === "#open-cart") {
+  setTimeout(() => {
+    toggleCart();
+  }, 300);
+}
 
         lucide.createIcons();
     </script>
 </body>
 </html>
+
 
 
 
