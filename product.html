@@ -29,7 +29,9 @@
 <button onclick="goToCart()"
   class="ml-auto relative p-2 rounded-xl bg-slate-900 border border-slate-800 text-emerald-400">
   <i data-lucide="shopping-cart" class="w-5 h-5"></i>
+  <span id="cart-badge" class="hidden absolute -top-1 -right-1 bg-rose-500 text-[10px] font-bold text-white w-5 h-5 rounded-full flex items-center justify-center">0</span>
 </button>
+
 </nav>
 
 <!-- LOADING STATE -->
@@ -127,6 +129,22 @@
 
   let productData = null;
   let quantity = 1;
+// Fungsi untuk memperbarui angka di badge keranjang
+const updateCartBadge = () => {
+    const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+    const totalItems = cart.reduce((sum, item) => sum + item.qty, 0);
+    const badge = document.getElementById('cart-badge');
+    
+    if (badge) {
+        badge.innerText = totalItems;
+        // Sembunyikan badge jika keranjang kosong
+        badge.classList.toggle('hidden', totalItems === 0);
+    }
+};
+
+// Jalankan saat halaman pertama kali dimuat agar badge muncul
+window.addEventListener('DOMContentLoaded', updateCartBadge);
+
 
   // AMBIL ID DARI URL
   const params = new URLSearchParams(window.location.search);
@@ -248,6 +266,8 @@
 
     // 2. Simpan kembali ke localStorage
     localStorage.setItem('cart', JSON.stringify(cart));
+
+updateCartBadge();
     
     // Feedback Berhasil
     const btn = document.getElementById("btn-action");
