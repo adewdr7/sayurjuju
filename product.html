@@ -17,9 +17,9 @@
     <!-- Navigasi Atas -->
     <nav class="p-4 flex justify-between items-center sticky top-0 bg-slate-950/90 backdrop-blur-md z-40 border-b border-slate-900">
         <div class="flex items-center gap-3">
-            <a href="index.html" class="p-2 bg-slate-900 text-slate-400 rounded-xl border border-slate-800 hover:text-emerald-400 transition-colors">
-                <i data-lucide="arrow-left" class="w-6 h-6"></i>
-            </a>
+            <button onclick="window.location.href='index.html'" class="p-2 bg-slate-900 text-slate-400 rounded-xl border border-slate-800 hover:text-emerald-400 transition-colors">
+    <i data-lucide="arrow-left" class="w-6 h-6"></i>
+</button>
             <h1 class="text-xl font-bold">Detail Produk</h1>
         </div>
         
@@ -246,7 +246,7 @@ let cart = JSON.parse(localStorage.getItem(CART_KEY)) || [];
                 } else {
                     cart[existingIndex].qty = newTotalQty;
                 }
-            } else {
+                        } else {
                 // Tambah baru
                 cart.push({
                     id: currentProduct.id,
@@ -254,9 +254,11 @@ let cart = JSON.parse(localStorage.getItem(CART_KEY)) || [];
                     price: currentProduct.price,
                     image: currentProduct.image,
                     qty: selectedQty,
-                    unit: currentProduct.unit
+                    unit: currentProduct.unit,
+                    stock: currentProduct.stock // PENTING: Tambahkan ini agar index.html tahu batas maksimal
                 });
             }
+
 
             saveCart();
             updateCartBadge();
@@ -299,6 +301,7 @@ let cart = JSON.parse(localStorage.getItem(CART_KEY)) || [];
     </script>
 </body>
 </html>
+
 
 
 
