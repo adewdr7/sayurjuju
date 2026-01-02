@@ -529,18 +529,22 @@ window.checkout = async function () {
 };
 
         lucide.createIcons();
+});
+window.addEventListener('load', () => {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('action') === 'checkout') {
+            const cartModal = document.getElementById('cart-modal');
+            if (cartModal) {
+                // Beri sedikit jeda agar data keranjang siap
+                setTimeout(() => {
+                    cartModal.classList.remove('hidden');
+                    if (typeof window.updateCartUI === 'function') {
+                        window.updateCartUI();
+                    }
+                }, 300); 
+            }
+        }
+    });
     </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
