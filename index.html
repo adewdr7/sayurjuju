@@ -492,6 +492,13 @@ window.updateCartUI = () => {
 
         lucide.createIcons();
 
+window.addEventListener('focus', () => {
+    cart = JSON.parse(localStorage.getItem(CART_KEY)) || [];
+    if (typeof updateCartUI === 'function') {
+        updateCartUI();
+    }
+});
+
 window.addEventListener('load', () => {
         const params = new URLSearchParams(window.location.search);
         if (params.get('action') === 'checkout') {
@@ -510,6 +517,7 @@ window.addEventListener('load', () => {
     </script>
 </body>
 </html>
+
 
 
 
