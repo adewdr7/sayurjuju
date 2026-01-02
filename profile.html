@@ -48,9 +48,18 @@
 
             <div id="user-stats" class="grid grid-cols-2 gap-3 mt-8">
                 <div class="bg-slate-950/50 p-4 rounded-2xl border border-slate-800/50">
-                    <p class="text-[10px] text-slate-500 uppercase font-bold mb-1">Frekuensi Belanja</p>
-                    <p class="text-lg font-bold text-emerald-400"><span id="user-freq">0</span>x</p>
-                </div>
+  <p class="text-[10px] text-slate-500 uppercase font-bold mb-1">
+    Frekuensi Transaksi
+  </p>
+  <p class="text-lg font-bold text-emerald-400">
+    <span id="user-freq">0%</span>
+  </p>
+</div>
+<div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl mt-4">
+  <p class="text-xs text-slate-500 mb-1">Frekuensi Belanja</p>
+  <p id="order-count" class="text-lg font-bold text-cyan-400"></p>
+  <p id="loyalty-label" class="text-xs text-slate-400 mt-1"></p>
+</div>
                 <div class="bg-slate-950/50 p-4 rounded-2xl border border-slate-800/50">
                     <p class="text-[10px] text-slate-500 uppercase font-bold mb-1">Catatan Hutang</p>
                     <p class="text-lg font-bold text-rose-400">Rp <span id="user-debt">0</span></p>
@@ -223,7 +232,9 @@ window.resetAllFrequency = async () => {
       if (docSnap.id !== ADMIN_UID) {
         batchUpdates.push(
           updateDoc(doc(db, "users", docSnap.id), {
-            totalSpent: 0
+            totalSpent: 0,
+orderCount: 0
+
           })
         );
       }
@@ -313,11 +324,22 @@ window.__maxSpent = maxSpent;
   });
 
   const mySpent = userData.totalSpent || 0;
+const orderCount = userData.orderCount || 0;
+let loyaltyLabel = "Pelanggan Baru 🌱";
+
+if (orderCount >= 20) loyaltyLabel = "Pelanggan Emas 🏆";
+else if (orderCount >= 10) loyaltyLabel = "Pelanggan Setia ⭐";
+else if (orderCount >= 5) loyaltyLabel = "Pelanggan Aktif 👍";
   const percent = maxSpent > 0
     ? Math.round((mySpent / maxSpent) * 100)
     : 0;
 
   document.getElementById("user-freq").innerText = percent + "%";
+
+document.getElementById("order-count").innerText =
+  `${orderCount} kali transaksi`;
+
+document.getElementById("loyalty-label").innerText = loyaltyLabel;
 
   loadMyOrders(user.uid);
 }
