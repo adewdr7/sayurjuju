@@ -416,22 +416,24 @@ function setDefaultCartBtn(btn) {
     updateCartUI();
 };
 
-        // Perbaikan fungsi updateCartUI agar tidak error saat element null
 window.updateCartUI = () => {
+    // Ambil elemen-elemen yang diperlukan
     const badge = document.getElementById('cart-badge');
-    const cartItems = document.getElementById('cart-items');
-    const cartTotal = document.getElementById('cart-total');
+    const itemsContainer = document.getElementById('cart-items');
+    const totalContainer = document.getElementById('cart-total');
 
+    // Hitung jumlah item di keranjang
     const count = cart.reduce((sum, item) => sum + item.qty, 0);
-    
-    // Gunakan optional chaining atau cek eksistensi
+
+    // FIX: Cek dulu apakah badge ada sebelum mengisi innerText
     if (badge) {
         badge.innerText = count;
         badge.classList.toggle('hidden', count === 0);
     }
 
-    if (cartItems) {
-        cartItems.innerHTML = cart.map(item => `
+    // Update daftar item di modal keranjang jika elemennya ada
+    if (itemsContainer) {
+        itemsContainer.innerHTML = cart.map(item => `
             <div class="flex gap-3 bg-slate-800/50 p-3 rounded-2xl border border-slate-800/50">
                 <img src="${item.image}" class="w-12 h-12 rounded-lg object-cover">
                 <div class="flex-1">
@@ -443,12 +445,15 @@ window.updateCartUI = () => {
         `).join('');
     }
 
-    if (cartTotal) {
+    // Update total harga jika elemennya ada
+    if (totalContainer) {
         const total = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
-        cartTotal.innerText = `Rp ${total.toLocaleString()}`;
+        totalContainer.innerText = `Rp ${total.toLocaleString()}`;
     }
+
     lucide.createIcons();
 };
+
 
 // Perbaikan fungsi checkout agar mengambil nama langsung dari Firebase Auth
 window.checkout = async function () {
