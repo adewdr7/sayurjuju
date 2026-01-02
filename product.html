@@ -26,6 +26,10 @@
     <i data-lucide="arrow-left" class="w-5 h-5"></i>
   </button>
   <h1 class="font-semibold text-lg text-white">Detail Produk</h1>
+<button onclick="goToCart()"
+  class="ml-auto relative p-2 rounded-xl bg-slate-900 border border-slate-800 text-emerald-400">
+  <i data-lucide="shopping-cart" class="w-5 h-5"></i>
+</button>
 </nav>
 
 <!-- LOADING STATE -->
@@ -251,9 +255,13 @@
         btn.classList.replace("bg-white", "bg-emerald-500");
         btn.classList.replace("text-emerald-600", "text-slate-950");
         lucide.createIcons();
-        window.location.href = "index.html"; // Kembali ke katalog
     }, 1000);
   };
+
+window.goToCart = () => {
+  window.location.href = "index.html#open-cart";
+};
+
 
   // Start
   loadProduct();
@@ -261,5 +269,6 @@
 </script>
 </body>
 </html>
+
 
 
