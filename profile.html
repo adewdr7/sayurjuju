@@ -145,6 +145,8 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
+
+
 const ADMIN_UID = "XVmdoXxSptTlA8xHVmAIzeLgkru2";
 let currentSort = "spent"; // spent | debt
 let targetEditUid = null;
@@ -235,6 +237,11 @@ window.resetAllFrequency = async () => {
     alert(err.message);
   }
 };
+
+// Tambahkan ini di bagian script profile.html Anda
+const CART_KEY = "pasar_cart";
+let cart = JSON.parse(localStorage.getItem(CART_KEY)) || [];
+
 
 onAuthStateChanged(auth, async (user) => {
   if (!user) {
@@ -513,6 +520,7 @@ lucide.createIcons();
     </script>
 </body>
 </html>
+
 
 
 
