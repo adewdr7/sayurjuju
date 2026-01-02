@@ -173,7 +173,8 @@
 const statusRef = doc(db, "settings", "dailyStatus");
 
         let allProducts = [];
-        let cart = [];
+        const CART_KEY = "pasar_cart";
+let cart = JSON.parse(localStorage.getItem(CART_KEY)) || [];
         let currentCategory = "Semua";
 function getShippingCost(method) {
   return method === "ANTAR" ? 3000 : 0;
@@ -181,6 +182,8 @@ function getShippingCost(method) {
         const ADMIN_UID = "XVmdoXxSptTlA8xHVmAIzeLgkru2";
 
        onAuthStateChanged(auth, (user) => {
+cart = JSON.parse(localStorage.getItem(CART_KEY)) || [];
+    updateCartUI();
     const adminBtn = document.getElementById("btn-admin");
     const manageBtn = document.getElementById("btn-manage");
     const loginBtn = document.getElementById("btn-login-nav");
@@ -222,6 +225,12 @@ document.getElementById("admin-status-note").classList.add("hidden");
     }
     lucide.createIcons();
 });
+
+// 🔓 AUTO BUKA CART DARI product.html
+const params = new URLSearchParams(window.location.search);
+if (params.get("openCart") === "true") {
+    toggleCart();
+}
 
 // ===============================
 // ADMIN: DROPDOWN UBAH STATUS
@@ -396,10 +405,11 @@ function setDefaultCartBtn(btn) {
                 return;
             }
             existing.qty++;
+localStorage.setItem(CART_KEY, JSON.stringify(cart));
         } else {
             cart.push({ ...product, qty: 1 });
-        }
-        updateCartUI();
+localStorage.setItem(CART_KEY, JSON.stringify(cart));
+updateCartUI();
     }
 };
 
