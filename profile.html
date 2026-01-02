@@ -305,10 +305,19 @@ window.__maxSpent = maxSpent;
     document.getElementById('orders-section').classList.remove('hidden');
     document.getElementById('user-stats').classList.remove('hidden');
 
-    const statsSnap = await getDoc(doc(db, "stats", "global"));
-const maxSpent = statsSnap.exists()
-  ? statsSnap.data().maxTotalSpent || 0
+    const allUsersSnap = await getDocs(collection(db, "users"));
+let maxSpent = 0;
+
+allUsersSnap.forEach(uDoc => {
+  maxSpent = Math.max(maxSpent, uDoc.data().totalSpent || 0);
+});
+
+const mySpent = userData.totalSpent || 0;
+const percent = maxSpent > 0
+  ? Math.round((mySpent / maxSpent) * 100)
   : 0;
+
+document.getElementById("user-freq").innerText = percent + "%";
 
 const mySpent = userData.totalSpent || 0;
 const percent =
