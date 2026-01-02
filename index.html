@@ -369,76 +369,120 @@ function setDefaultCartBtn(btn) {
 
         window.addToCart = async (id) => {
     const user = auth.currentUser;
-
-    // JIKA ADMIN: Tambah Stok di Database
     if (user && user.uid === ADMIN_UID) {
         try {
             const productRef = doc(db, "products", id);
-            await updateDoc(productRef, {
-                stock: increment(1) // Tambah stok +1
-            });
-            // Tidak perlu render manual karena onSnapshot akan otomatis update tampilan
-        } catch (err) {
-            console.error("Gagal update stok:", err);
-        }
+            await updateDoc(productRef, { stock: increment(1) });
+        } catch (err) { console.error("Gagal update stok:", err); }
     } 
-    // JIKA PELANGGAN: Masukkan ke Keranjang
     else {
         const product = allProducts.find(p => p.id === id);
-        if (product.stock <= 0) {
+        if (!product || product.stock <= 0) {
             alert("Stok habis!");
             return;
         }
-        const existing = cart.find(item => item.id === id);
+        
+        // Ambil data terbaru dari storage
+        let currentCart = JSON.parse(localStorage.getItem("cart") || "[]");
+        const existing = currentCart.find(item => item.id === id);
+        
         if (existing) {
             if (existing.qty >= product.stock) {
-                alert("Tidak bisa melebihi stok yang tersedia");
+                alert("Tidak bisa melebihi stok");
                 return;
             }
             existing.qty++;
         } else {
-            cart.push({ ...product, qty: 1 });
+            currentCart.push({ ...product, qty: 1 });
         }
+        
+        // SIMPAN ke storage
+        localStorage.setItem("cart", JSON.stringify(currentCart));
+        // UPDATE tampilan
         updateCartUI();
     }
 };
 
-        window.updateCartUI = () => {
-            const count = cart.reduce((sum, item) => sum + item.qty, 0);
-            document.getElementById('cart-badge').innerText = count;
-            document.getElementById('cart-badge').classList.toggle('hidden', count === 0);
-            document.getElementById('cart-items').innerHTML = cart.map(item => `
-                <div class="flex gap-3 bg-slate-800/50 p-3 rounded-2xl border border-slate-800/50">
-                    <img src="${item.image}" class="w-12 h-12 rounded-lg object-cover">
-                    <div class="flex-1">
-                        <h4 class="text-xs font-bold text-slate-100">${item.name}</h4>
-                        <p class="text-[10px] text-emerald-400">${item.qty} x Rp ${Number(item.price).toLocaleString()}</p>
-                    </div>
-                    <button onclick="removeFromCart('${item.id}')" class="text-rose-500 p-2"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
-                </div>
-            `).join('');
-            const total = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
-            document.getElementById('cart-total').innerText = `Rp ${total.toLocaleString()}`;
-            lucide.createIcons();
-localStorage.setItem("cart", JSON.stringify(cart));
-        };
-
         window.toggleCart = () => document.getElementById('cart-modal').classList.toggle('hidden');
-        window.removeFromCart = (id) => { cart = cart.filter(i => i.id !== id); updateCartUI(); };
-        window.checkout = async function () {
+        
+window.removeFromCart = (id) => { 
+    let currentCart = JSON.parse(localStorage.getItem("cart") || "[]");
+    currentCart = currentCart.filter(i => i.id !== id); 
+    localStorage.setItem("cart", JSON.stringify(currentCart));
+    updateCartUI(); 
+};
+
+window.updateCartUI = () => {
+    // Selalu baca dari localStorage sebagai sumber kebenaran tunggal
+    const currentCart = JSON.parse(localStorage.getItem("cart") || "[]");
+    
+    const count = currentCart.reduce((sum, item) => sum + item.qty, 0);
+    const badge = document.getElementById('cart-badge');
+    
+    if(badge) {
+        badge.innerText = count;
+        badge.classList.toggle('hidden', count === 0);
+    }
+    const cartItemsEl = document.getElementById('cart-items');
+    if (currentCart.length === 0) {
+        cartItemsEl.innerHTML = '<p class="text-center text-slate-500 text-sm py-10">Keranjang kosong</p>';
+    } else {
+        cartItemsEl.innerHTML = currentCart.map(item => `
+            <div class="flex gap-3 bg-slate-800/50 p-3 rounded-2xl border border-slate-800/50">
+                <img src="${item.image}" class="w-12 h-12 rounded-lg object-cover">
+                <div class="flex-1">
+                    <h4 class="text-xs font-bold text-slate-100">${item.name}</h4>
+                    <p class="text-[10px] text-emerald-400">${item.qty} x Rp ${Number(item.price).toLocaleString()}</p>
+                </div>
+                <button onclick="removeFromCart('${item.id}')" class="text-rose-500 p-2">
+                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                </button>
+            </div>
+        `).join('');
+    }
+    const method = document.querySelector('input[name="delivery"]:checked')?.value || "ANTAR";
+    const subtotal = currentCart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+    const total = subtotal + getShippingCost(method);
+    
+    document.getElementById('cart-total').innerText = `Rp ${total.toLocaleString()}`;
+    lucide.createIcons();
+};
+
+
+// Jalankan saat pertama kali buka halaman
+window.addEventListener('DOMContentLoaded', () => {
+    updateCartUI();
+});
+
+// Listener untuk radio button pengiriman agar total update otomatis
+document.querySelectorAll('input[name="delivery"]').forEach(radio => {
+    radio.addEventListener('change', updateCartUI);
+});
+
+window.checkout = async function () {
     const user = auth.currentUser;
-    if (!user) { alert("Silakan login dulu"); return; }
-    if (cart.length === 0) { alert("Keranjang kosong"); return; }
+    if (!user) { 
+        alert("Silakan login terlebih dahulu untuk melakukan pemesanan."); 
+        return; 
+    }
+    
+    // Selalu ambil data terbaru dari localStorage untuk dicheckout
+    const currentCart = JSON.parse(localStorage.getItem("cart") || "[]");
+    if (currentCart.length === 0) { 
+        alert("Keranjang Anda masih kosong."); 
+        return; 
+    }
 
     const method = document.querySelector('input[name="delivery"]:checked').value;
-    const subtotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
+    const subtotal = currentCart.reduce((s, i) => s + i.price * i.qty, 0);
     const total = subtotal + getShippingCost(method);
 
     try {
+        // 1. Simpan ke Firestore
         await addDoc(collection(db, "orders"), {
             userId: user.uid,
-            userName: document.getElementById('user-name')?.innerText || user.email, // Tambahkan ini agar admin tahu siapa yang pesan
-            items: cart.map(i => ({
+            userName: user.displayName || user.email,
+            items: currentCart.map(i => ({
                 productId: i.id,
                 name: i.name,
                 qty: i.qty,
@@ -447,26 +491,24 @@ localStorage.setItem("cart", JSON.stringify(cart));
             total,
             deliveryMethod: method,
             status: "MENUNGGU",
-            createdAt: serverTimestamp(),
-            cancelableUntil: Date.now() + (5 * 60 * 1000)
+            createdAt: serverTimestamp()
         });
 
-        // HAPUS LOGIKA PENGURANGAN STOK DI SINI
-        cart = [];
-        updateCartUI();
-localStorage.removeItem("cart");
-        toggleCart();
-        window.location.href = "profile.html";
-    } catch (err) { alert("Gagal checkout: " + err.message); }
-};
-// AUTO OPEN CART JIKA DARI PRODUCT
-if (window.location.hash === "#open-cart") {
-  setTimeout(() => {
-    toggleCart();
-  }, 300);
-}
+        // 2. TIPS UTAMA: Pembersihan Keranjang
+        localStorage.removeItem("cart"); // Hapus permanen dari browser
+        
+        // 3. Update tampilan secara instan
+        updateCartUI(); // Sinkronkan badge dan list agar kosong
+        
+        alert("Pesanan berhasil dikirim!");
+        toggleCart(); // Tutup modal keranjang
+        window.location.href = "profile.html"; // Arahkan ke halaman riwayat
 
-        lucide.createIcons();
+    } catch (err) { 
+        alert("Gagal melakukan checkout: " + err.message); 
+    }
+};
+
     </script>
 </body>
 </html>
