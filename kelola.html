@@ -91,6 +91,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
         import { getFirestore, collection, onSnapshot, doc, updateDoc, deleteDoc, writeBatch } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+import { mediaThumb } from "./media.js"; // <--- Tambahkan ini
 
         const firebaseConfig = {
             apiKey: "AIzaSyBWkPqyh54IRccNz2YjuB1bL5r49YadAP4",
@@ -136,7 +137,7 @@
                             ${selectedIds.has(p.id) ? '<i data-lucide="check" class="w-4 h-4 text-white"></i>' : ''}
                         </label>
                     </div>
-                    <img src="${p.image}" class="w-14 h-14 rounded-xl object-cover bg-slate-800">
+                    <img src="${mediaThumb(p.image)}" class="w-14 h-14 rounded-xl object-cover bg-slate-800">
                     <div class="flex-1 min-w-0">
                         <h3 class="font-bold text-sm truncate">${p.name}</h3>
                         <p class="text-[10px] text-slate-500">${p.category} • Rp ${Number(p.price).toLocaleString()} • ${p.stock} ${p.unit}</p>
@@ -257,5 +258,6 @@
     </script>
 </body>
 </html>
+
 
 
