@@ -20,21 +20,6 @@
       <i data-lucide="arrow-left"></i>
     </a>
 
-
-
-
-<div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 mb-6">
-    <label class="block text-[10px] text-slate-500 font-bold mb-2 uppercase tracking-widest">Biaya Antar (Rp)</label>
-    <div class="flex gap-2">
-        <input type="number" id="shipping-input" class="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm focus:border-emerald-500 outline-none" placeholder="Contoh: 5000">
-        <button onclick="updateShippingFee()" class="px-6 py-2 bg-emerald-500 text-white rounded-xl font-bold text-sm hover:bg-emerald-600 transition-all">Simpan</button>
-    </div>
-</div>
-
-
-
-
-
     <h1 class="font-bold text-lg text-emerald-400">Daftar Pesanan</h1>
   </div>
   <div id="revenue-today" class="text-right">
@@ -44,6 +29,14 @@
 </nav>
 
 <main class="p-4 space-y-4 max-w-2xl mx-auto">
+<div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 mb-6">
+    <label class="block text-[10px] text-slate-500 font-bold mb-2 uppercase tracking-widest">Biaya Antar (Rp)</label>
+    <div class="flex gap-2">
+        <input type="number" id="shipping-input" class="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm focus:border-emerald-500 outline-none" placeholder="Contoh: 5000">
+        <button onclick="updateShippingFee()" class="px-6 py-2 bg-emerald-500 text-white rounded-xl font-bold text-sm hover:bg-emerald-600 transition-all">Simpan</button>
+    </div>
+</div>
+
   <!-- Ringkasan Status -->
   <div class="grid grid-cols-3 gap-3 mb-6">
     <div class="bg-slate-900 border border-slate-800 p-3 rounded-2xl text-center">
