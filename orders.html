@@ -19,6 +19,22 @@
     <a href="index.html" class="p-2 bg-slate-900 rounded-xl border border-slate-800 hover:text-emerald-400 transition-colors">
       <i data-lucide="arrow-left"></i>
     </a>
+
+
+
+
+<div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 mb-6">
+    <label class="block text-[10px] text-slate-500 font-bold mb-2 uppercase tracking-widest">Biaya Antar (Rp)</label>
+    <div class="flex gap-2">
+        <input type="number" id="shipping-input" class="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm focus:border-emerald-500 outline-none" placeholder="Contoh: 5000">
+        <button onclick="updateShippingFee()" class="px-6 py-2 bg-emerald-500 text-white rounded-xl font-bold text-sm hover:bg-emerald-600 transition-all">Simpan</button>
+    </div>
+</div>
+
+
+
+
+
     <h1 class="font-bold text-lg text-emerald-400">Daftar Pesanan</h1>
   </div>
   <div id="revenue-today" class="text-right">
@@ -64,6 +80,7 @@ import {
   orderBy,
   onSnapshot,
   doc,
+setDoc, 
   updateDoc,
   getDoc,
   serverTimestamp,
@@ -83,6 +100,31 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
+
+const shippingRef = doc(db, "settings", "shipping");
+
+// load ongkir awal
+onSnapshot(shippingRef, (snap) => {
+  if (snap.exists()) {
+    document.getElementById("shipping-input").value = snap.data().fee ?? 0;
+  }
+});
+
+// simpan ongkir
+window.updateShippingFee = async () => {
+  const fee = Number(document.getElementById("shipping-input").value || 0);
+
+  await setDoc(
+    shippingRef,
+    {
+      fee: fee,
+      updatedAt: serverTimestamp()
+    },
+    { merge: true }
+  );
+
+  alert(fee === 0 ? "Ongkir digratiskan" : "Ongkir diperbarui");
+};
 
 const ADMIN_UID = "XVmdoXxSptTlA8xHVmAIzeLgkru2";
 
@@ -316,6 +358,7 @@ return ;
 </script>
 </body>
 </html>
+
 
 
 
