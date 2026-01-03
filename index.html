@@ -147,11 +147,22 @@
         </label>
     </div>
 
-    <!-- TOTAL -->
-    <div class="flex justify-between mb-4">
-        <span class="text-slate-400">Total:</span>
-        <span id="cart-total" class="font-bold text-emerald-400 text-xl">Rp 0</span>
-    </div>
+    <div class="space-y-1 mb-4">
+  <div class="flex justify-between text-sm">
+    <span class="text-slate-400">Ongkir:</span>
+    <span id="cart-shipping">Rp 0</span>
+  </div>
+
+  <div class="flex justify-between text-sm">
+    <span class="text-slate-400">Subtotal:</span>
+    <span id="cart-subtotal">Rp 0</span>
+  </div>
+
+  <div class="flex justify-between">
+    <span class="text-slate-400">Total:</span>
+    <span id="cart-total" class="font-bold text-emerald-400 text-xl">Rp 0</span>
+  </div>
+</div>
 
     <!-- CHECKOUT -->
     <button onclick="checkout()" 
@@ -184,6 +195,16 @@ import { mediaGrid, mediaThumb } from "./media.js"; // <--- Tambahkan ini
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
+
+let shippingFee = 0;
+const shippingRef = doc(db, "settings", "shipping");
+
+onSnapshot(shippingRef, (snap) => {
+  if (snap.exists()) {
+    shippingFee = snap.data().fee ?? 0;
+    updateCartUI(); // refresh total realtime
+  }
+});
 
 // ===============================
 // ADMIN: NOTIFIKASI PREORDER
@@ -246,9 +267,7 @@ const statusRef = doc(db, "settings", "dailyStatus");
         const CART_KEY = "pasar_cart";
 let cart = JSON.parse(localStorage.getItem(CART_KEY)) || [];
         let currentCategory = "Semua";
-function getShippingCost(method) {
-  return method === "ANTAR" ? 3000 : 0;
-}
+
         const ADMIN_UID = "XVmdoXxSptTlA8xHVmAIzeLgkru2";
 
        onAuthStateChanged(auth, (user) => {
@@ -544,8 +563,19 @@ cart = JSON.parse(localStorage.getItem(CART_KEY)) || [];
 
     // Update total harga jika elemennya ada
     if (totalContainer) {
-        const total = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
-        totalContainer.innerText = `Rp ${total.toLocaleString()}`;
+        const subtotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+
+const method = document.querySelector('input[name="delivery"]:checked')?.value;
+const ongkir = method === "ANTAR" ? shippingFee : 0;
+
+document.getElementById("cart-subtotal").innerText =
+  `Rp ${subtotal.toLocaleString()}`;
+
+document.getElementById("cart-shipping").innerText =
+  ongkir === 0 ? "Gratis" : `Rp ${ongkir.toLocaleString()}`;
+
+totalContainer.innerText =
+  `Rp ${(subtotal + ongkir).toLocaleString()}`;
     }
 
     lucide.createIcons();
@@ -562,7 +592,8 @@ updateCartUI(); };
 
     const method = document.querySelector('input[name="delivery"]:checked').value;
     const subtotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
-    const total = subtotal + getShippingCost(method);
+    const shipping = method === "ANTAR" ? shippingFee : 0;
+const total = subtotal + shipping;
 
     try {
         await addDoc(collection(db, "orders"), {
