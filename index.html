@@ -494,7 +494,7 @@ updateCartUI(); };
             deliveryMethod: method,
             status: "MENUNGGU",
             createdAt: serverTimestamp(),          // untuk server (valid jangka panjang)
-createdAtClient: Date.now(),            // 🔥 untuk UI & sorting langsung
+createdAtClient: Number(Date.now()),          // 🔥 untuk UI & sorting langsung
 cancelableUntil: Date.now() + (5 * 60 * 1000)
         });
 
