@@ -16,12 +16,15 @@ Mengoptimalkan URL Cloudinary agar hemat bandwidth
 
 @param {string} options.crop - mode crop (fill | fit | scale)
 
-@returns {string} */ export function mediaUrl(url, options = {}) { if (!url || typeof url !== "string") return url; if (!url.includes("res.cloudinary.com")) return url;
+@returns {string} */ export function mediaUrl(url, options = {}) { 
+    if (!url || typeof url !== "string") return url; 
+    if (!url.includes("res.cloudinary.com")) return url;
 
-const { width = 400, quality = "auto", format = "auto", crop = "fill" } = options;
+    const { width = 400, quality = "auto", format = "auto", crop = "fill" } = options;
 
-return url.replace( "/upload/", /upload/f_${format},q_${quality},c_${crop},w_${width}/ ); }
-
+ // Perbaikan: Gunakan template literal agar variabel masuk ke string URL
+    return url.replace("/upload/", `/upload/f_${format},q_${quality},c_${crop},w_${width}/`); 
+}
 
 /**
 
