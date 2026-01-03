@@ -316,12 +316,8 @@ window.__maxSpent = maxSpent;
   document.getElementById('orders-section').classList.remove('hidden');
   document.getElementById('user-stats').classList.remove('hidden');
 
-  const allUsersSnap = await getDocs(collection(db, "users"));
-  let maxSpent = 0;
-
-  allUsersSnap.forEach(uDoc => {
-    maxSpent = Math.max(maxSpent, uDoc.data().totalSpent || 0);
-  });
+  // 👤 PELANGGAN
+const maxSpent = userData.totalSpent || 0;
 
   const mySpent = userData.totalSpent || 0;
 const orderCount = userData.orderCount || 0;
@@ -556,6 +552,7 @@ lucide.createIcons();
     </script>
 </body>
 </html>
+
 
 
 
