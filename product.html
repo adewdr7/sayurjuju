@@ -106,6 +106,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+import { mediaDetail } from "./media.js"; // <--- Tambahkan baris ini
 
         const firebaseConfig = {
   apiKey: "AIzaSyBWkPqyh54IRccNz2YjuB1bL5r49YadAP4",
@@ -172,8 +173,8 @@ let cart = JSON.parse(localStorage.getItem(CART_KEY)) || [];
 
             const p = currentProduct;
             
-            // Image & Status
-            document.getElementById('p-image').src = p.image || 'https://images.unsplash.com/photo-1542831371-29b0f74f9713?w=500';
+            // Image & Status dengan Optimasi media.js
+document.getElementById('p-image').src = mediaDetail(p.image) || 'https://images.unsplash.com/photo-1542831371-29b0f74f9713?w=500';
             const statusTag = document.getElementById('p-status-tag');
             statusTag.innerText = p.status === 'Segar' ? 'Segar' : 'Lama';
             statusTag.className = `absolute top-4 left-4 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest shadow-lg ${
@@ -298,6 +299,7 @@ function syncCart() {
     </script>
 </body>
 </html>
+
 
 
 
