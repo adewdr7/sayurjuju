@@ -169,6 +169,34 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
+
+// ===============================
+// ADMIN: NOTIFIKASI PESANAN BARU
+// ===============================
+function listenOrderNotification() {
+    const badge = document.getElementById("order-badge");
+    if (!badge) return;
+
+    const q = query(
+        collection(db, "orders"),
+        orderBy("createdAtClient", "desc")
+    );
+
+    onSnapshot(q, (snapshot) => {
+        let count = 0;
+
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            if (data.status === "MENUNGGU") {
+                count++;
+            }
+        });
+
+        badge.innerText = count;
+        badge.classList.toggle("hidden", count === 0);
+    });
+}
+
         const productsRef = collection(db, "products");
 const statusRef = doc(db, "settings", "dailyStatus");
 
@@ -191,6 +219,7 @@ cart = JSON.parse(localStorage.getItem(CART_KEY)) || [];
     
     if (user) {
         if (user.uid === ADMIN_UID) {
+
 document.getElementById("admin-status-select").classList.remove("hidden");
 document.getElementById("admin-status-note").classList.remove("hidden");
 
@@ -199,12 +228,24 @@ document.getElementById("admin-status-note").classList.remove("hidden");
             manageBtn.classList.remove("hidden");
             
             // UBAH TOMBOL KERANJANG JADI KELOLA PESANAN
-            cartBtn.innerHTML = `
-                <i data-lucide="clipboard-list" class="w-6 h-6 text-cyan-400"></i>
-                <span class="sr-only">Pesanan</span>
-            `;
+           cartBtn.innerHTML = `
+    <i data-lucide="clipboard-list" class="w-6 h-6 text-cyan-400"></i>
+
+    <!-- BADGE NOTIF ORDER -->
+    <span id="order-badge"
+        class="hidden absolute -top-1 -right-1
+               bg-rose-500 text-white text-[10px]
+               font-bold w-5 h-5 rounded-full
+               flex items-center justify-center">
+        0
+    </span>
+
+    <span class="sr-only">Pesanan</span>
+`;
+            
             // Alihkan fungsi klik jika admin ingin langsung ke halaman orders
             cartBtn.onclick = () => window.location.href = "orders.html";
+listenOrderNotification();
         } else {
 document.getElementById("admin-status-select").classList.add("hidden");
 document.getElementById("admin-status-note").classList.add("hidden");
@@ -535,6 +576,7 @@ window.addEventListener('load', () => {
     </script>
 </body>
 </html>
+
 
 
 
