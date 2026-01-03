@@ -360,7 +360,6 @@ function loadMyOrders(uid) {
     const q = query(
         collection(db, "orders"), 
         where("userId", "==", uid), 
-        orderBy("createdAtClient", "desc")
     );
 
     onSnapshot(q, (snap) => {
