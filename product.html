@@ -105,7 +105,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        import { getAuth, onAuthStateChanged, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
         const firebaseConfig = {
   apiKey: "AIzaSyBWkPqyh54IRccNz2YjuB1bL5r49YadAP4",
@@ -137,12 +137,13 @@ let cart = JSON.parse(localStorage.getItem(CART_KEY)) || [];
         };
 
         onAuthStateChanged(auth, (user) => {
-
-    // 🔁 SYNC ULANG CART
-    cart = JSON.parse(localStorage.getItem(CART_KEY)) || [];
-    updateCartBadge();
-
+  if (!user) {
+    // biarkan user guest hanya READ
     loadProduct();
+    return;
+  }
+
+  loadProduct();
 });
 
         initAuth();
@@ -305,6 +306,7 @@ function syncCart() {
     </script>
 </body>
 </html>
+
 
 
 
