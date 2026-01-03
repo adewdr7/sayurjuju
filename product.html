@@ -105,7 +105,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        import { getAuth, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
         const firebaseConfig = {
   apiKey: "AIzaSyBWkPqyh54IRccNz2YjuB1bL5r49YadAP4",
@@ -127,14 +127,7 @@ const params = new URLSearchParams(window.location.search);
         const CART_KEY = "pasar_cart";
 let cart = JSON.parse(localStorage.getItem(CART_KEY)) || [];
 
-        // Auth Init
-        const initAuth = async () => {
-            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                await signInWithCustomToken(auth, __initial_auth_token);
-            } else {
-                await signInAnonymously(auth);
-            }
-        };
+        
 
         onAuthStateChanged(auth, (user) => {
   if (!user) {
@@ -146,7 +139,6 @@ let cart = JSON.parse(localStorage.getItem(CART_KEY)) || [];
   loadProduct();
 });
 
-        initAuth();
 
         // Load Product Data
         async function loadProduct() {
