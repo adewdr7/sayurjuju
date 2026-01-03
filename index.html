@@ -65,14 +65,26 @@
 
 <div class="px-4 mt-3">
   <a href="preorder.html"
-     class="w-full flex items-center justify-center gap-2
-            text-sm font-semibold
-            bg-cyan-600/10 border border-cyan-500/30
-            text-cyan-400 rounded-xl
-            py-3
-            hover:bg-cyan-600/20 transition">
-    📦 Pre Order
-  </a>
+   id="btn-preorder"
+   class="relative w-full flex items-center justify-center gap-2
+          text-sm font-semibold
+          bg-cyan-600/10 border border-cyan-500/30
+          text-cyan-400 rounded-xl
+          py-3
+          hover:bg-cyan-600/20 transition">
+
+  📦 Pre Order
+
+  <!-- BADGE PREORDER (ADMIN) -->
+  <span id="preorder-badge"
+        class="hidden absolute -top-2 -right-2
+               bg-yellow-400 text-black
+               text-[10px] font-bold
+               w-5 h-5 rounded-full
+               flex items-center justify-center">
+    0
+  </span>
+</a>
 </div>
 
         <!-- SEARCH + FILTER (STICKY, SATU BLOK) -->
@@ -171,6 +183,33 @@
         const db = getFirestore(app);
 
 // ===============================
+// ADMIN: NOTIFIKASI PREORDER
+// ===============================
+function listenPreorderNotification() {
+    const badge = document.getElementById("preorder-badge");
+    if (!badge) return;
+
+    const q = query(
+        collection(db, "preorders"),
+        orderBy("createdAt", "desc")
+    );
+
+    onSnapshot(q, (snapshot) => {
+        let count = 0;
+
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            if (data.status === "PENDING") {
+                count++;
+            }
+        });
+
+        badge.innerText = count;
+        badge.classList.toggle("hidden", count === 0);
+    });
+}
+
+// ===============================
 // ADMIN: NOTIFIKASI PESANAN BARU
 // ===============================
 function listenOrderNotification() {
@@ -233,12 +272,12 @@ document.getElementById("admin-status-note").classList.remove("hidden");
 
     <!-- BADGE NOTIF ORDER -->
     <span id="order-badge"
-        class="hidden absolute -top-1 -right-1
-               bg-blue-500 text-white text-[10px]
-               font-bold w-5 h-5 rounded-full
-               flex items-center justify-center">
-        0
-    </span>
+    class="hidden absolute -top-1 -right-1
+           bg-blue-500 text-white text-[10px]
+           font-bold w-5 h-5 rounded-full
+           flex items-center justify-center">
+    0
+</span>
 
     <span class="sr-only">Pesanan</span>
 `;
@@ -246,6 +285,7 @@ document.getElementById("admin-status-note").classList.remove("hidden");
             // Alihkan fungsi klik jika admin ingin langsung ke halaman orders
             cartBtn.onclick = () => window.location.href = "orders.html";
 listenOrderNotification();
+listenPreorderNotification();
         } else {
 document.getElementById("admin-status-select").classList.add("hidden");
 document.getElementById("admin-status-note").classList.add("hidden");
