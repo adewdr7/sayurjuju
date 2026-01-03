@@ -364,6 +364,7 @@ function loadMyOrders(uid) {
     );
 
     onSnapshot(q, (snap) => {
+console.log("Data diterima dari Firestore:", snap.size, "dokumen ditemukan");
         Object.values(activeTimers).forEach(clearInterval);
         activeTimers = {};
 
@@ -439,8 +440,19 @@ function loadMyOrders(uid) {
             }
         });
         lucide.createIcons();
-    });
-}
+    
+}, (error) => { // <--- TAMBAHKAN MULAI DARI SINI
+    console.error("Error Query Pesanan:", error);
+    const list = document.getElementById("my-orders");
+    if (list) {
+        list.innerHTML = `
+            <div class="p-4 bg-rose-500/10 border border-rose-500/20 rounded-2xl text-center">
+                <p class="text-rose-400 text-xs font-bold">Gagal memuat data</p>
+                <p class="text-[10px] text-slate-500 mt-1">${error.message}</p>
+            </div>
+        `;
+    }
+}); // <--- PENUTUP ONSNAPSHOT
 
 window.loadUsers = (maxSpent) => {
   const listEl = document.getElementById('users-list');
