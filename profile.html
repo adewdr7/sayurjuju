@@ -208,22 +208,18 @@ window.deleteSelectedOrders = async () => {
 
 
 window.toggleSort = (btn) => {
-  // 1. Ganti status sort
-  currentSort = currentSort === "spent" ? "debt" : "spent";
-
-  // 2. Ganti teks dan warna tombol untuk memberi indikasi visual
   if (currentSort === "spent") {
-  currentSort = "debt";
-  btn.innerText = "🔁 Urutkan (Hutang)";
-} else if (currentSort === "debt") {
-  currentSort = "transaction";
-  btn.innerText = "🔁 Urutkan (Transaksi)";
-} else {
-  currentSort = "spent";
-  btn.innerText = "🔁 Urutkan (Belanja)";
-}
+    currentSort = "debt";
+    btn.innerText = "🔁 Urutkan (Hutang)";
+  } else if (currentSort === "debt") {
+    currentSort = "transaction";
+    btn.innerText = "🔁 Urutkan (Transaksi)";
+  } else {
+    currentSort = "spent";
+    btn.innerText = "🔁 Urutkan (Belanja)";
+  }
 
-loadUsers(window.__maxSpent || 0);
+  loadUsers(window.__maxSpent || 0);
 };
 
 
@@ -618,6 +614,7 @@ lucide.createIcons();
     </script>
 </body>
 </html>
+
 
 
 
