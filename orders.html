@@ -304,15 +304,10 @@ if (next === "SELESAI") {
     batch.update(pRef, { stock: increment(-item.qty) });
   }
 
-  // 2️⃣ Tandai user terakhir transaksi (opsional)
-  const userRef = doc(db, "users", orderData.userId);
-  batch.update(userRef, {
-    lastTransactionAt: serverTimestamp()
-  });
-
-// 2️⃣ Update total transaksi user (SAAT PESANAN SELESAI)
+  // 2️⃣ Update data user (HANYA SAAT PESANAN SELESAI)
 const userRef = doc(db, "users", orderData.userId);
 batch.update(userRef, {
+  lastTransactionAt: serverTimestamp(),
   orderCount: increment(1),
   transactionCount: increment(1),
   totalSpent: increment(orderData.total)
