@@ -55,11 +55,6 @@
     <span id="user-freq">0%</span>
   </p>
 </div>
-<div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl mt-4">
-  <p class="text-xs text-slate-500 mb-1">Frekuensi Belanja</p>
-  <p id="order-count" class="text-lg font-bold text-cyan-400"></p>
-  <p id="loyalty-label" class="text-xs text-slate-400 mt-1"></p>
-</div>
                 <div class="bg-slate-950/50 p-4 rounded-2xl border border-slate-800/50">
                     <p class="text-[10px] text-slate-500 uppercase font-bold mb-1">Catatan Hutang</p>
                     <p class="text-lg font-bold text-rose-400">Rp <span id="user-debt">0</span></p>
@@ -207,16 +202,17 @@ window.toggleSort = (btn) => {
 
   // 2. Ganti teks dan warna tombol untuk memberi indikasi visual
   if (currentSort === "spent") {
-    btn.innerText = "🔁 Urutkan (Belanja)";
-    btn.classList.replace("text-rose-400", "text-emerald-400"); // Jika ingin ganti warna
-  } else {
-    btn.innerText = "🔁 Urutkan (Hutang)";
-    btn.classList.replace("text-emerald-400", "text-rose-400");
-  }
+  currentSort = "debt";
+  btn.innerText = "🔁 Urutkan (Hutang)";
+} else if (currentSort === "debt") {
+  currentSort = "transaction";
+  btn.innerText = "🔁 Urutkan (Transaksi)";
+} else {
+  currentSort = "spent";
+  btn.innerText = "🔁 Urutkan (Belanja)";
+}
 
-  // 3. Panggil ulang loadUsers dengan nilai maxSpent yang tersimpan
-  // Pastikan Anda menyimpan maxSpent ke variabel global atau mengambilnya kembali
-  loadUsers(window.__maxSpent || 0);
+loadUsers(window.__maxSpent || 0);
 };
 
 
@@ -487,10 +483,16 @@ console.log("Data diterima dari Firestore:", snap.size, "dokumen ditemukan");
 window.loadUsers = (maxSpent) => {
   const listEl = document.getElementById('users-list');
 
-  // 1. Tentukan Query
-  const q = currentSort === "spent"
-    ? query(collection(db, "users"), orderBy("totalSpent", "desc"))
-    : query(collection(db, "users"), orderBy("debt", "desc"));
+  let q;
+
+if (currentSort === "spent") {
+  q = query(collection(db, "users"), orderBy("totalSpent", "desc"));
+} else if (currentSort === "debt") {
+  q = query(collection(db, "users"), orderBy("debt", "desc"));
+} else {
+  // TRANSAKSI TERBANYAK
+  q = query(collection(db, "users"), orderBy("orderCount", "desc"));
+}
 
   // 2. Gunakan onSnapshot (Try-Catch biasanya di dalam callback atau membungkus inisialisasi)
   onSnapshot(q, (snap) => {
@@ -507,10 +509,16 @@ window.loadUsers = (maxSpent) => {
 
         const card = document.createElement('div');
         card.className = "bg-slate-900/50 p-4 rounded-2xl border border-slate-800 flex items-center gap-4";
+const online = u.orderCount || 0;
+const offline = u.offlineOrderCount || 0;
+const totalTx = online + offline;
         card.innerHTML = `
             <img src="${u.photo || 'https://ui-avatars.com/api/?name=' + u.email}" class="w-12 h-12 rounded-xl object-cover bg-slate-800">
             <div class="flex-1">
                 <h4 class="text-sm font-bold text-slate-100">${u.name || (u.email ? u.email.split('@')[0] : 'User')}</h4>
+<span class="text-[10px] text-cyan-400 font-bold">
+  🔄 ${totalTx} transaksi
+</span>
                 <div class="flex gap-3 mt-1">
                     <span class="text-[10px] text-emerald-400 font-bold"><i data-lucide="star" class="w-3 h-3 inline"></i> ${score}%</span>
                     <span class="text-[10px] text-rose-400 font-bold"><i data-lucide="banknote" class="w-3 h-3 inline"></i> Rp ${(u.debt || 0).toLocaleString()}</span>
@@ -550,7 +558,7 @@ window.openEditModal = (uid, name, totalSpent, debt) => {
     targetEditUid = uid;
     // Set nilai input nama
     document.getElementById('edit-name').value = name || ""; 
-    document.getElementById('edit-freq').value = totalSpent;
+    
     document.getElementById('edit-debt').value = debt;
     document.getElementById('edit-modal').classList.remove('hidden');
 };
@@ -559,7 +567,7 @@ window.closeEditModal = () => document.getElementById('edit-modal').classList.ad
 
 window.saveUserEdit = async () => {
     const newName = document.getElementById('edit-name').value; // Ambil nilai nama baru
-    const totalSpent = parseInt(document.getElementById('edit-freq').value) || 0;
+    
     const debt = parseInt(document.getElementById('edit-debt').value) || 0;
 
     if (!newName.trim()) {
@@ -570,7 +578,7 @@ window.saveUserEdit = async () => {
     try {
         await updateDoc(doc(db, "users", targetEditUid), { 
             name: newName, // Simpan perubahan nama ke Firestore
-            totalSpent: totalSpent, 
+            
             debt: debt 
         });
         closeEditModal();
