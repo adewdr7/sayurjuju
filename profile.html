@@ -107,7 +107,13 @@
         <!-- ================= ADMIN SECTION ================= -->
         <div id="admin-section" class="hidden space-y-4">
             <h3 class="text-lg font-bold text-white">Daftar Pelanggan</h3>
-            <div class="flex gap-3 mb-4">
+<div class="relative mt-2 mb-4">
+    <i data-lucide="search" class="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"></i>
+    <input type="text" id="search-customer" oninput="filterCustomers()" placeholder="Cari nama pelanggan..." 
+    class="w-full bg-slate-900 border border-slate-800 rounded-2xl py-3 pl-11 pr-4 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
+</div>
+<div class="flex gap-3 mb-4">
+
   <button
   onclick="toggleSort(this)" 
   class="flex-1 py-3 bg-slate-800 rounded-xl text-xs font-bold transition-all active:scale-95">
@@ -570,6 +576,11 @@ window.openOfflineModal = async (uid) => {
 
   const listEl = document.getElementById("offline-product-list");
   listEl.innerHTML = "Memuat produk...";
+  // Tambahkan ini agar kolom search kosong saat modal dibuka kembali
+  if(document.getElementById('search-product-offline')) {
+      document.getElementById('search-product-offline').value = '';
+  }
+
 
   const snap = await getDocs(collection(db, "products"));
 
@@ -687,15 +698,63 @@ window.handleLogout = async () => {
     }
 };
 
+// --- Fungsi Filter Daftar Customer ---
+window.filterCustomers = () => {
+    const term = document.getElementById('search-customer').value.toLowerCase();
+    const list = document.getElementById('users-list');
+    const cards = list.getElementsByTagName('div'); // Mengambil div pembungkus kartu
+
+    // Karena struktur kartu cukup kompleks, kita filter berdasarkan teks h4 (nama)
+    Array.from(cards).forEach(card => {
+        const nameText = card.querySelector('h4')?.innerText.toLowerCase() || "";
+        if (nameText.includes(term)) {
+            card.classList.remove('hidden');
+            card.classList.add('flex');
+        } else {
+            card.classList.add('hidden');
+            card.classList.remove('flex');
+        }
+    });
+};
+
+// --- Fungsi Filter Produk di Modal Offline ---
+window.filterOfflineProducts = () => {
+    const term = document.getElementById('search-product-offline').value.toLowerCase();
+    const list = document.getElementById('offline-product-list');
+    const items = list.children;
+
+    Array.from(items).forEach(item => {
+        const productName = item.querySelector('label')?.innerText.toLowerCase() || "";
+        if (productName.includes(term)) {
+            item.classList.remove('hidden');
+            item.classList.add('flex');
+        } else {
+            item.classList.add('hidden');
+            item.classList.remove('flex');
+        }
+    });
+};
+
+// Update pemanggilan icon agar icon search muncul
 lucide.createIcons();
     </script>
 <div id="offline-modal"
  class="fixed inset-0 bg-black/70 z-50 hidden flex items-center justify-center p-4">
 
-  <div class="bg-slate-900 w-full max-w-md rounded-2xl p-6 border border-slate-800">
-    <h3 class="font-bold text-lg mb-4">Transaksi Offline</h3>
+  <div class="bg-slate-900 w-full max-w-2xl rounded-[2.5rem] p-8 border border-slate-800 shadow-2xl mx-auto">
+    <div class="flex justify-between items-center mb-6">
+        <h3 class="font-bold text-xl text-white">Catat Transaksi Offline</h3>
+        <button onclick="closeOfflineModal()" class="p-2 bg-slate-800 rounded-full text-slate-400"><i data-lucide="x" class="w-5 h-5"></i></button>
+    </div>
 
-    <div id="offline-product-list" class="space-y-3 max-h-60 overflow-y-auto"></div>
+    <div class="relative mb-6">
+        <i data-lucide="search" class="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"></i>
+        <input type="text" id="search-product-offline" oninput="filterOfflineProducts()" placeholder="Cari nama produk..." 
+        class="w-full bg-slate-950 border border-slate-800 rounded-2xl py-4 pl-12 pr-4 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
+    </div>
+
+    <div id="offline-product-list" class="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[50vh] overflow-y-auto pr-2 hide-scrollbar">
+        </div>
 
     <div class="flex gap-3 mt-6">
       <button onclick="closeOfflineModal()"
@@ -711,22 +770,3 @@ lucide.createIcons();
 </div>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
