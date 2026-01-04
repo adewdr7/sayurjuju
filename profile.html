@@ -22,9 +22,20 @@
             </a>
             <h1 class="text-xl font-bold bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">Profil Saya</h1>
         </div>
-        <button onclick="handleLogout()" class="p-2 bg-rose-500/10 text-rose-500 rounded-xl border border-rose-500/20">
-            <i data-lucide="log-out" class="w-6 h-6"></i>
-        </button>
+        <div class="flex items-center gap-2">
+    <!-- LEADERBOARD -->
+    <a href="leaderboard.html"
+       class="p-2 bg-yellow-500/10 text-yellow-400 rounded-xl border border-yellow-500/20"
+       title="Leaderboard Pelanggan">
+        <i data-lucide="crown" class="w-6 h-6"></i>
+    </a>
+
+    <!-- LOGOUT -->
+    <button onclick="handleLogout()"
+        class="p-2 bg-rose-500/10 text-rose-500 rounded-xl border border-rose-500/20">
+        <i data-lucide="log-out" class="w-6 h-6"></i>
+    </button>
+</div>
     </nav>
 
     <main class="p-4 max-w-2xl mx-auto space-y-6">
@@ -610,6 +621,7 @@ lucide.createIcons();
     </script>
 </body>
 </html>
+
 
 
 
