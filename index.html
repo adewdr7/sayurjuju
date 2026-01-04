@@ -596,32 +596,46 @@ updateCartUI(); };
 const total = subtotal + shipping;
 
     try {
-        await addDoc(collection(db, "orders"), {
-            userId: user.uid,
-            userName: document.getElementById('user-name')?.innerText || user.email, // Tambahkan ini agar admin tahu siapa yang pesan
-            items: cart.map(i => ({
-                productId: i.id,
-                name: i.name,
-                qty: i.qty,
-                price: i.price
-            })),
-            total,
-            deliveryMethod: method,
-            status: "MENUNGGU",
-            createdAt: serverTimestamp(),          // untuk server (valid jangka panjang)
-createdAtClient: Number(Date.now()),          // 🔥 untuk UI & sorting langsung
-cancelableUntil: Date.now() + (5 * 60 * 1000)
-        });
+    // 1️⃣ SIMPAN PESANAN (ORDER)
+    await addDoc(collection(db, "orders"), {
+        userId: user.uid,
+        userName: document.getElementById('user-name')?.innerText || user.email,
+        items: cart.map(i => ({
+            productId: i.id,
+            name: i.name,
+            qty: i.qty,
+            price: i.price
+        })),
+        subtotal,
+        shipping,
+        total,
+        deliveryMethod: method,
+        status: "MENUNGGU",
+        createdAt: serverTimestamp(),              // server time
+        createdAtClient: Date.now(),               // untuk UI
+        cancelableUntil: Date.now() + (5 * 60 * 1000)
+    });
 
-        // HAPUS LOGIKA PENGURANGAN STOK DI SINI
-        cart = [];
-localStorage.removeItem(CART_KEY); // 🔥 INI KUNCI UTAMA
-updateCartUI();
-toggleCart();
-alert("Pesanan berhasil dibuat 🎉");
-window.location.href = "profile.html";
-    } catch (err) { alert("Gagal checkout: " + err.message); }
-};
+    // 2️⃣ UPDATE DATA USER (INI "LANGKAH TAMBAHAN")
+    const userRef = doc(db, "users", user.uid);
+    await updateDoc(userRef, {
+        orderCount: increment(1),          // transaksi online
+        transactionCount: increment(1),    // ⬅ penting untuk sorting
+        totalSpent: increment(total)       // uang belanja
+    });
+
+    // 3️⃣ BERSIHKAN KERANJANG
+    cart = [];
+    localStorage.removeItem(CART_KEY);
+    updateCartUI();
+    toggleCart();
+
+    alert("Pesanan berhasil dibuat 🎉");
+    window.location.href = "profile.html";
+} catch (err) {
+   console.error(err);
+   alert("Gagal membuat pesanan");
+}
 
         lucide.createIcons();
 
