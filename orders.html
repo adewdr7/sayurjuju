@@ -173,13 +173,6 @@ const buyerName = userSnap.exists()
   ? userSnap.data().name || "Tanpa Nama"
   : "User";
 
-const userSnap = await getDoc(doc(db, "users", o.userId));
-const buyerName = userSnap.exists()
-  ? userSnap.data().name || "Tanpa Nama"
-  : "User";
-
-      
-
 // Di dalam loop snap.forEach
 const deleteBtn = o.status === "SELESAI" ? `
     <button onclick="deleteSingleOrder('${id}')" class="p-2 text-rose-500">
