@@ -173,6 +173,9 @@ const ADMIN_UID = "XVmdoXxSptTlA8xHVmAIzeLgkru2";
 let currentSort = "spent"; // spent | debt
 let targetEditUid = null;
 let activeTimers = {};
+// ===== STATE TRANSAKSI OFFLINE =====
+let offlineTargetUid = null;
+let offlineSelected = {};
 
 // Tambahkan fungsi pendukung di dalam tag <script>
 let selectedOrders = [];
@@ -259,14 +262,9 @@ orderCount: 0
   }
 };
 
-window.addOffline = async (uid) => {
-  if (!confirm("Tambah 1 transaksi offline?")) return;
 
-  await updateDoc(doc(db, "users", uid), {
-    offlineOrderCount: increment(1)
-  });
-
-  alert("Transaksi offline ditambahkan");
+window.addOffline = (uid) => {
+  openOfflineModal(uid);
 };
 
 window.removeOffline = async (uid) => {
@@ -540,11 +538,10 @@ const totalTx = online + offline;
             </div>
 <div class="flex gap-1">
   <button
-    onclick="addOffline('${userDoc.id}')"
-    class="px-3 py-1 text-[10px] font-bold rounded-lg bg-emerald-500 text-slate-950">
-    +1
-  </button>
-
+  onclick="openOfflineModal('${userDoc.id}')"
+  class="px-3 py-1 text-[10px] font-bold rounded-lg bg-emerald-500">
+  +1
+</button>
   <button
     onclick="removeOffline('${userDoc.id}')"
     class="px-3 py-1 text-[10px] font-bold rounded-lg bg-rose-500 text-white">
@@ -567,6 +564,79 @@ const totalTx = online + offline;
   });
 };
 
+window.openOfflineModal = async (uid) => {
+  offlineTargetUid = uid;
+  offlineSelected = {};
+
+  const listEl = document.getElementById("offline-product-list");
+  listEl.innerHTML = "Memuat produk...";
+
+  const snap = await getDocs(collection(db, "products"));
+
+  listEl.innerHTML = "";
+
+  snap.forEach(docSnap => {
+    const p = docSnap.data();
+    if (p.stock <= 0) return;
+
+    const row = document.createElement("div");
+    row.className = "flex items-center justify-between bg-slate-800 p-3 rounded-xl";
+
+    row.innerHTML = `
+      <label class="flex items-center gap-3 text-sm">
+        <input type="checkbox"
+          onchange="toggleOfflineProduct('${docSnap.id}', this.checked)"
+          class="accent-emerald-500">
+        ${p.name}
+        <span class="text-[10px] text-slate-400">(stok ${p.stock})</span>
+      </label>
+
+      <input type="number" min="1" value="1"
+        onchange="setOfflineQty('${docSnap.id}', this.value)"
+        class="w-16 bg-slate-900 border border-slate-700 rounded-lg text-xs px-2 py-1">
+    `;
+
+    listEl.appendChild(row);
+  });
+
+  document.getElementById("offline-modal").classList.remove("hidden");
+};
+
+window.toggleOfflineProduct = (id, checked) => {
+  if (!checked) delete offlineSelected[id];
+  else offlineSelected[id] = 1;
+};
+
+window.setOfflineQty = (id, qty) => {
+  if (offlineSelected[id] !== undefined) {
+    offlineSelected[id] = parseInt(qty) || 1;
+  }
+};
+
+window.confirmOfflineTransaction = async () => {
+  const ids = Object.keys(offlineSelected);
+  if (ids.length === 0) {
+    alert("Pilih minimal 1 produk");
+    return;
+  }
+
+  for (const id of ids) {
+    await updateDoc(doc(db, "products", id), {
+      stock: increment(-offlineSelected[id])
+    });
+  }
+
+  await updateDoc(doc(db, "users", offlineTargetUid), {
+    offlineOrderCount: increment(1)
+  });
+
+  closeOfflineModal();
+  alert("Transaksi offline berhasil dicatat");
+};
+
+window.closeOfflineModal = () => {
+  document.getElementById("offline-modal").classList.add("hidden");
+};
 
 window.openEditModal = (uid, name, totalSpent, debt) => {
     targetEditUid = uid;
@@ -619,6 +689,26 @@ window.handleLogout = async () => {
 
 lucide.createIcons();
     </script>
+<div id="offline-modal"
+ class="fixed inset-0 bg-black/70 z-50 hidden flex items-center justify-center p-4">
+
+  <div class="bg-slate-900 w-full max-w-md rounded-2xl p-6 border border-slate-800">
+    <h3 class="font-bold text-lg mb-4">Transaksi Offline</h3>
+
+    <div id="offline-product-list" class="space-y-3 max-h-60 overflow-y-auto"></div>
+
+    <div class="flex gap-3 mt-6">
+      <button onclick="closeOfflineModal()"
+        class="flex-1 py-3 bg-slate-800 rounded-xl font-bold text-sm">
+        Batal
+      </button>
+      <button onclick="confirmOfflineTransaction()"
+        class="flex-1 py-3 bg-emerald-500 text-slate-950 rounded-xl font-bold text-sm">
+        Konfirmasi
+      </button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
 
