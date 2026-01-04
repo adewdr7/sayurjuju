@@ -163,15 +163,22 @@ function loadOrders() {
       return;
     }
 
-    snap.forEach(docSnap => {
+    for (const docSnap of snap.docs) {
+
+const o = docSnap.data();
+const id = docSnap.id;
 
 const userSnap = await getDoc(doc(db, "users", o.userId));
 const buyerName = userSnap.exists()
   ? userSnap.data().name || "Tanpa Nama"
   : "User";
 
-      const o = docSnap.data();
-      const id = docSnap.id;
+const userSnap = await getDoc(doc(db, "users", o.userId));
+const buyerName = userSnap.exists()
+  ? userSnap.data().name || "Tanpa Nama"
+  : "User";
+
+      
 
 // Di dalam loop snap.forEach
 const deleteBtn = o.status === "SELESAI" ? `
