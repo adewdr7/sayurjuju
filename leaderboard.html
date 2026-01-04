@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="id">
+<!DOCTYPE html>
+<html lang="id">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -8,28 +9,44 @@
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap');
     body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    .gold-glow { box-shadow: 0 0 20px rgba(234, 179, 8, 0.2); }
   </style>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen">  <!-- NAVBAR -->  <nav class="p-4 flex items-center gap-3 sticky top-0 bg-slate-950/90 backdrop-blur-md z-40 border-b border-slate-900">
+<body class="bg-slate-950 text-slate-100 min-h-screen">
+
+  <!-- NAVBAR -->
+  <nav class="p-4 flex items-center gap-3 sticky top-0 bg-slate-950/90 backdrop-blur-md z-40 border-b border-slate-900">
     <a href="index.html" class="p-2 bg-slate-900 text-slate-400 rounded-xl border border-slate-800">
       <i data-lucide="arrow-left" class="w-6 h-6"></i>
     </a>
     <h1 class="text-xl font-bold bg-gradient-to-r from-yellow-400 to-amber-500 bg-clip-text text-transparent flex items-center gap-2">
-      <span>🏆</span> Leaderboard Pelanggan
+      <span>🏆</span> Leaderboard
     </h1>
-  </nav>  <!-- INFO PERIODE -->  <div class="p-4">
-    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4">
-      <p class="text-xs text-slate-400">Periode Hadiah</p>
-      <p id="period-name" class="font-bold text-slate-200">Sedang memuat...</p>
-      <p class="text-[10px] text-slate-500 mt-1">
-        Peringkat dihitung dari jumlah transaksi (online + offline) pada periode ini
-      </p>
+  </nav>
+
+  <main class="p-4 max-w-md mx-auto">
+    <!-- Header Stats -->
+    <div class="bg-slate-900/40 border border-slate-800 rounded-2xl p-6 mb-6 text-center">
+      <p class="text-slate-400 text-sm mb-1">Pelanggan Teraktif</p>
+      <h2 class="text-2xl font-bold text-white">Top 10 Bulan Ini</h2>
     </div>
-  </div>  <!-- LEADERBOARD LIST -->  <main class="p-4 space-y-3" id="leaderboard-list">
-    <div class="text-center text-slate-500 text-sm">Memuat leaderboard...</div>
-  </main>  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
-    import { getFirestore, collection, query, orderBy, onSnapshot, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+
+    <!-- Loading State -->
+    <div id="loading" class="flex flex-col items-center justify-center py-20 gap-4">
+      <div class="w-8 h-8 border-4 border-yellow-500/20 border-t-yellow-500 rounded-full animate-spin"></div>
+      <p class="text-slate-500 text-sm italic">Memuat peringkat...</p>
+    </div>
+
+    <!-- User List -->
+    <div id="leaderboard-list" class="space-y-3 hidden">
+      <!-- Data akan diisi via JS -->
+    </div>
+  </main>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
+    import { getFirestore, collection, query, orderBy, limit, onSnapshot } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyBWkPqyh54IRccNz2YjuB1bL5r49YadAP4",
@@ -39,66 +56,96 @@
       messagingSenderId: "754413439458",
       appId: "1:754413439458:web:341c9fe99fd9b1550551bb"
     };
-
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
+    const auth = getAuth(app);
 
     const listEl = document.getElementById('leaderboard-list');
-    const periodNameEl = document.getElementById('period-name');
+    const loadingEl = document.getElementById('loading');
 
-    // =============================
-    // AMBIL PERIODE HADIAH
-    // =============================
-    const periodRef = doc(db, 'stats', 'global');
-    getDoc(periodRef).then(snap => {
-      if (snap.exists() && snap.data().rewardPeriod?.name) {
-        periodNameEl.innerText = snap.data().rewardPeriod.name;
+    // PROTEKSI HALAMAN: Cek Login
+    onAuthStateChanged(auth, (user) => {
+      if (!user) {
+        // Jika tidak ada user, arahkan ke login
+        window.location.href = 'login.html';
       } else {
-        periodNameEl.innerText = 'Periode berjalan';
+        // Jika login, jalankan fungsi load leaderboard
+        initLeaderboard();
       }
     });
 
-    // =============================
-    // LEADERBOARD BERDASARKAN TRANSAKSI
-    // =============================
-    const q = query(collection(db, 'users'), orderBy('orderCount', 'desc'));
+    function initLeaderboard() {
+      // Ambil top 20 user berdasarkan orderCount
+      const q = query(
+        collection(db, 'users'), 
+        orderBy('orderCount', 'desc'),
+        limit(20)
+      );
 
-    onSnapshot(q, (snap) => {
-      listEl.innerHTML = '';
-      let rank = 1;
+      onSnapshot(q, (snap) => {
+        listEl.innerHTML = '';
+        loadingEl.classList.add('hidden');
+        listEl.classList.remove('hidden');
 
-      snap.forEach(docSnap => {
-        const u = docSnap.data();
-        const online = u.orderCount || 0;
-        const offline = u.offlineOrderCount || 0;
-        const totalTx = online + offline;
+        let rank = 1;
 
-        if (totalTx === 0) return;
+        if (snap.empty) {
+          listEl.innerHTML = `
+            <div class="text-center py-10 text-slate-500">
+              <p>Belum ada data transaksi.</p>
+            </div>
+          `;
+          return;
+        }
 
-        const badge = rank === 1 ? '👑' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : `#${rank}`;
+        snap.forEach(docSnap => {
+          const u = docSnap.data();
+          const online = u.orderCount || 0;
+          const offline = u.offlineOrderCount || 0;
+          const totalTx = online + offline;
 
-        const card = document.createElement('div');
-        card.className = 'bg-slate-900/60 border border-slate-800 rounded-2xl p-4 flex items-center gap-4';
-        card.innerHTML = `
-          <div class="text-xl">${badge}</div>
-          <img src="${u.photo || 'https://ui-avatars.com/api/?name=' + (u.name || 'User')}" class="w-12 h-12 rounded-xl object-cover" />
-          <div class="flex-1">
-            <p class="font-bold text-slate-100 text-sm">${u.name || 'Pelanggan'}</p>
-            <p class="text-[10px] text-slate-400">${totalTx} kali transaksi</p>
-          </div>
-        `;
+          // Jangan tampilkan yang nol transaksi
+          if (totalTx === 0) return;
 
-        listEl.appendChild(card);
-        rank++;
+          const isTop3 = rank <= 3;
+          const badgeColor = rank === 1 ? 'text-yellow-400' : rank === 2 ? 'text-slate-300' : rank === 3 ? 'text-amber-600' : 'text-slate-500';
+          const badgeIcon = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : `#${rank}`;
+
+          const card = document.createElement('div');
+          card.className = `flex items-center gap-4 p-4 rounded-2xl border transition-all ${
+            rank === 1 ? 'bg-yellow-500/10 border-yellow-500/30 gold-glow' : 'bg-slate-900/60 border-slate-800'
+          }`;
+          
+          card.innerHTML = `
+            <div class="w-8 text-center font-bold ${badgeColor}">${badgeIcon}</div>
+            <div class="relative">
+                <img src="${u.photo || 'https://ui-avatars.com/api/?background=1e293b&color=fff&name=' + (u.name || 'U')}" 
+                     class="w-12 h-12 rounded-xl object-cover border-2 ${rank === 1 ? 'border-yellow-500' : 'border-slate-700'}" />
+                ${rank === 1 ? '<span class="absolute -top-2 -right-2 text-lg">👑</span>' : ''}
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="font-bold text-slate-100 truncate">${u.name || 'Pelanggan'}</p>
+              <p class="text-xs text-slate-400">${totalTx} Total Pesanan</p>
+            </div>
+            <div class="text-right">
+                <div class="text-xs font-bold text-slate-300">${online} <span class="text-[10px] font-normal text-slate-500 italic">Online</span></div>
+            </div>
+          `;
+          
+          listEl.appendChild(card);
+          rank++;
+        });
+
+        lucide.createIcons();
+      }, (error) => {
+        console.error("Error fetching leaderboard:", error);
+        loadingEl.innerHTML = `<p class="text-red-400 text-sm">Gagal memuat data. Periksa koneksi.</p>`;
       });
-
-      if (rank === 1) {
-        listEl.innerHTML = '<div class="text-center text-slate-500 text-sm">Belum ada transaksi di periode ini</div>';
-      }
-
-      lucide.createIcons();
-    });
+    }
 
     lucide.createIcons();
-  </script></body>
+  </script>
+</body>
 </html>
+
+
