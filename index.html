@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -617,14 +616,6 @@ const total = subtotal + shipping;
         cancelableUntil: Date.now() + (5 * 60 * 1000)
     });
 
-    // 2️⃣ UPDATE DATA USER (INI "LANGKAH TAMBAHAN")
-    const userRef = doc(db, "users", user.uid);
-    await updateDoc(userRef, {
-        orderCount: increment(1),          // transaksi online
-        transactionCount: increment(1),    // ⬅ penting untuk sorting
-        totalSpent: increment(total)       // uang belanja
-    });
-
     // 3️⃣ BERSIHKAN KERANJANG
     cart = [];
     localStorage.removeItem(CART_KEY);
@@ -666,6 +657,7 @@ window.addEventListener('load', () => {
     </script>
 </body>
 </html>
+
 
 
 
