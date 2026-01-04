@@ -31,11 +31,12 @@
 <main class="p-4 space-y-4 max-w-2xl mx-auto">
 <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 mb-6">
     <label class="block text-[10px] text-slate-500 font-bold mb-2 uppercase tracking-widest">Biaya Antar (Rp)</label>
-    <div class="flex justify-end gap-2">
-        <input type="number" id="shipping-input" class="w-full max-w-[150px] bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm focus:border-emerald-500 outline-none" placeholder="Contoh: 5000">
+    <div class="flex gap-2">
+        <input type="number" id="shipping-input" class="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm focus:border-emerald-500 outline-none" placeholder="Contoh: 5000">
         <button onclick="updateShippingFee()" class="px-6 py-2 bg-emerald-500 text-white rounded-xl font-bold text-sm hover:bg-emerald-600 transition-all">Simpan</button>
     </div>
 </div>
+
   <!-- Ringkasan Status -->
   <div class="grid grid-cols-3 gap-3 mb-6">
     <div class="bg-slate-900 border border-slate-800 p-3 rounded-2xl text-center">
@@ -294,8 +295,7 @@ window.updateStatus = async (id, current) => {
         const orderRef = doc(db, "orders", id);
         const orderSnap = await getDoc(orderRef);
         const orderData = orderSnap.data();
-
-        if (next === "SELESAI") {
+if (next === "SELESAI") {
   const batch = writeBatch(db);
 
   // 1️⃣ Kurangi stok produk
@@ -304,44 +304,18 @@ window.updateStatus = async (id, current) => {
     batch.update(pRef, { stock: increment(-item.qty) });
   }
 
-  // 2️⃣ Ambil user SEKALI SAJA
+  // 2️⃣ Tandai user terakhir transaksi (opsional)
   const userRef = doc(db, "users", orderData.userId);
-  const userSnap = await getDoc(userRef);
-
-  const currentSpent = userSnap.exists()
-    ? userSnap.data().totalSpent || 0
-    : 0;
-
-  const newUserTotal = currentSpent + orderData.total;
-
-  // 3️⃣ Update user
   batch.update(userRef, {
-    totalSpent: increment(orderData.total),
-    orderCount: increment(1),
     lastTransactionAt: serverTimestamp()
   });
 
-  // 4️⃣ Update global maxTotalSpent
-  const statsRef = doc(db, "stats", "global");
-  const statsSnap = await getDoc(statsRef);
+  // 3️⃣ Update status pesanan
+  batch.update(orderRef, { status: "SELESAI" });
 
-  const currentMax = statsSnap.exists()
-    ? statsSnap.data().maxTotalSpent || 0
-    : 0;
-
-  if (newUserTotal > currentMax) {
-    batch.set(
-      statsRef,
-      { maxTotalSpent: newUserTotal },
-      { merge: true }
-    );
-  }
-            // 3. Update Status Pesanan
-            batch.update(orderRef, { status: "SELESAI" });
-
-            await batch.commit();
-            alert("Pesanan Selesai! Stok berkurang & frekuensi pelanggan diperbarui.");
-return ;
+  await batch.commit();
+  alert("Pesanan selesai & stok diperbarui.");
+  return;
         } else {
             await updateDoc(orderRef, { status: next });
         }
