@@ -1,0 +1,104 @@
+<!DOCTYPE html><html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Leaderboard Pelanggan - Pasar Segar</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap');
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen">  <!-- NAVBAR -->  <nav class="p-4 flex items-center gap-3 sticky top-0 bg-slate-950/90 backdrop-blur-md z-40 border-b border-slate-900">
+    <a href="index.html" class="p-2 bg-slate-900 text-slate-400 rounded-xl border border-slate-800">
+      <i data-lucide="arrow-left" class="w-6 h-6"></i>
+    </a>
+    <h1 class="text-xl font-bold bg-gradient-to-r from-yellow-400 to-amber-500 bg-clip-text text-transparent flex items-center gap-2">
+      <span>🏆</span> Leaderboard Pelanggan
+    </h1>
+  </nav>  <!-- INFO PERIODE -->  <div class="p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4">
+      <p class="text-xs text-slate-400">Periode Hadiah</p>
+      <p id="period-name" class="font-bold text-slate-200">Sedang memuat...</p>
+      <p class="text-[10px] text-slate-500 mt-1">
+        Peringkat dihitung dari jumlah transaksi (online + offline) pada periode ini
+      </p>
+    </div>
+  </div>  <!-- LEADERBOARD LIST -->  <main class="p-4 space-y-3" id="leaderboard-list">
+    <div class="text-center text-slate-500 text-sm">Memuat leaderboard...</div>
+  </main>  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
+    import { getFirestore, collection, query, orderBy, onSnapshot, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBWkPqyh54IRccNz2YjuB1bL5r49YadAP4",
+      authDomain: "sayurjuju-bfe82.firebaseapp.com",
+      projectId: "sayurjuju-bfe82",
+      storageBucket: "sayurjuju-bfe82.firebasestorage.app",
+      messagingSenderId: "754413439458",
+      appId: "1:754413439458:web:341c9fe99fd9b1550551bb"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const listEl = document.getElementById('leaderboard-list');
+    const periodNameEl = document.getElementById('period-name');
+
+    // =============================
+    // AMBIL PERIODE HADIAH
+    // =============================
+    const periodRef = doc(db, 'stats', 'global');
+    getDoc(periodRef).then(snap => {
+      if (snap.exists() && snap.data().rewardPeriod?.name) {
+        periodNameEl.innerText = snap.data().rewardPeriod.name;
+      } else {
+        periodNameEl.innerText = 'Periode berjalan';
+      }
+    });
+
+    // =============================
+    // LEADERBOARD BERDASARKAN TRANSAKSI
+    // =============================
+    const q = query(collection(db, 'users'), orderBy('orderCount', 'desc'));
+
+    onSnapshot(q, (snap) => {
+      listEl.innerHTML = '';
+      let rank = 1;
+
+      snap.forEach(docSnap => {
+        const u = docSnap.data();
+        const online = u.orderCount || 0;
+        const offline = u.offlineOrderCount || 0;
+        const totalTx = online + offline;
+
+        if (totalTx === 0) return;
+
+        const badge = rank === 1 ? '👑' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : `#${rank}`;
+
+        const card = document.createElement('div');
+        card.className = 'bg-slate-900/60 border border-slate-800 rounded-2xl p-4 flex items-center gap-4';
+        card.innerHTML = `
+          <div class="text-xl">${badge}</div>
+          <img src="${u.photo || 'https://ui-avatars.com/api/?name=' + (u.name || 'User')}" class="w-12 h-12 rounded-xl object-cover" />
+          <div class="flex-1">
+            <p class="font-bold text-slate-100 text-sm">${u.name || 'Pelanggan'}</p>
+            <p class="text-[10px] text-slate-400">${totalTx} kali transaksi</p>
+          </div>
+        `;
+
+        listEl.appendChild(card);
+        rank++;
+      });
+
+      if (rank === 1) {
+        listEl.innerHTML = '<div class="text-center text-slate-500 text-sm">Belum ada transaksi di periode ini</div>';
+      }
+
+      lucide.createIcons();
+    });
+
+    lucide.createIcons();
+  </script></body>
+</html>
