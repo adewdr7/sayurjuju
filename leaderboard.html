@@ -28,25 +28,26 @@
     <!-- Header Stats -->
     <div class="bg-slate-900/40 border border-slate-800 rounded-2xl p-6 mb-6 text-center">
       <p class="text-slate-400 text-sm mb-1">Pelanggan Teraktif</p>
-      <h2 class="text-2xl font-bold text-white">Top 10 Bulan Ini</h2>
+      <h2 class="text-2xl font-bold text-white">Top Peringkat Periode</h2>
+      <p class="text-[10px] text-slate-500 mt-2 uppercase tracking-widest">Berdasarkan Total Order Online + Offline</p>
     </div>
 
     <!-- Loading State -->
     <div id="loading" class="flex flex-col items-center justify-center py-20 gap-4">
       <div class="w-8 h-8 border-4 border-yellow-500/20 border-t-yellow-500 rounded-full animate-spin"></div>
-      <p class="text-slate-500 text-sm italic">Memuat peringkat...</p>
+      <p class="text-slate-500 text-sm italic">Menghitung skor pelanggan...</p>
     </div>
 
     <!-- User List -->
     <div id="leaderboard-list" class="space-y-3 hidden">
-      <!-- Data akan diisi via JS -->
+      <!-- Data diisi via JS -->
     </div>
   </main>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
-    import { getFirestore, collection, query, orderBy, limit, onSnapshot } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
-    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
+    import { getFirestore, collection, query, limit, onSnapshot } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
+    import { getAuth, onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyBWkPqyh54IRccNz2YjuB1bL5r49YadAP4",
@@ -56,6 +57,7 @@
       messagingSenderId: "754413439458",
       appId: "1:754413439458:web:341c9fe99fd9b1550551bb"
     };
+
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
     const auth = getAuth(app);
@@ -63,84 +65,110 @@
     const listEl = document.getElementById('leaderboard-list');
     const loadingEl = document.getElementById('loading');
 
-    // PROTEKSI HALAMAN: Cek Login
+    // PROTEKSI & INISIALISASI
     onAuthStateChanged(auth, (user) => {
       if (!user) {
-        // Jika tidak ada user, arahkan ke login
+        // Jika tidak login, coba sign in anonim (opsional) atau lempar ke login
         window.location.href = 'login.html';
       } else {
-        // Jika login, jalankan fungsi load leaderboard
         initLeaderboard();
       }
     });
 
     function initLeaderboard() {
-      // Ambil top 20 user berdasarkan orderCount
-      const q = query(
-        collection(db, 'users'), 
-        orderBy('orderCount', 'desc'),
-        limit(20)
-      );
+      // Step 1: Query dasar (Tanpa orderBy Firestore agar bisa custom sort di JS)
+      const q = query(collection(db, 'users'), limit(100));
 
       onSnapshot(q, (snap) => {
-        listEl.innerHTML = '';
-        loadingEl.classList.add('hidden');
-        listEl.classList.remove('hidden');
-
-        let rank = 1;
-
         if (snap.empty) {
+          loadingEl.classList.add('hidden');
+          listEl.classList.remove('hidden');
           listEl.innerHTML = `
             <div class="text-center py-10 text-slate-500">
-              <p>Belum ada data transaksi.</p>
+              <p>Belum ada data pelanggan.</p>
             </div>
           `;
           return;
         }
 
+        const usersData = [];
+
+        // Step 2: Hitung Skor Hadiah (Online + Offline)
         snap.forEach(docSnap => {
-          const u = docSnap.data();
-          const online = u.orderCount || 0;
-          const offline = u.offlineOrderCount || 0;
-          const totalTx = online + offline;
+          const data = docSnap.data();
+          const online = data.orderCount || 0;
+          const offline = data.offlineOrderCount || 0;
+          const totalScore = online + offline;
 
-          // Jangan tampilkan yang nol transaksi
-          if (totalTx === 0) return;
-
-          const isTop3 = rank <= 3;
-          const badgeColor = rank === 1 ? 'text-yellow-400' : rank === 2 ? 'text-slate-300' : rank === 3 ? 'text-amber-600' : 'text-slate-500';
-          const badgeIcon = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : `#${rank}`;
-
-          const card = document.createElement('div');
-          card.className = `flex items-center gap-4 p-4 rounded-2xl border transition-all ${
-            rank === 1 ? 'bg-yellow-500/10 border-yellow-500/30 gold-glow' : 'bg-slate-900/60 border-slate-800'
-          }`;
-          
-          card.innerHTML = `
-            <div class="w-8 text-center font-bold ${badgeColor}">${badgeIcon}</div>
-            <div class="relative">
-                <img src="${u.photo || 'https://ui-avatars.com/api/?background=1e293b&color=fff&name=' + (u.name || 'U')}" 
-                     class="w-12 h-12 rounded-xl object-cover border-2 ${rank === 1 ? 'border-yellow-500' : 'border-slate-700'}" />
-                ${rank === 1 ? '<span class="absolute -top-2 -right-2 text-lg">👑</span>' : ''}
-            </div>
-            <div class="flex-1 min-w-0">
-              <p class="font-bold text-slate-100 truncate">${u.name || 'Pelanggan'}</p>
-              <p class="text-xs text-slate-400">${totalTx} Total Pesanan</p>
-            </div>
-            <div class="text-right">
-                <div class="text-xs font-bold text-slate-300">${online} <span class="text-[10px] font-normal text-slate-500 italic">Online</span></div>
-            </div>
-          `;
-          
-          listEl.appendChild(card);
-          rank++;
+          // Hanya masukkan yang punya transaksi
+          if (totalScore > 0) {
+            usersData.push({
+              uid: docSnap.id,
+              name: data.name || 'Pelanggan',
+              photo: data.photo || null,
+              online: online,
+              offline: offline,
+              scoreHadiah: totalScore
+            });
+          }
         });
 
-        lucide.createIcons();
+        // Step 3: Sorting Manual (Terbesar ke Terkecil)
+        usersData.sort((a, b) => b.scoreHadiah - a.scoreHadiah);
+
+        // Step 4: Render ke UI
+        renderLeaderboard(usersData.slice(0, 50)); // Ambil top 50 saja untuk performa
       }, (error) => {
-        console.error("Error fetching leaderboard:", error);
-        loadingEl.innerHTML = `<p class="text-red-400 text-sm">Gagal memuat data. Periksa koneksi.</p>`;
+        console.error("Firestore Error:", error);
+        loadingEl.innerHTML = `<p class="text-red-400 text-sm">Gagal memuat data peringkat.</p>`;
       });
+    }
+
+    function renderLeaderboard(users) {
+      loadingEl.classList.add('hidden');
+      listEl.classList.remove('hidden');
+      listEl.innerHTML = '';
+
+      users.forEach((u, index) => {
+        const rank = index + 1;
+        const isTop1 = rank === 1;
+        const isTop2 = rank === 2;
+        const isTop3 = rank === 3;
+
+        let badgeIcon = `#${rank}`;
+        let badgeColor = 'text-slate-500';
+        
+        if(isTop1) { badgeIcon = '🥇'; badgeColor = 'text-yellow-400'; }
+        if(isTop2) { badgeIcon = '🥈'; badgeColor = 'text-slate-300'; }
+        if(isTop3) { badgeIcon = '🥉'; badgeColor = 'text-amber-600'; }
+
+        const card = document.createElement('div');
+        card.className = `flex items-center gap-4 p-4 rounded-2xl border transition-all ${
+          isTop1 ? 'bg-yellow-500/10 border-yellow-500/30 gold-glow' : 'bg-slate-900/60 border-slate-800'
+        }`;
+
+        card.innerHTML = `
+          <div class="w-8 text-center font-bold text-lg ${badgeColor}">${badgeIcon}</div>
+          <div class="relative">
+              <img src="${u.photo || 'https://ui-avatars.com/api/?background=1e293b&color=fff&name=' + encodeURIComponent(u.name)}" 
+                   class="w-12 h-12 rounded-xl object-cover border-2 ${isTop1 ? 'border-yellow-500' : 'border-slate-700'}" />
+              ${isTop1 ? '<span class="absolute -top-2 -right-2 text-lg">👑</span>' : ''}
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="font-bold text-slate-100 truncate">${u.name}</p>
+            <p class="text-xs text-slate-400 font-semibold">${u.scoreHadiah} Poin Transaksi</p>
+          </div>
+          <div class="text-right">
+              <div class="text-[10px] font-bold text-blue-400 uppercase">${u.online} Online</div>
+              <div class="text-[10px] font-medium text-slate-500 uppercase">${u.offline} Offline</div>
+          </div>
+        `;
+        
+        listEl.appendChild(card);
+      });
+
+      // Refresh icons if any used via data-lucide
+      lucide.createIcons();
     }
 
     lucide.createIcons();
