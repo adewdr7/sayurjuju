@@ -310,6 +310,14 @@ if (next === "SELESAI") {
     lastTransactionAt: serverTimestamp()
   });
 
+// 2️⃣ Update total transaksi user (SAAT PESANAN SELESAI)
+const userRef = doc(db, "users", orderData.userId);
+batch.update(userRef, {
+  orderCount: increment(1),
+  transactionCount: increment(1),
+  totalSpent: increment(orderData.total)
+});
+
   // 3️⃣ Update status pesanan
   batch.update(orderRef, { status: "SELESAI" });
 
@@ -324,6 +332,7 @@ if (next === "SELESAI") {
 </script>
 </body>
 </html>
+
 
 
 
