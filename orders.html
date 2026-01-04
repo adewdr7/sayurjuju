@@ -153,7 +153,7 @@ onAuthStateChanged(auth, (user) => {
 function loadOrders() {
   const q = query(collection(db, "orders"), orderBy("createdAt", "desc"));
 
-  onSnapshot(q, (snap) => {
+  onSnapshot(q, async (snap) => {
     ordersList.innerHTML = "";
     let totalRev = 0;
     let counts = { pending: 0, process: 0, done: 0 };
