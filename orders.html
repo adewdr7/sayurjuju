@@ -164,6 +164,12 @@ function loadOrders() {
     }
 
     snap.forEach(docSnap => {
+
+const userSnap = await getDoc(doc(db, "users", o.userId));
+const buyerName = userSnap.exists()
+  ? userSnap.data().name || "Tanpa Nama"
+  : "User";
+
       const o = docSnap.data();
       const id = docSnap.id;
 
@@ -199,8 +205,9 @@ const deleteBtn = o.status === "SELESAI" ? `
         </span>
         <span class="text-[10px] text-slate-500 font-mono">#${id.slice(-5).toUpperCase()}</span>
       </div>
-      <p class="text-sm font-bold text-slate-100">${o.userName || 'Pelanggan'}</p>
-      <p class="text-[10px] text-slate-500">${o.userEmail || ''}</p>
+      <p class="text-xs font-bold text-slate-200">
+  👤 ${buyerName}
+</p>
     </div>
     
     <div class="flex items-start gap-2">
