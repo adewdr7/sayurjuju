@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Produk - Admin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen p-4 pb-12">
+
+    <div class="max-w-xl mx-auto">
+        <!-- Navigation -->
+        <nav class="p-4 flex items-center gap-3 sticky top-0 bg-slate-950/90 backdrop-blur-md z-40 border-b border-slate-900 mb-6">
+            <a href="index.html" class="p-2 bg-slate-900 rounded-xl border border-slate-800 text-slate-400">
+                <i data-lucide="arrow-left" class="w-5 h-5"></i>
+            </a>
+            <h2 class="text-lg font-bold">Edit Detail Produk</h2>
+        </nav>
+
+        <!-- Loading State -->
+        <div id="loading-state" class="text-center py-20 bg-slate-900 rounded-3xl border border-slate-800">
+            <div class="animate-spin w-8 h-8 border-4 border-emerald-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+            <p class="text-slate-400 text-sm">Mengambil data produk...</p>
+        </div>
+
+        <!-- Auth Guard (Hidden by default) -->
+        <div id="auth-guard" class="hidden text-center py-20 bg-slate-900 rounded-3xl border border-slate-800">
+            <i data-lucide="lock" class="w-12 h-12 mx-auto text-slate-700 mb-4"></i>
+            <h3 class="font-bold text-slate-300">Akses Dibatasi</h3>
+            <p class="text-slate-500 text-sm mb-6 px-6">Hanya admin yang dapat mengedit detail produk ini.</p>
+            <a href="login.html" class="px-6 py-3 bg-emerald-500 rounded-xl font-bold inline-block text-black">Login Admin</a>
+        </div>
+
+        <!-- Edit Form (Hidden until data loaded) -->
+        <form id="edit-form" class="hidden space-y-6 bg-slate-900 p-6 rounded-3xl border border-slate-800 shadow-2xl">
+            <div class="space-y-4">
+                <div class="flex items-center gap-4 p-4 bg-slate-950 rounded-2xl border border-slate-800">
+                    <img id="preview-image" src="" alt="Produk" class="w-16 h-16 rounded-xl object-cover bg-slate-800">
+                    <div>
+                        <p id="display-name" class="font-bold text-slate-200">-</p>
+                        <p id="display-category" class="text-xs text-slate-500 uppercase tracking-wider">-</p>
+                    </div>
+                </div>
+
+                <!-- KHUSUS: DESKRIPSI PRODUK -->
+                <div>
+                    <label class="block text-xs text-slate-400 mb-2 font-semibold tracking-widest uppercase">Deskripsi Produk</label>
+                    <textarea id="p-description" rows="5" 
+                        placeholder="Tambahkan penjelasan produk, manfaat, atau cara penyimpanan..." 
+                        class="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 text-sm focus:border-emerald-500 outline-none resize-none leading-relaxed"></textarea>
+                    <p class="text-[10px] text-slate-500 mt-2 px-1">Deskripsi ini akan muncul di halaman detail produk pelanggan.</p>
+                </div>
+
+                <!-- Update Info Dasar -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs text-slate-400 mb-2 font-semibold uppercase tracking-widest">Stok Saat Ini</label>
+                        <input type="number" id="p-stock" class="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 text-sm focus:border-emerald-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-slate-400 mb-2 font-semibold uppercase tracking-widest">Harga (Rp)</label>
+                        <input type="number" id="p-price" class="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 text-sm focus:border-emerald-500 outline-none">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs text-slate-400 mb-2 font-semibold uppercase tracking-widest">Status Kesegaran</label>
+                    <select id="p-status" class="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 text-sm focus:border-emerald-500 outline-none">
+                        <option value="Segar">Segar</option>
+                        <option value="Sangat Segar">Sangat Segar</option>
+                        <option value="Terbatas">Stok Terbatas</option>
+                        <option value="Habis">Habis</option>
+                    </select>
+                </div>
+            </div>
+
+            <button type="submit" id="btn-save" class="w-full bg-emerald-500 hover:bg-emerald-400 text-black py-4 rounded-2xl font-bold transition-all shadow-lg shadow-emerald-500/20">
+                Simpan Perubahan
+            </button>
+            
+            <button type="button" id="btn-delete" class="w-full bg-transparent border border-red-500/30 text-red-500 py-3 rounded-2xl font-semibold text-sm hover:bg-red-500/10 transition-all">
+                Hapus Produk
+            </button>
+        </form>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
+        import { getFirestore, doc, getDoc, updateDoc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBWkPqyh54IRccNz2YjuB1bL5r49YadAP4",
+            authDomain: "sayurjuju-bfe82.firebaseapp.com",
+            projectId: "sayurjuju-bfe82",
+            storageBucket: "sayurjuju-bfe82.firebasestorage.app",
+            messagingSenderId: "754413439458",
+            appId: "1:754413439458:web:341c9fe99fd9b1550551bb"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        const ADMIN_UID = "XVmdoXxSptTlA8xHVmAIzeLgkru2";
+        const urlParams = new URLSearchParams(window.location.search);
+        const productId = urlParams.get('id');
+
+        if (!productId) {
+            alert("ID Produk tidak ditemukan!");
+            window.location.href = "index.html";
+        }
+
+        const productRef = doc(db, "products", productId);
+
+        // UI Elements
+        const loadingState = document.getElementById('loading-state');
+        const authGuard = document.getElementById('auth-guard');
+        const editForm = document.getElementById('edit-form');
+
+        // Check Auth and Load Data
+        onAuthStateChanged(auth, async (user) => {
+            if (user && user.uid === ADMIN_UID) {
+                loadProductData();
+            } else {
+                loadingState.classList.add('hidden');
+                authGuard.classList.remove('hidden');
+            }
+        });
+
+        async function loadProductData() {
+            try {
+                const snap = await getDoc(productRef);
+                if (snap.exists()) {
+                    const data = snap.data();
+                    
+                    // Fill form
+                    document.getElementById('display-name').innerText = data.name;
+                    document.getElementById('display-category').innerText = data.category;
+                    document.getElementById('preview-image').src = data.image || "https://images.unsplash.com/photo-1542831371-29b0f74f9713?w=300";
+                    
+                    document.getElementById('p-description').value = data.description || "";
+                    document.getElementById('p-stock').value = data.stock || 0;
+                    document.getElementById('p-price').value = data.price || 0;
+                    document.getElementById('p-status').value = data.status || "Segar";
+
+                    loadingState.classList.add('hidden');
+                    editForm.classList.remove('hidden');
+                    lucide.createIcons();
+                } else {
+                    alert("Produk tidak ditemukan di database.");
+                    window.location.href = "index.html";
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Gagal memuat data produk.");
+            }
+        }
+
+        // Handle Update
+        document.getElementById('edit-form').onsubmit = async (e) => {
+            e.preventDefault();
+            const btnSave = document.getElementById('btn-save');
+            btnSave.disabled = true;
+            btnSave.innerText = "Menyimpan...";
+
+            try {
+                await updateDoc(productRef, {
+                    description: document.getElementById('p-description').value,
+                    stock: parseFloat(document.getElementById('p-stock').value),
+                    price: parseInt(document.getElementById('p-price').value),
+                    status: document.getElementById('p-status').value,
+                    updatedAt: serverTimestamp()
+                });
+                
+                alert("Detail produk berhasil diperbarui!");
+                window.location.href = "index.html";
+            } catch (err) {
+                console.error(err);
+                alert("Gagal menyimpan perubahan.");
+                btnSave.disabled = false;
+                btnSave.innerText = "Simpan Perubahan";
+            }
+        };
+
+        // Handle Delete
+        document.getElementById('btn-delete').onclick = async () => {
+            if (confirm("Apakah Anda yakin ingin menghapus produk ini secara permanen?")) {
+                try {
+                    await deleteDoc(productRef);
+                    alert("Produk berhasil dihapus.");
+                    window.location.href = "index.html";
+                } catch (err) {
+                    alert("Gagal menghapus produk.");
+                }
+            }
+        };
+
+        lucide.createIcons();
+    </script>
+</body>
+</html>
+
