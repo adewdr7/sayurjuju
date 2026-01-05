@@ -179,7 +179,7 @@
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
         import {
   getFirestore, collection, onSnapshot, query, orderBy,
-  addDoc, doc, updateDoc, increment, serverTimestamp
+  addDoc, doc, updateDoc, increment, serverTimestamp, deleteDoc, getDoc
 } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 import { mediaGrid, mediaThumb } from "./media.js"; // <--- Tambahkan ini
 
@@ -414,12 +414,14 @@ function setDefaultCartBtn(btn) {
     btn.onclick = () => toggleCart();
 }
 
-        // Load Products
-        onSnapshot(query(productsRef, orderBy("name", "asc")), (snapshot) => {
-            allProducts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            renderCategories();
-            renderProducts();
-        });
+        onSnapshot(
+  query(productsRef, orderBy("pinCount", "desc"), orderBy("name", "asc")),
+  (snapshot) => {
+    allProducts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    renderCategories();
+    renderProducts();
+  }
+);
 
         window.renderCategories = () => {
             const categories = ["Semua", "Sayur Mentah", "Buah", "Bumbu Dapur", "Ikan", "Daging", "Makanan", "Pangan", "Lainnya"];
@@ -466,6 +468,11 @@ function setDefaultCartBtn(btn) {
                     <h3 class="font-bold text-sm truncate text-slate-100">${p.name}</h3>
                     <p class="text-[10px] text-slate-500">Stok: ${p.stock} • ${p.unit}</p>
                    <div class="mt-auto flex justify-between items-center gap-2">
+  <button
+    onclick="event.stopPropagation(); togglePin('${p.id}')"
+    class="p-2 rounded-xl border border-slate-700 text-slate-400 hover:text-yellow-400">
+    <i data-lucide="pin" class="w-4 h-4"></i>
+  </button>
     <span class="text-emerald-400 font-bold text-xs">
         Rp ${Number(p.price).toLocaleString()}
     </span>
@@ -568,6 +575,38 @@ window.decreaseStock = async (id) => {
     // 🔑 WAJIB: simpan & update UI
     localStorage.setItem(CART_KEY, JSON.stringify(cart));
     updateCartUI();
+};
+
+window.togglePin = async (productId) => {
+  const user = auth.currentUser;
+  if (!user) {
+    alert("Login dulu untuk pin produk");
+    return;
+  }
+
+  const pinId = `${productId}_${user.uid}`;
+  const pinRef = doc(db, "productPins", pinId);
+  const productRef = doc(db, "products", productId);
+
+  const snap = await getDoc(pinRef);
+
+  if (snap.exists()) {
+    // UNPIN
+    await deleteDoc(pinRef);
+    await updateDoc(productRef, {
+      pinCount: increment(-1)
+    });
+  } else {
+    // PIN
+    await updateDoc(productRef, {
+      pinCount: increment(1)
+    });
+    await setDoc(pinRef, {
+      productId,
+      userId: user.uid,
+      createdAt: serverTimestamp()
+    });
+  }
 };
 
 function syncCart() {
@@ -700,6 +739,7 @@ window.addEventListener('load', () => {
     </script>
 </body>
 </html>
+
 
 
 
