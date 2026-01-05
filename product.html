@@ -176,10 +176,33 @@ let cart = JSON.parse(localStorage.getItem(CART_KEY)) || [];
             // Image & Status dengan Optimasi media.js
 document.getElementById('p-image').src = mediaDetail(p.image) || 'https://images.unsplash.com/photo-1542831371-29b0f74f9713?w=500';
             const statusTag = document.getElementById('p-status-tag');
-            statusTag.innerText = p.status === 'Segar' ? 'Segar' : 'Lama';
-            statusTag.className = `absolute top-4 left-4 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest shadow-lg ${
-                p.status === 'Segar' ? 'bg-emerald-500 text-white' : 'bg-orange-500 text-white'
-            }`;
+            let statusText = p.status || "Segar";
+let statusClass = "bg-slate-600 text-white";
+
+switch (statusText) {
+  case "Sangat Segar":
+    statusClass = "bg-emerald-500 text-white";
+    break;
+  case "Segar":
+    statusClass = "bg-green-500 text-white";
+    break;
+  case "Terbatas":
+    statusClass = "bg-amber-500 text-white";
+    break;
+  case "Habis":
+    statusClass = "bg-rose-500 text-white";
+    break;
+  default:
+    statusText = "Lama";
+    statusClass = "bg-orange-500 text-white";
+}
+
+statusTag.innerText = statusText;
+statusTag.className = `
+  absolute top-4 left-4 px-3 py-1 rounded-full
+  text-[10px] font-bold uppercase tracking-widest shadow-lg
+  ${statusClass}
+`;
 
             // Basic Info
             document.getElementById('p-name').innerText = p.name;
@@ -299,6 +322,7 @@ function syncCart() {
     </script>
 </body>
 </html>
+
 
 
 
