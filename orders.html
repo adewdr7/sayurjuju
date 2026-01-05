@@ -16,9 +16,12 @@
 
 <nav class="p-4 flex items-center justify-between sticky top-0 bg-slate-950/90 backdrop-blur-md z-40 border-b border-slate-900">
   <div class="flex items-center gap-3">
-    <a href="index.html" class="p-2 bg-slate-900 rounded-xl border border-slate-800 hover:text-emerald-400 transition-colors">
-      <i data-lucide="arrow-left"></i>
-    </a>
+    <a href="index.html"
+   class="p-2 bg-slate-900 rounded-xl border border-slate-800
+          hover:text-emerald-400 transition-colors
+          flex items-center justify-center w-10 h-10">
+  <i data-lucide="arrow-left" class="w-5 h-5"></i>
+</a>
 
     <h1 class="font-bold text-lg text-emerald-400">Daftar Pesanan</h1>
   </div>
@@ -31,6 +34,10 @@
 <main class="p-4 space-y-4 max-w-2xl mx-auto">
 <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 mb-6">
     <label class="block text-[10px] text-slate-500 font-bold mb-2 uppercase tracking-widest">Biaya Antar (Rp)</label>
+<p id="current-shipping"
+   class="text-[11px] text-slate-400 mb-3">
+  Ongkir saat ini: Rp 0
+</p>
     <div class="flex justify-end gap-2">
         <input type="number" id="shipping-input" class="w-full max-w-[150px] bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm focus:border-emerald-500 outline-none" placeholder="Contoh: 5000">
         <button onclick="updateShippingFee()" class="px-6 py-2 bg-emerald-500 text-white rounded-xl font-bold text-sm hover:bg-emerald-600 transition-all">Simpan</button>
@@ -100,7 +107,12 @@ const shippingRef = doc(db, "settings", "shipping");
 // load ongkir awal
 onSnapshot(shippingRef, (snap) => {
   if (snap.exists()) {
-    document.getElementById("shipping-input").value = snap.data().fee ?? 0;
+    const fee = snap.data().fee ?? 0;
+    document.getElementById("shipping-input").value = fee;
+    document.getElementById("current-shipping").innerText =
+      fee === 0
+        ? "Ongkir saat ini: GRATIS"
+        : `Ongkir saat ini: Rp ${fee.toLocaleString()}`;
   }
 });
 
@@ -118,6 +130,10 @@ window.updateShippingFee = async () => {
   );
 
   alert(fee === 0 ? "Ongkir digratiskan" : "Ongkir diperbarui");
+document.getElementById("current-shipping").innerText =
+  fee === 0
+    ? "Ongkir saat ini: GRATIS"
+    : `Ongkir saat ini: Rp ${fee.toLocaleString()}`;
 };
 
 const ADMIN_UID = "XVmdoXxSptTlA8xHVmAIzeLgkru2";
@@ -343,6 +359,7 @@ batch.update(userRef, {
 </script>
 </body>
 </html>
+
 
 
 
