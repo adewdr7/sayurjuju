@@ -40,7 +40,13 @@
         <!-- Product Content (Hidden initially) -->
         <div id="product-content" class="hidden space-y-6">
             <!-- Gambar Produk -->
-            <div class="relative aspect-square w-full overflow-hidden rounded-3xl border border-slate-800 bg-slate-900">
+            <button
+  id="pin-btn"
+  onclick="togglePinDetail()"
+  class="absolute top-4 right-4 p-2 rounded-xl border border-slate-700
+         text-slate-400 hover:text-yellow-400 hidden">
+  <i data-lucide="pin" class="w-5 h-5"></i>
+</button>
                 <img id="p-image" src="" alt="Produk" class="w-full h-full object-cover">
                 <div id="p-status-tag" class="absolute top-4 left-4 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider shadow-lg">
                     <!-- Status Segar/Lama -->
@@ -104,7 +110,15 @@
     <!-- Firebase -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import {
+  getFirestore,
+  doc,
+  getDoc,
+  setDoc,
+  deleteDoc,
+  increment,
+  serverTimestamp
+} from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 import { mediaDetail } from "./media.js"; // <--- Tambahkan baris ini
 
@@ -125,6 +139,7 @@ const params = new URLSearchParams(window.location.search);
 
         let currentProduct = null;
         let selectedQty = 1;
+let isPinnedByUser = false;
         const CART_KEY = "pasar_cart";
 let cart = JSON.parse(localStorage.getItem(CART_KEY)) || [];
 
@@ -153,11 +168,11 @@ let cart = JSON.parse(localStorage.getItem(CART_KEY)) || [];
             try {
                 const docRef = doc(db, "products", productId);
                 const docSnap = await getDoc(docRef);
-
-                if (docSnap.exists()) {
-                    currentProduct = { id: docSnap.id, ...docSnap.data() };
-                    renderProduct();
-                } else {
+if (docSnap.exists()) {
+  currentProduct = { id: docSnap.id, ...docSnap.data() };
+  await checkPinStatus();
+  renderProduct();
+} else {
                     document.getElementById('product-container').innerHTML = `<div class="text-center py-20 text-slate-500">Produk telah dihapus</div>`;
                 }
             } catch (err) {
@@ -165,6 +180,17 @@ let cart = JSON.parse(localStorage.getItem(CART_KEY)) || [];
                 document.getElementById('product-container').innerHTML = `<div class="text-center py-20 text-red-400">Gagal memuat data</div>`;
             }
         }
+
+async function checkPinStatus() {
+  const user = auth.currentUser;
+  if (!user || !currentProduct) return;
+
+  const pinId = `${currentProduct.id}_${user.uid}`;
+  const pinRef = doc(db, "productPins", pinId);
+
+  const snap = await getDoc(pinRef);
+  isPinnedByUser = snap.exists();
+}
 
         function renderProduct() {
             document.getElementById('loading').classList.add('hidden');
@@ -230,9 +256,61 @@ statusTag.className = `
                 mainBtn.onclick = () => window.location.href = `preorder.html?id=${p.id}`;
                 document.getElementById('counter-group').classList.add('hidden');
             }
+const pinBtn = document.getElementById("pin-btn");
+const user = auth.currentUser;
+
+if (user) {
+  pinBtn.classList.remove("hidden");
+
+  pinBtn.className = `
+    absolute top-4 right-4 p-2 rounded-xl border
+    ${isPinnedByUser
+      ? "text-yellow-400 border-yellow-400"
+      : "text-slate-400 border-slate-700 hover:text-yellow-400"}
+  `;
+} else {
+  pinBtn.classList.add("hidden");
+}
             
             lucide.createIcons();
         }
+
+window.togglePinDetail = async () => {
+  const user = auth.currentUser;
+  if (!user) {
+    alert("Login dulu untuk pin produk");
+    return;
+  }
+
+  const pinId = `${currentProduct.id}_${user.uid}`;
+  const pinRef = doc(db, "productPins", pinId);
+  const productRef = doc(db, "products", currentProduct.id);
+
+  if (isPinnedByUser) {
+    // UNPIN
+    await deleteDoc(pinRef);
+    await setDoc(productRef, {
+      pinCount: increment(-1)
+    }, { merge: true });
+
+    isPinnedByUser = false;
+  } else {
+    // PIN
+    await setDoc(pinRef, {
+      productId: currentProduct.id,
+      userId: user.uid,
+      createdAt: serverTimestamp()
+    });
+
+    await setDoc(productRef, {
+      pinCount: increment(1)
+    }, { merge: true });
+
+    isPinnedByUser = true;
+  }
+
+  renderProduct(); // refresh UI
+};
 
         // Counter Logic
         window.changeQty = (val) => {
@@ -322,6 +400,7 @@ function syncCart() {
     </script>
 </body>
 </html>
+
 
 
 
