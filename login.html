@@ -36,6 +36,14 @@
                     <input id="user-password" type="password" placeholder="••••••••" 
                         class="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 text-sm focus:ring-2 focus:ring-emerald-500 outline-none transition-all text-white">
                 </div>
+<p class="text-right text-xs">
+  <button
+    type="button"
+    onclick="openResetPassword()"
+    class="text-emerald-400 hover:underline">
+    Lupa sandi?
+  </button>
+</p>
 
                 <!-- Tombol Masuk -->
                 <button onclick="handleLogin()" id="btn-login" class="w-full bg-emerald-500 hover:bg-emerald-600 py-4 rounded-2xl font-bold shadow-lg shadow-emerald-900/20 transition-all flex justify-center items-center gap-2 text-slate-950">
@@ -61,14 +69,35 @@
         </div>
     </div>
 
+<div id="reset-modal" class="fixed inset-0 z-50 hidden">
+  <div class="absolute inset-0 bg-black/70" onclick="closeResetPassword()"></div>
+
+  <div class="relative max-w-sm mx-auto mt-32 bg-slate-900 p-6 rounded-3xl border border-slate-800">
+    <h2 class="font-bold text-lg mb-3">Reset Password</h2>
+
+    <input
+      id="reset-email"
+      type="email"
+      placeholder="Masukkan email terdaftar"
+      class="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 text-sm mb-4"
+    />
+
+    <button
+      onclick="sendResetPassword()"
+      class="w-full bg-emerald-500 py-4 rounded-2xl font-bold text-slate-950">
+      Kirim Email Reset
+    </button>
+  </div>
+</div>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
         import { 
             getAuth, 
-            onAuthStateChanged, 
             signInWithEmailAndPassword, 
             createUserWithEmailAndPassword, 
             sendEmailVerification,
+sendPasswordResetEmail, 
             signOut 
         } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
         import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
@@ -84,6 +113,33 @@
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
+window.openResetPassword = () => {
+  const loginEmail = document.getElementById("user-email").value;
+  document.getElementById("reset-email").value = loginEmail || "";
+  document.getElementById("reset-modal").classList.remove("hidden");
+};
+
+window.closeResetPassword = () => {
+  document.getElementById("reset-modal").classList.add("hidden");
+};
+
+window.sendResetPassword = async () => {
+  const email = document.getElementById("reset-email").value.trim();
+
+  if (!email) {
+    alert("Masukkan email terlebih dahulu");
+    return;
+  }
+
+  try {
+    await sendPasswordResetEmail(auth, email);
+    alert("Link reset password telah dikirim ke email 📩");
+    closeResetPassword();
+  } catch (err) {
+    console.error(err);
+    alert("Gagal mengirim email reset");
+  }
+};
         const db = getFirestore(app);
 
         // Atur bahasa email ke Indonesia
@@ -190,6 +246,7 @@
     </script>
 </body>
 </html>
+
 
 
 
