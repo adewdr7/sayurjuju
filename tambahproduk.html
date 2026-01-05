@@ -241,15 +241,19 @@ document.getElementById("product-form").addEventListener("submit", async (e) => 
       : parseInt(stockRaw);
 
     const newProduct = {
-      name: document.getElementById("p-name").value,
-      category: document.getElementById("p-category").value,
-      price: parseInt(document.getElementById("p-price").value),
-      unit,
-      stock,
-      status: document.querySelector('input[name="p-status"]:checked').value,
-      image: imageUrl,
-      purchaseTime: new Date().toISOString()
-    };
+  name: document.getElementById("p-name").value,
+  category: document.getElementById("p-category").value,
+  price: parseInt(document.getElementById("p-price").value),
+  unit,
+  stock,
+  status: document.querySelector('input[name="p-status"]:checked').value,
+  image: imageUrl,
+  purchaseTime: new Date().toISOString(),
+
+  // 🔑 WAJIB UNTUK INDEX
+  pinCount: 0,
+  createdAt: new Date()
+};
 
     await addDoc(productsRef, newProduct);
 
@@ -266,6 +270,7 @@ lucide.createIcons();
 </script>
 </body>
 </html>
+
 
 
 
