@@ -201,7 +201,7 @@ window.togglePassword = () => {
                 }
 
                 await ensureUserDoc(user);
-                window.location.href = "index.html";
+await checkAddressAndPrompt(user);
             } catch (err) {
                 let message = "Gagal masuk: ";
                 if(err.code === 'auth/invalid-credential') message += "Email atau password salah.";
@@ -273,7 +273,72 @@ window.togglePassword = () => {
 
         // Jalankan icon Lucide
         lucide.createIcons();
+
+async function checkAddressAndPrompt(user) {
+if (user.uid === ADMIN_UID) {
+  window.location.href = "index.html";
+  return;
+}
+  const snap = await getDoc(doc(db, "users", user.uid));
+  if (!snap.exists()) return;
+
+  const data = snap.data();
+
+  if (!data.address || data.address === "Alamat belum diatur") {
+  document.getElementById("address-modal").classList.remove("hidden");
+} else {
+  window.location.href = "index.html";
+}
+}
+
+window.saveAddress = async () => {
+  const address = document.getElementById("input-address").value.trim();
+  if (!address) return alert("Alamat tidak boleh kosong");
+
+  const btn = document.querySelector('#address-modal button');
+  btn.disabled = true;
+  btn.innerText = "Menyimpan...";
+
+  const user = auth.currentUser;
+  if (!user) return;
+
+  try {
+    await setDoc(
+      doc(db, "users", user.uid),
+      { address },
+      { merge: true }
+    );
+
+    document.getElementById("address-modal").classList.add("hidden");
+    window.location.href = "index.html";
+
+  } catch (err) {
+    console.error(err);
+    alert("Gagal menyimpan alamat. Cek koneksi internet.");
+
+    // 🔓 buka kembali tombol
+    btn.disabled = false;
+    btn.innerText = "Simpan Alamat";
+  }
+};
     </script>
+<div id="address-modal" class="fixed inset-0 bg-black/70 hidden z-50 flex items-center justify-center p-4">
+  <div class="bg-slate-900 p-6 rounded-3xl border border-slate-800 w-full max-w-sm">
+    <h3 class="text-lg font-bold mb-4">Masukkan Alamat</h3>
+
+    <textarea
+      id="input-address"
+      placeholder="Contoh: Jl. Mawar No.12, RT 03 RW 01"
+      class="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 text-sm mb-4"
+      rows="3"></textarea>
+
+    <button
+      onclick="saveAddress()"
+      class="w-full bg-emerald-500 py-3 rounded-2xl font-bold text-slate-950">
+      Simpan Alamat
+    </button>
+  </div>
+</div>
 </body>
 </html>
 
