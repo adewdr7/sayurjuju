@@ -179,7 +179,7 @@
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
         import {
   getFirestore, collection, onSnapshot, query, orderBy,
-  addDoc, doc, updateDoc, increment, serverTimestamp, deleteDoc, getDoc
+  addDoc, doc, updateDoc, increment, serverTimestamp, deleteDoc, getDoc, getDocs 
 } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 import { mediaGrid, mediaThumb } from "./media.js"; // <--- Tambahkan ini
 
@@ -261,6 +261,19 @@ function listenOrderNotification() {
 }
 
         const productsRef = collection(db, "products");
+
+async function initPinCount() {
+  const snap = await getDocs(productsRef);
+
+  snap.forEach(async (d) => {
+    if (d.data().pinCount === undefined) {
+      await updateDoc(doc(db, "products", d.id), {
+        pinCount: 0
+      });
+    }
+  });
+}
+
 const statusRef = doc(db, "settings", "dailyStatus");
 
         let allProducts = [];
