@@ -30,8 +30,16 @@
                 <a href="login.html" id="btn-login-nav" class="p-2 bg-slate-900 rounded-xl border border-slate-800 text-slate-400">
                     <i data-lucide="user" class="w-6 h-6"></i>
                 </a>
-                <button id="btn-cart-toggle" onclick="toggleCart()" class="relative p-2 bg-slate-900 rounded-xl border border-slate-800">
-    </button>
+               <button id="btn-cart-toggle" onclick="toggleCart()" class="relative p-2 bg-slate-900 rounded-xl border border-slate-800">
+  <i data-lucide="shopping-cart" class="w-6 h-6 text-emerald-400"></i>
+  <span id="cart-badge"
+    class="hidden absolute -top-1 -right-1
+           bg-rose-500 text-[10px] font-bold
+           w-5 h-5 rounded-full
+           flex items-center justify-center">
+    0
+  </span>
+</button>
             </div>
         </nav>
 <!-- STATUS DAGANG HARI INI -->
@@ -179,7 +187,7 @@
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
         import {
   getFirestore, collection, onSnapshot, query, orderBy,
-  addDoc, doc, updateDoc, increment, serverTimestamp, deleteDoc, getDoc,  
+  addDoc, doc, updateDoc, increment, serverTimestamp, deleteDoc, getDoc, setDoc, where 
 } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 import { mediaGrid, mediaThumb } from "./media.js"; // <--- Tambahkan ini
 
