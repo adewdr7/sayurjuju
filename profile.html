@@ -706,15 +706,14 @@ window.filterCustomers = () => {
 
     // Karena struktur kartu cukup kompleks, kita filter berdasarkan teks h4 (nama)
     Array.from(cards).forEach(card => {
-        const nameText = card.querySelector('h4')?.innerText.toLowerCase() || "";
-        if (nameText.includes(term)) {
-            card.classList.remove('hidden');
-            card.classList.add('flex');
-        } else {
-            card.classList.add('hidden');
-            card.classList.remove('flex');
-        }
-    });
+    const nameText = card.querySelector('h4')?.innerText.toLowerCase() || "";
+
+    if (nameText.includes(term)) {
+        card.classList.remove('hidden');
+    } else {
+        card.classList.add('hidden');
+    }
+});
 };
 
 // --- Fungsi Filter Produk di Modal Offline ---
@@ -770,3 +769,4 @@ lucide.createIcons();
 </div>
 </body>
 </html>
+
