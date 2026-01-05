@@ -688,17 +688,31 @@ cart = JSON.parse(localStorage.getItem(CART_KEY)) || [];
 
     // Update daftar item di modal keranjang jika elemennya ada
     if (itemsContainer) {
-        itemsContainer.innerHTML = cart.map(item => `
-            <div class="flex gap-3 bg-slate-800/50 p-3 rounded-2xl border border-slate-800/50">
-                <img src="${mediaThumb(item.image)}" class="w-12 h-12 rounded-lg object-cover">
-                <div class="flex-1">
-                    <h4 class="text-xs font-bold text-slate-100">${item.name}</h4>
-                    <p class="text-[10px] text-emerald-400">${item.qty} x Rp ${Number(item.price).toLocaleString()}</p>
-                </div>
-                <button onclick="removeFromCart('${item.id}')" class="text-rose-500 p-2"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+        // Ganti bagian itemsContainer.innerHTML menjadi ini:
+itemsContainer.innerHTML = cart.map(item => `
+    <div class="flex gap-3 bg-slate-800/50 p-3 rounded-2xl border border-slate-800/50 items-center">
+        <img src="${mediaThumb(item.image)}" class="w-12 h-12 rounded-lg object-cover">
+        
+        <div class="flex-1">
+            <h4 class="text-xs font-bold text-slate-100">${item.name}</h4>
+            <p class="text-[10px] text-slate-500 mb-1">Rp ${Number(item.price).toLocaleString()}</p>
+            
+            <div class="flex items-center gap-3">
+                <button onclick="updateQty('${item.id}', -1)" class="w-6 h-6 flex items-center justify-center bg-slate-700 rounded-md hover:bg-rose-500 transition-colors">
+                    <i data-lucide="minus" class="w-3 h-3"></i>
+                </button>
+                <span class="text-xs font-bold text-emerald-400">${item.qty}</span>
+                <button onclick="updateQty('${item.id}', 1)" class="w-6 h-6 flex items-center justify-center bg-slate-700 rounded-md hover:bg-emerald-500 transition-colors">
+                    <i data-lucide="plus" class="w-3 h-3"></i>
+                </button>
             </div>
-        `).join('');
-    }
+        </div>
+
+        <button onclick="removeFromCart('${item.id}')" class="text-slate-500 hover:text-rose-500 p-2 transition-colors">
+            <i data-lucide="trash-2" class="w-4 h-4"></i>
+        </button>
+    </div>
+`).join('');
 
     // Update total harga jika elemennya ada
     if (totalContainer) {
@@ -724,6 +738,25 @@ totalContainer.innerText =
         window.removeFromCart = (id) => { cart = cart.filter(i => i.id !== id);
 localStorage.setItem(CART_KEY, JSON.stringify(cart));
 updateCartUI(); };
+window.updateQty = (id, change) => {
+    const item = cart.find(i => i.id === id);
+    if (!item) return;
+
+    const newQty = item.qty + change;
+
+    if (newQty <= 0) {
+        // Jika jumlah 0, hapus dari keranjang
+        removeFromCart(id);
+    } else if (newQty > item.stock) {
+        // Jika melebihi stok
+        alert("Stok tidak mencukupi!");
+    } else {
+        // Update jumlah
+        item.qty = newQty;
+        localStorage.setItem(CART_KEY, JSON.stringify(cart));
+        updateCartUI();
+    }
+};
         window.checkout = async function () {
     const user = auth.currentUser;
     if (!user) { alert("Silakan login dulu"); return; }
@@ -796,6 +829,7 @@ window.addEventListener('load', () => {
     </script>
 </body>
 </html>
+
 
 
 
