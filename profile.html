@@ -573,12 +573,13 @@ if (currentSort === "spent") {
 }
 
   // 2. Gunakan onSnapshot (Try-Catch biasanya di dalam callback atau membungkus inisialisasi)
-  onSnapshot(q, (snap) => {
-    try {
-      listEl.innerHTML = "";
+  onSnapshot(
+  q,
+  (snap) => {
+    listEl.innerHTML = "";
 
-      snap.forEach(userDoc => {
-        if (userDoc.id === ADMIN_UID) return;
+    snap.forEach(userDoc => {
+      if (userDoc.id === ADMIN_UID) return;
 
         const u = userDoc.data();
         const score = maxSpent > 0
@@ -627,16 +628,15 @@ const totalTx =
 </button>
         `;
         listEl.appendChild(card);
-      });
+    });
 
-      lucide.createIcons();
+    lucide.createIcons();
   },
   (error) => {
-    alert(error.message);     // ⬅️ INI YANG MEMUNCULKAN LINK INDEX
+    alert(error.message);   // untuk munculin link Create Index
     console.error(error);
   }
 );
-
 window.openOfflineModal = async (uid) => {
   offlineTargetUid = uid;
   offlineSelected = {};
