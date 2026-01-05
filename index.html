@@ -250,7 +250,7 @@ function listenOrderNotification() {
 
     const q = query(
         collection(db, "orders"),
-        orderBy("createdAtClient", "desc")
+        orderBy("createdAt", "desc")
     );
 
     onSnapshot(q, (snapshot) => {
@@ -773,9 +773,8 @@ const total = subtotal + shipping;
         shipping,
         total,
         deliveryMethod: method,
-        status: "MENUNGGU",
-        createdAt: serverTimestamp(),              // server time
-        createdAtClient: Date.now(),               // untuk UI
+        status: "MENUNGGU", 
+        createdAt: serverTimestamp(),        // untuk UI
         cancelableUntil: Date.now() + (5 * 60 * 1000)
     });
 
