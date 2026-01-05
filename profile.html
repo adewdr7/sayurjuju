@@ -657,13 +657,14 @@ window.openOfflineModal = async (uid) => {
     if (p.stock <= 0) return;
 
     const row = document.createElement("div");
-    row.className = "flex items-center justify-between bg-slate-800 p-3 rounded-xl";
+row.id = `offline-row-${docSnap.id}`;
+row.className = "flex items-center justify-between bg-slate-800 p-3 rounded-xl transition-all";
 
     row.innerHTML = `
       <label class="flex items-center gap-3 text-sm">
-        <input type="checkbox"
-          onchange="toggleOfflineProduct('${docSnap.id}', this.checked)"
-          class="accent-emerald-500">
+       <input type="checkbox"
+  onchange="toggleOfflineProduct('${docSnap.id}', this.checked)"
+  class="accent-emerald-500">
         ${p.name}
         <span class="text-[10px] text-slate-400">(stok ${p.stock})</span>
       </label>
@@ -680,8 +681,26 @@ window.openOfflineModal = async (uid) => {
 };
 
 window.toggleOfflineProduct = (id, checked) => {
-  if (!checked) delete offlineSelected[id];
-  else offlineSelected[id] = 1;
+  const row = document.getElementById(`offline-row-${id}`);
+  const list = document.getElementById("offline-product-list");
+
+  if (!row || !list) return;
+
+  if (checked) {
+    // simpan state
+    offlineSelected[id] = offlineSelected[id] || 1;
+
+    // pindahkan ke PALING ATAS
+    list.prepend(row);
+    row.classList.add("ring-2", "ring-emerald-500");
+  } else {
+    // hapus dari state
+    delete offlineSelected[id];
+
+    // pindahkan ke BAWAH
+    list.appendChild(row);
+    row.classList.remove("ring-2", "ring-emerald-500");
+  }
 };
 
 window.setOfflineQty = (id, qty) => {
