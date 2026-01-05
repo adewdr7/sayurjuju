@@ -36,7 +36,7 @@
         <form id="edit-form" class="hidden space-y-6 bg-slate-900 p-6 rounded-3xl border border-slate-800 shadow-2xl">
             
             <div class="flex items-center gap-4 p-4 bg-slate-950 rounded-2xl border border-slate-800">
-                <img id="preview-image" src="" alt="Produk" class="w-16 h-16 rounded-xl object-cover bg-slate-800 border border-slate-700">
+                <img id="preview-image" loading="lazy" src="" alt="Produk" class="w-16 h-16 rounded-xl object-cover bg-slate-800 border border-slate-700">
                 <div>
                     <h3 id="display-name" class="font-bold text-lg text-emerald-500"></h3>
                     <p id="display-category" class="text-xs text-slate-500 uppercase tracking-widest"></p>
@@ -72,6 +72,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
         import { getFirestore, doc, getDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+import { mediaThumb } from "./media.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBWkPqyh54IRccNz2YjuB1bL5r49YadAP4",
@@ -117,7 +118,7 @@
                     // Display info
                     document.getElementById('display-name').innerText = data.name;
                     document.getElementById('display-category').innerText = data.category;
-                    document.getElementById('preview-image').src = data.image;
+                    document.getElementById('preview-image').src = mediaThumb(data.image);
 
                     // Editable fields
                     document.getElementById('p-description').value = data.description || "";
@@ -165,4 +166,5 @@
     </script>
 </body>
 </html>
+
 
