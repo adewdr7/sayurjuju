@@ -427,12 +427,11 @@ console.log("Data diterima dari Firestore:", snap.size, "dokumen ditemukan");
         // Cek apakah panel kontrol hapus sedang terbuka
         const isDeleteMode = !document.getElementById('delete-controls').classList.contains('hidden');
 
-const hidden = o.hiddenFor || [];
-if (hidden.includes(uid)) return;
-
         snap.forEach(docSnap => {
             const o = docSnap.data();
             const id = docSnap.id;
+const hidden = o.hiddenFor || [];
+if (hidden.includes(uid)) return;
             const now = Date.now();
             const remainingMs = o.cancelableUntil ? o.cancelableUntil - now : 0;
             
