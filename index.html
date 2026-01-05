@@ -267,6 +267,7 @@ const statusRef = doc(db, "settings", "dailyStatus");
         const CART_KEY = "pasar_cart";
 let cart = JSON.parse(localStorage.getItem(CART_KEY)) || [];
         let currentCategory = "Semua";
+let userPinnedProducts = new Set();
 
         const ADMIN_UID = "XVmdoXxSptTlA8xHVmAIzeLgkru2";
 
@@ -279,6 +280,19 @@ cart = JSON.parse(localStorage.getItem(CART_KEY)) || [];
     const cartBtn = document.getElementById("btn-cart-toggle"); // Ambil elemen tombol
     
     if (user) {
+const q = query(
+      collection(db, "productPins"),
+      where("userId", "==", user.uid)
+    );
+
+    onSnapshot(q, (snap) => {
+      userPinnedProducts.clear();
+      snap.forEach(d => {
+        userPinnedProducts.add(d.data().productId);
+      });
+      renderProducts();
+    });
+ 
         if (user.uid === ADMIN_UID) {
 
 document.getElementById("admin-status-select").classList.remove("hidden");
@@ -319,6 +333,7 @@ document.getElementById("admin-status-note").classList.add("hidden");
         loginBtn.href = "profile.html";
     } else {
         // Tampilan JIKA BELUM LOGIN
+userPinnedProducts.clear();
         adminBtn.classList.add("hidden");
         manageBtn.classList.add("hidden");
         setDefaultCartBtn(cartBtn);
@@ -327,6 +342,7 @@ document.getElementById("admin-status-note").classList.add("hidden");
         loginBtn.href = "login.html";
     }
     lucide.createIcons();
+loadProducts();
 });
 
 // 🔓 AUTO BUKA CART DARI product.html
@@ -445,6 +461,18 @@ function setDefaultCartBtn(btn) {
     const grid = document.getElementById('product-grid');
     const filtered = allProducts.filter(p => (currentCategory === "Semua" || p.category === currentCategory) && p.name.toLowerCase().includes(searchTerm));
 
+filtered.sort((a, b) => {
+  const aPinned = userPinnedProducts.has(a.id);
+  const bPinned = userPinnedProducts.has(b.id);
+
+  // 1️⃣ pinned oleh user sendiri → paling atas
+  if (aPinned && !bPinned) return -1;
+  if (!aPinned && bPinned) return 1;
+
+  // 2️⃣ sisanya urut pinCount
+  return (b.pinCount || 0) - (a.pinCount || 0);
+});
+
     if (filtered.length === 0) {
         grid.innerHTML = '<div class="col-span-2 text-center py-10 text-slate-500">Produk tidak ditemukan</div>';
         return;
@@ -472,11 +500,6 @@ function setDefaultCartBtn(btn) {
       `
       : ''
   }
-
-  <span class="absolute top-2 right-2 px-1.5 py-0.5 rounded text-[8px] font-bold uppercase ${p.status === 'Segar' ? 'bg-emerald-500 text-white' : 'bg-amber-500 text-white'}">
-    ${p.status}
-  </span>
-</div>
                     <span class="absolute top-2 right-2 px-1.5 py-0.5 rounded text-[8px] font-bold uppercase ${p.status === 'Segar' ? 'bg-emerald-500 text-white' : 'bg-amber-500 text-white'}">${p.status}</span>
                 </div>
                 <div class="p-3 flex-1 flex flex-col">
@@ -487,10 +510,13 @@ function setDefaultCartBtn(btn) {
     (!user || user.uid !== ADMIN_UID)
       ? `
       <button
-        onclick="event.stopPropagation(); togglePin('${p.id}')"
-        class="p-2 rounded-xl border border-slate-700 text-slate-400 hover:text-yellow-400">
-        <i data-lucide="pin" class="w-4 h-4"></i>
-      </button>
+  onclick="event.stopPropagation(); togglePin('${p.id}')"
+  class="p-2 rounded-xl border border-slate-700
+         ${userPinnedProducts.has(p.id)
+           ? 'text-yellow-400 border-yellow-400'
+           : 'text-slate-400 hover:text-yellow-400'}">
+  <i data-lucide="pin" class="w-4 h-4"></i>
+</button>
       `
       : ''
   }
