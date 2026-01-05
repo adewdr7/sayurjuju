@@ -125,8 +125,10 @@ const ADMIN_UID = "XVmdoXxSptTlA8xHVmAIzeLgkru2";
 window.clearFinishedOrders = async () => {
     if (!confirm("Hapus semua pesanan dengan status 'SELESAI'? Tindakan ini tidak dapat dibatalkan.")) return;
     
-    const q = query(collection(db, "orders"), where("status", "==", "SELESAI"));
-    const snap = await getDocs(q);
+    const q = query(
+  collection(db, "orders"),
+  where("status", "in", ["SELESAI", "DIBATALKAN"])
+);
     
     const batch = writeBatch(db);
     snap.forEach(d => batch.delete(d.ref));
@@ -175,7 +177,15 @@ const buyerName = userSnap.exists()
   : "User";
 
 // Di dalam loop snap.forEach
-const deleteBtn = o.status === "SELESAI" ? `
+const deleteBtn =
+  o.status === "SELESAI" || o.status === "DIBATALKAN"
+    ? `
+      <button onclick="deleteSingleOrder('${id}')"
+        class="p-2 text-rose-500">
+        <i data-lucide="trash-2" class="w-4 h-4"></i>
+      </button>
+    `
+    : "";
     <button onclick="deleteSingleOrder('${id}')" class="p-2 text-rose-500">
         <i data-lucide="trash-2" class="w-4 h-4"></i>
     </button>
@@ -336,6 +346,7 @@ batch.update(userRef, {
 </script>
 </body>
 </html>
+
 
 
 
