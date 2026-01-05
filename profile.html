@@ -568,8 +568,8 @@ if (currentSort === "spent") {
 } else if (currentSort === "debt") {
   q = query(collection(db, "users"), orderBy("debt", "desc"));
 } else {
-  // TRANSAKSI TERBANYAK
-  q = query(collection(db, "users"), orderBy("totalTransaction", "desc"));
+  // ambil semua user, sorting nanti di JS
+  q = query(collection(db, "users"));
 }
 
   // 2. Gunakan onSnapshot (Try-Catch biasanya di dalam callback atau membungkus inisialisasi)
@@ -577,6 +577,24 @@ if (currentSort === "spent") {
   q,
   (snap) => {
     listEl.innerHTML = "";
+
+let users = [];
+
+users.forEach(u => {
+  if (docSnap.id === ADMIN_UID) return;
+
+  const u = docSnap.data();
+  users.push({
+    id: docSnap.id,
+    ...u,
+    totalTx: (u.orderCount || 0) + (u.offlineOrderCount || 0)
+  });
+});
+
+// SORT JIKA MODE TRANSAKSI
+if (currentSort === "transaction") {
+  users.sort((a, b) => b.totalTx - a.totalTx);
+}
 
     snap.forEach(userDoc => {
       if (userDoc.id === ADMIN_UID) return;
@@ -607,7 +625,7 @@ const totalTx =
             </div>
 <div class="flex gap-1">
   <button
-  onclick="openOfflineModal('${userDoc.id}')"
+  onclick="openOfflineModal('${u.id}')"
   class="px-3 py-1 text-[10px] font-bold rounded-lg bg-emerald-500">
   +1
 </button>
