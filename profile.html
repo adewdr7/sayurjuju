@@ -408,9 +408,10 @@ function loadMyOrders(uid) {
     const list = document.getElementById("my-orders");
     
     const q = query(
-        collection(db, "orders"), 
-        where("userId", "==", uid), 
-    );
+    collection(db, "orders"),
+    where("userId", "==", uid),
+    orderBy("createdAt", "desc")
+);
 
     onSnapshot(q, (snap) => {
 console.log("Data diterima dari Firestore:", snap.size, "dokumen ditemukan");
@@ -426,6 +427,7 @@ console.log("Data diterima dari Firestore:", snap.size, "dokumen ditemukan");
         
         // Cek apakah panel kontrol hapus sedang terbuka
         const isHideMode = !document.getElementById('delete-controls').classList.contains('hidden');
+const isDeleteMode = isHideMode;
 
         snap.forEach(docSnap => {
             const o = docSnap.data();
@@ -777,5 +779,6 @@ lucide.createIcons();
 </div>
 </body>
 </html>
+
 
 
