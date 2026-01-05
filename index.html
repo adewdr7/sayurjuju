@@ -453,7 +453,7 @@ function setDefaultCartBtn(btn) {
     // Ambil UID user saat ini untuk pengecekan admin
     const user = auth.currentUser;
 
-    grid.innerHTML = filtered.map(p => {
+    grid.innerHTML = filtered.map((p, index) => {
         // Tentukan link tujuan berdasarkan status admin
         const targetPage = (user && user.uid === ADMIN_UID) ? 'edit-product.html' : 'product.html';
         
@@ -461,18 +461,39 @@ function setDefaultCartBtn(btn) {
             <div onclick="location.href='${targetPage}?id=${p.id}'"
                  class="bg-slate-900 rounded-2xl overflow-hidden border border-slate-800 flex flex-col shadow-lg cursor-pointer">
                 <div class="relative h-32 bg-slate-800">
-                    <img src="${mediaGrid(p.image)}" class="w-full h-full object-cover">
+  <img src="${mediaGrid(p.image)}" class="w-full h-full object-cover">
+
+  ${
+    (user && user.uid === ADMIN_UID && index === 0 && p.pinCount > 0)
+      ? `
+      <div class="absolute top-2 left-2 bg-yellow-400 text-black text-[10px] font-bold px-2 py-1 rounded-full flex items-center gap-1">
+        👑 Terbanyak
+      </div>
+      `
+      : ''
+  }
+
+  <span class="absolute top-2 right-2 px-1.5 py-0.5 rounded text-[8px] font-bold uppercase ${p.status === 'Segar' ? 'bg-emerald-500 text-white' : 'bg-amber-500 text-white'}">
+    ${p.status}
+  </span>
+</div>
                     <span class="absolute top-2 right-2 px-1.5 py-0.5 rounded text-[8px] font-bold uppercase ${p.status === 'Segar' ? 'bg-emerald-500 text-white' : 'bg-amber-500 text-white'}">${p.status}</span>
                 </div>
                 <div class="p-3 flex-1 flex flex-col">
                     <h3 class="font-bold text-sm truncate text-slate-100">${p.name}</h3>
                     <p class="text-[10px] text-slate-500">Stok: ${p.stock} • ${p.unit}</p>
                    <div class="mt-auto flex justify-between items-center gap-2">
-  <button
-    onclick="event.stopPropagation(); togglePin('${p.id}')"
-    class="p-2 rounded-xl border border-slate-700 text-slate-400 hover:text-yellow-400">
-    <i data-lucide="pin" class="w-4 h-4"></i>
-  </button>
+  ${
+    (!user || user.uid !== ADMIN_UID)
+      ? `
+      <button
+        onclick="event.stopPropagation(); togglePin('${p.id}')"
+        class="p-2 rounded-xl border border-slate-700 text-slate-400 hover:text-yellow-400">
+        <i data-lucide="pin" class="w-4 h-4"></i>
+      </button>
+      `
+      : ''
+  }
     <span class="text-emerald-400 font-bold text-xs">
         Rp ${Number(p.price).toLocaleString()}
     </span>
