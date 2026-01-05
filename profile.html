@@ -128,7 +128,7 @@
   <button
     onclick="resetAllFrequency()"
     class="flex-1 py-3 bg-rose-500/10 text-rose-500 rounded-xl text-xs font-bold border border-rose-500/20">
-    ♻ Reset Transaksi
+    ♻ Reset Frekuensi
   </button>
 </div>
 
@@ -260,7 +260,7 @@ window.toggleSort = (btn) => {
 
 
 window.resetAllFrequency = async () => {
-  if (!confirm("Reset semua transaksi belanja ke 0 ?")) return;
+  if (!confirm("Reset semua frekuensi belanja ke 0% ?")) return;
 
   try {
     const snap = await getDocs(collection(db, "users"));
@@ -569,7 +569,7 @@ if (currentSort === "spent") {
   q = query(collection(db, "users"), orderBy("debt", "desc"));
 } else {
   // TRANSAKSI TERBANYAK
-  q = query(collection(db, "users"), orderBy("orderCount", "desc"));
+  q = query(collection(db, "users"), orderBy("totalTransaction", "desc"));
 }
 
   // 2. Gunakan onSnapshot (Try-Catch biasanya di dalam callback atau membungkus inisialisasi)
@@ -589,7 +589,9 @@ if (currentSort === "spent") {
         card.className = "bg-slate-900/50 p-4 rounded-2xl border border-slate-800 flex items-center gap-4";
 const online = u.orderCount || 0;
 const offline = u.offlineOrderCount || 0;
-const totalTx = online + offline;
+const totalTx =
+  u.totalTransaction ??
+  (u.orderCount || 0) + (u.offlineOrderCount || 0);
         card.innerHTML = `
             <img src="${u.photo || 'https://ui-avatars.com/api/?name=' + u.email}" class="w-12 h-12 rounded-xl object-cover bg-slate-800">
             <div class="flex-1">
@@ -657,14 +659,13 @@ window.openOfflineModal = async (uid) => {
     if (p.stock <= 0) return;
 
     const row = document.createElement("div");
-row.id = `offline-row-${docSnap.id}`;
-row.className = "flex items-center justify-between bg-slate-800 p-3 rounded-xl transition-all";
+    row.className = "flex items-center justify-between bg-slate-800 p-3 rounded-xl";
 
     row.innerHTML = `
       <label class="flex items-center gap-3 text-sm">
-       <input type="checkbox"
-  onchange="toggleOfflineProduct('${docSnap.id}', this.checked)"
-  class="accent-emerald-500">
+        <input type="checkbox"
+          onchange="toggleOfflineProduct('${docSnap.id}', this.checked)"
+          class="accent-emerald-500">
         ${p.name}
         <span class="text-[10px] text-slate-400">(stok ${p.stock})</span>
       </label>
@@ -681,26 +682,8 @@ row.className = "flex items-center justify-between bg-slate-800 p-3 rounded-xl t
 };
 
 window.toggleOfflineProduct = (id, checked) => {
-  const row = document.getElementById(`offline-row-${id}`);
-  const list = document.getElementById("offline-product-list");
-
-  if (!row || !list) return;
-
-  if (checked) {
-    // simpan state
-    offlineSelected[id] = offlineSelected[id] || 1;
-
-    // pindahkan ke PALING ATAS
-    list.prepend(row);
-    row.classList.add("ring-2", "ring-emerald-500");
-  } else {
-    // hapus dari state
-    delete offlineSelected[id];
-
-    // pindahkan ke BAWAH
-    list.appendChild(row);
-    row.classList.remove("ring-2", "ring-emerald-500");
-  }
+  if (!checked) delete offlineSelected[id];
+  else offlineSelected[id] = 1;
 };
 
 window.setOfflineQty = (id, qty) => {
