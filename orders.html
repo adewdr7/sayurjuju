@@ -129,6 +129,8 @@ window.clearFinishedOrders = async () => {
   collection(db, "orders"),
   where("status", "in", ["SELESAI", "DIBATALKAN"])
 );
+
+const snap = await getDocs(q);
     
     const batch = writeBatch(db);
     snap.forEach(d => batch.delete(d.ref));
@@ -178,19 +180,14 @@ const buyerName = userSnap.exists()
 
 // Di dalam loop snap.forEach
 const deleteBtn =
-  o.status === "SELESAI" || o.status === "DIBATALKAN"
+  (o.status === "SELESAI" || o.status === "DIBATALKAN")
     ? `
       <button onclick="deleteSingleOrder('${id}')"
-        class="p-2 text-rose-500">
+        class="p-2 text-rose-500 hover:bg-rose-500/10 rounded-lg">
         <i data-lucide="trash-2" class="w-4 h-4"></i>
       </button>
     `
     : "";
-    <button onclick="deleteSingleOrder('${id}')" class="p-2 text-rose-500">
-        <i data-lucide="trash-2" class="w-4 h-4"></i>
-    </button>
-` : "";
-
 // Masukkan variabel deleteBtn ke dalam template literal card di bagian header
 
       
