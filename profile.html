@@ -88,14 +88,14 @@
         <section id="orders-section" class="bg-slate-900 rounded-[2rem] p-5 border border-slate-800">
  <div class="flex justify-between items-center mb-3">
             <h3 class="text-lg font-bold text-white mb-3">Pesanan Saya</h3>
- <button onclick="toggleSelectMode()" class="text-[10px] font-bold text-rose-400 bg-rose-400/10 px-3 py-1.5 rounded-lg border border-rose-400/20">
-            Kelola Hapus
-        </button>
+ <button onclick="toggleSelectMode()" class="text-[10px] font-bold text-amber-400 bg-amber-400/10 px-3 py-1.5 rounded-lg border border-amber-400/20">
+    Kelola Sembunyikan
+</button>
     </div>
 <div id="delete-controls" class="hidden flex justify-between items-center mb-3 bg-slate-800/50 p-3 rounded-2xl border border-slate-700">
-        <button onclick="deleteSelectedOrders()" class="text-xs font-bold text-rose-500 bg-rose-500/20 px-4 py-2 rounded-xl border border-rose-500/30">
-            Hapus Terpilih (<span id="selected-count">0</span>)
-        </button>
+        <button onclick="hideSelectedOrders()" class="text-xs font-bold text-amber-500 bg-amber-500/20 px-4 py-2 rounded-xl border border-amber-500/30">
+    Sembunyikan Terpilih (<span id="selected-count">0</span>)
+</button>
         <button onclick="toggleSelectMode()" class="text-xs text-slate-400 font-bold">Batal</button>
     </div>
 
@@ -211,7 +211,7 @@ window.toggleOrderSelection = (id) => {
 };
 
 
-window.deleteSelectedOrders = async () => {
+window.hideSelectedOrders = async () => {
   const user = auth.currentUser;
   if (!user) return;
 
@@ -425,7 +425,7 @@ console.log("Data diterima dari Firestore:", snap.size, "dokumen ditemukan");
         list.innerHTML = "";
         
         // Cek apakah panel kontrol hapus sedang terbuka
-        const isDeleteMode = !document.getElementById('delete-controls').classList.contains('hidden');
+        const isHideMode = !document.getElementById('delete-controls').classList.contains('hidden');
 
         snap.forEach(docSnap => {
             const o = docSnap.data();
