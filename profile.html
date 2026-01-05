@@ -630,13 +630,12 @@ const totalTx =
       });
 
       lucide.createIcons();
-    } catch (err) {
-      console.error("Error rendering users:", err);
-    }
-  }, (error) => {
-    console.error("Firebase Snapshot error:", error);
-  });
-};
+  },
+  (error) => {
+    alert(error.message);     // ⬅️ INI YANG MEMUNCULKAN LINK INDEX
+    console.error(error);
+  }
+);
 
 window.openOfflineModal = async (uid) => {
   offlineTargetUid = uid;
