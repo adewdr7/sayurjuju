@@ -465,18 +465,61 @@ function setDefaultCartBtn(btn) {
                 <div class="p-3 flex-1 flex flex-col">
                     <h3 class="font-bold text-sm truncate text-slate-100">${p.name}</h3>
                     <p class="text-[10px] text-slate-500">Stok: ${p.stock} • ${p.unit}</p>
-                    <div class="mt-auto flex justify-between items-center">
-                        <span class="text-emerald-400 font-bold text-xs">Rp ${Number(p.price).toLocaleString()}</span>
-                        <button onclick="event.stopPropagation(); addToCart('${p.id}')" 
-                                class="${(user && user.uid === ADMIN_UID) ? 'bg-cyan-500' : 'bg-emerald-500'} p-2 rounded-xl text-white">
-                            <i data-lucide="${(user && user.uid === ADMIN_UID) ? 'package-plus' : 'plus'}" class="w-4 h-4"></i>
-                        </button>
-                    </div>
+                   <div class="mt-auto flex justify-between items-center gap-2">
+    <span class="text-emerald-400 font-bold text-xs">
+        Rp ${Number(p.price).toLocaleString()}
+    </span>
+
+    ${
+      (user && user.uid === ADMIN_UID)
+        ? `
+        <div class="flex gap-1">
+            <!-- TOMBOL -1 (TRANSAKSI OFFLINE TANPA PERINGATAN) -->
+            <button
+                onclick="event.stopPropagation(); decreaseStock('${p.id}')"
+                class="bg-rose-500 p-2 rounded-xl text-white">
+                <i data-lucide="minus" class="w-4 h-4"></i>
+            </button>
+
+            <!-- TOMBOL +1 -->
+            <button
+                onclick="event.stopPropagation(); addToCart('${p.id}')"
+                class="bg-cyan-500 p-2 rounded-xl text-white">
+                <i data-lucide="package-plus" class="w-4 h-4"></i>
+            </button>
+        </div>
+        `
+        : `
+        <button
+            onclick="event.stopPropagation(); addToCart('${p.id}')"
+            class="bg-emerald-500 p-2 rounded-xl text-white">
+            <i data-lucide="plus" class="w-4 h-4"></i>
+        </button>
+        `
+    }
+</div>
                 </div>
             </div>
         `;
     }).join('');
     lucide.createIcons();
+};
+
+window.decreaseStock = async (id) => {
+    const user = auth.currentUser;
+    if (!user || user.uid !== ADMIN_UID) return;
+
+    const product = allProducts.find(p => p.id === id);
+    if (!product || product.stock <= 0) return; // ❌ diam-diam diblok
+
+    try {
+        const productRef = doc(db, "products", id);
+        await updateDoc(productRef, {
+            stock: increment(-1)
+        });
+    } catch (err) {
+        console.error("Gagal mengurangi stok:", err);
+    }
 };
 
         window.addToCart = async (id) => {
@@ -657,6 +700,7 @@ window.addEventListener('load', () => {
     </script>
 </body>
 </html>
+
 
 
 
