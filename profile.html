@@ -618,9 +618,8 @@ users.forEach(u => {
     : 0;
 
   const online = u.orderCount || 0;
-  const offline = u.offlineOrderCount || 0;
-  const totalTx =
-    u.totalTransaction ?? (online + offline);
+const offline = u.offlineOrderCount || 0;
+const totalTx = online + offline;
 
   const card = document.createElement('div');
   card.className =
@@ -907,5 +906,6 @@ lucide.createIcons();
 </div>
 </body>
 </html>
+
 
 
