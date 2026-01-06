@@ -172,7 +172,7 @@
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
-import { getFirestore, doc, getDoc, getDocs, collection, updateDoc, query, orderBy, where, onSnapshot, increment, arrayUnion } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+import { getFirestore, doc, getDoc, getDocs, collection, updateDoc, query, orderBy, where, onSnapshot, increment, arrayUnion, limit } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyBWkPqyh54IRccNz2YjuB1bL5r49YadAP4",
@@ -419,9 +419,16 @@ window.__maxSpent = maxSpent;
   document.getElementById('user-stats').classList.remove('hidden');
 
   // 👤 PELANGGAN
-const maxSpent = userData.totalSpent || 0;
+// Ambil maxSpent global (1 dokumen saja, ringan)
+const maxSnap = await getDocs(
+  query(collection(db, "users"), orderBy("totalSpent", "desc"), limit(1))
+);
 
-  const mySpent = userData.totalSpent || 0;
+const maxSpent = maxSnap.empty
+  ? 0
+  : maxSnap.docs[0].data().totalSpent || 0;
+
+const mySpent = userData.totalSpent || 0;
 const online = userData.orderCount || 0;
 const offline = userData.offlineOrderCount || 0;
 const orderCount = online + offline;
@@ -433,10 +440,10 @@ if (orderCount >= 20) loyaltyLabel = "Pelanggan Emas 🏆";
 else if (orderCount >= 10) loyaltyLabel = "Pelanggan Setia ⭐";
 else if (orderCount >= 5) loyaltyLabel = "Pelanggan Aktif 👍";
   const percent = maxSpent > 0
-    ? Math.round((mySpent / maxSpent) * 100)
-    : 0;
+  ? Math.round((mySpent / maxSpent) * 100)
+  : 0;
 
-  document.getElementById("user-freq").innerText = percent + "%";
+document.getElementById("user-freq").innerText = percent + "%";
 
 document.getElementById("order-count").innerText =
   `${orderCount} kali transaksi`;
@@ -830,6 +837,10 @@ window.cancelOrder = async (orderId) => {
 
 window.handleLogout = async () => {
     if (confirm("Keluar dari akun?")) {
+if (unsubscribeUsers) {
+  unsubscribeUsers();
+  unsubscribeUsers = null;
+}
         await signOut(auth);
         window.location.href = "login.html";
     }
@@ -909,6 +920,3 @@ lucide.createIcons();
 </div>
 </body>
 </html>
-
-
-
