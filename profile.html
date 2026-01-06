@@ -622,8 +622,8 @@ const offline = u.offlineOrderCount || 0;
 const totalTx = online + offline;
 
   const card = document.createElement('div');
-  card.className =
-    "bg-slate-900/50 p-4 rounded-2xl border border-slate-800 flex items-center gap-4";
+card.className =
+  "user-card bg-slate-900/50 p-4 rounded-2xl border border-slate-800 flex items-center gap-4";
 
   card.innerHTML = `
     <img src="${u.photo || 'https://ui-avatars.com/api/?name=' + u.email}"
@@ -837,20 +837,23 @@ window.handleLogout = async () => {
 
 // --- Fungsi Filter Daftar Customer ---
 window.filterCustomers = () => {
-    const term = document.getElementById('search-customer').value.toLowerCase();
-    const list = document.getElementById('users-list');
-    const cards = list.getElementsByTagName('div'); // Mengambil div pembungkus kartu
+  const term = document
+    .getElementById('search-customer')
+    .value
+    .toLowerCase();
 
-    // Karena struktur kartu cukup kompleks, kita filter berdasarkan teks h4 (nama)
-    Array.from(cards).forEach(card => {
-    const nameText = card.querySelector('h4')?.innerText.toLowerCase() || "";
+  const cards = document.querySelectorAll('#users-list .user-card');
+
+  cards.forEach(card => {
+    const nameText =
+      card.querySelector('h4')?.innerText.toLowerCase() || "";
 
     if (nameText.includes(term)) {
-        card.classList.remove('hidden');
+      card.classList.remove('hidden');
     } else {
-        card.classList.add('hidden');
+      card.classList.add('hidden');
     }
-});
+  });
 };
 
 // --- Fungsi Filter Produk di Modal Offline ---
