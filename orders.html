@@ -337,12 +337,11 @@ if (next === "SELESAI") {
   }
 
   // 2️⃣ Update data user (HANYA SAAT PESANAN SELESAI)
+// 2️⃣ Update data user (HANYA SAAT PESANAN SELESAI)
 const userRef = doc(db, "users", orderData.userId);
 batch.update(userRef, {
   lastTransactionAt: serverTimestamp(),
-  orderCount: increment(1),
-  transactionCount: increment(1),
-  totalTransaction: increment(1), // Tambahkan baris ini
+  orderCount: increment(1),        // ✅ online transaction
   totalSpent: increment(orderData.total)
 });
 
