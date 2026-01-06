@@ -190,13 +190,16 @@ const db = getFirestore(app);
 
 
 const ADMIN_UID = "XVmdoXxSptTlA8xHVmAIzeLgkru2";
+let unsubscribeUsers = null;
 let currentSort = "spent"; // spent | debt
 let targetEditUid = null;
 let activeTimers = {};
+let pinnedUsers = {}; 
+// contoh: { uid1: true, uid2: true }
+
 // ===== STATE TRANSAKSI OFFLINE =====
 let offlineTargetUid = null;
 let offlineSelected = {};
-
 // Tambahkan fungsi pendukung di dalam tag <script>
 let selectedOrders = [];
 
@@ -271,10 +274,10 @@ window.resetAllFrequency = async () => {
       if (docSnap.id !== ADMIN_UID) {
         batchUpdates.push(
           updateDoc(doc(db, "users", docSnap.id), {
-offlineOrderCount: 0, 
-orderCount: 0
-
-          })
+    offlineOrderCount: 0, 
+    orderCount: 0,
+    totalTransaction: 0 
+})
         );
       }
     });
@@ -462,7 +465,13 @@ function loadMyOrders(uid) {
     orderBy("createdAt", "desc")
 );
 
-    onSnapshot(q, (snap) => {
+    if (unsubscribeUsers) {
+  unsubscribeUsers();
+}
+
+unsubscribeUsers = onSnapshot(
+  q,
+  (snap) => {
 const container = document.getElementById("my-orders");
 console.log("Data diterima dari Firestore:", snap.size, "dokumen ditemukan");
         Object.values(activeTimers).forEach(clearInterval);
@@ -573,7 +582,11 @@ if (currentSort === "spent") {
 }
 
   // 2. Gunakan onSnapshot (Try-Catch biasanya di dalam callback atau membungkus inisialisasi)
-  onSnapshot(
+  if (unsubscribeUsers) {
+  unsubscribeUsers();
+}
+
+unsubscribeUsers = onSnapshot(
   q,
   (snap) => {
     listEl.innerHTML = "";
@@ -695,7 +708,8 @@ window.openOfflineModal = async (uid) => {
     if (p.stock <= 0) return;
 
     const row = document.createElement("div");
-    row.className = "flex items-center justify-between bg-slate-800 p-3 rounded-xl";
+row.className = "flex items-center justify-between bg-slate-800 p-3 rounded-xl";
+row.dataset.productId = docSnap.id;
 
     row.innerHTML = `
       <label class="flex items-center gap-3 text-sm">
@@ -718,8 +732,27 @@ window.openOfflineModal = async (uid) => {
 };
 
 window.toggleOfflineProduct = (id, checked) => {
-  if (!checked) delete offlineSelected[id];
-  else offlineSelected[id] = 1;
+  const list = document.getElementById("offline-product-list");
+  const row = list.querySelector(`[data-product-id="${id}"]`);
+
+  if (!row) return;
+
+  if (checked) {
+  offlineSelected[id] = 1;
+  row.classList.add("ring-2", "ring-emerald-500");
+  list.prepend(row);
+} else {
+  delete offlineSelected[id];
+  row.classList.remove("ring-2", "ring-emerald-500");
+}
+const rows = Array.from(list.children);
+  rows.sort((a, b) => {
+    const aChecked = offlineSelected[a.dataset.productId] ? 1 : 0;
+    const bChecked = offlineSelected[b.dataset.productId] ? 1 : 0;
+    return bChecked - aChecked;
+  });
+
+  rows.forEach(r => list.appendChild(r));
 };
 
 window.setOfflineQty = (id, qty) => {
@@ -874,6 +907,5 @@ lucide.createIcons();
 </div>
 </body>
 </html>
-
 
 
