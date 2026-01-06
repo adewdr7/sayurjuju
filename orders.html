@@ -342,8 +342,10 @@ batch.update(userRef, {
   lastTransactionAt: serverTimestamp(),
   orderCount: increment(1),
   transactionCount: increment(1),
+  totalTransaction: increment(1), // Tambahkan baris ini
   totalSpent: increment(orderData.total)
 });
+
 
   // 3️⃣ Update status pesanan
   batch.update(orderRef, { status: "SELESAI" });
@@ -360,6 +362,7 @@ lucide.createIcons();
 </script>
 </body>
 </html>
+
 
 
 
