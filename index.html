@@ -270,6 +270,22 @@ function playPreorderSound() {
   preorderAudio.play().catch(() => {});
 }
 
+let audioUnlocked = false;
+
+function unlockAudioOnce() {
+  if (audioUnlocked) return;
+
+  const silent = new Audio();
+  silent.src = "data:audio/mp3;base64,//uQxAAAAAAAAAAAAAAAAAAAAAAAWGluZwAAAA8AAAACAAACcQCA...";
+  silent.play().then(() => {
+    audioUnlocked = true;
+    console.log("Audio unlocked");
+  }).catch(() => {});
+}
+
+// unlock saat user sentuh layar
+document.addEventListener("touchstart", unlockAudioOnce, { once: true });
+document.addEventListener("click", unlockAudioOnce, { once: true });
 
 let shippingFee = 0;
 const shippingRef = doc(db, "settings", "shipping");
@@ -894,3 +910,22 @@ window.addEventListener('load', () => {
     </script>
 </body>
 </html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
