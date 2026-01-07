@@ -204,6 +204,73 @@ import { mediaGrid, mediaThumb } from "./media.js"; // <--- Tambahkan ini
         const auth = getAuth(app);
         const db = getFirestore(app);
 
+// ===============================
+// AUDIO NOTIFICATION (INDEXED DB)
+// ===============================
+const DB_NAME = "notif_audio_db";
+const STORE_NAME = "sounds";
+
+const SOUND_ORDER_KEY = "order_sound";
+const SOUND_PREORDER_KEY = "preorder_sound";
+
+const SOUND_ORDER_URL = "order.mp3";
+const SOUND_PREORDER_URL = "preorder.mp3";
+
+let orderAudio = new Audio();
+let preorderAudio = new Audio();
+
+function openAudioDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, 1);
+    req.onupgradeneeded = () => {
+      const db = req.result;
+      if (!db.objectStoreNames.contains(STORE_NAME)) {
+        db.createObjectStore(STORE_NAME);
+      }
+    };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function saveSound(key, blob) {
+  const db = await openAudioDB();
+  const tx = db.transaction(STORE_NAME, "readwrite");
+  tx.objectStore(STORE_NAME).put(blob, key);
+}
+
+async function loadSound(key) {
+  const db = await openAudioDB();
+  const tx = db.transaction(STORE_NAME, "readonly");
+  const req = tx.objectStore(STORE_NAME).get(key);
+  return new Promise(resolve => {
+    req.onsuccess = () => resolve(req.result || null);
+  });
+}
+
+async function prepareSound(key, url, audioObj) {
+  const saved = await loadSound(key);
+  if (saved) {
+    audioObj.src = URL.createObjectURL(saved);
+  } else {
+    const res = await fetch(url);
+    const blob = await res.blob();
+    await saveSound(key, blob);
+    audioObj.src = URL.createObjectURL(blob);
+  }
+}
+
+function playOrderSound() {
+  orderAudio.currentTime = 0;
+  orderAudio.play().catch(() => {});
+}
+
+function playPreorderSound() {
+  preorderAudio.currentTime = 0;
+  preorderAudio.play().catch(() => {});
+}
+
+
 let shippingFee = 0;
 const shippingRef = doc(db, "settings", "shipping");
 
@@ -214,58 +281,66 @@ onSnapshot(shippingRef, (snap) => {
   }
 });
 
-// ===============================
-// ADMIN: NOTIFIKASI PREORDER
-// ===============================
+let lastPreorderCount = 0;
+
 function listenPreorderNotification() {
-    const badge = document.getElementById("preorder-badge");
-    if (!badge) return;
+  const badge = document.getElementById("preorder-badge");
+  if (!badge) return;
 
-    const q = query(
-        collection(db, "preorders"),
-        orderBy("createdAt", "desc")
-    );
+  const q = query(
+    collection(db, "preorders"),
+    orderBy("createdAt", "desc")
+  );
 
-    onSnapshot(q, (snapshot) => {
-        let count = 0;
+  prepareSound(SOUND_PREORDER_KEY, SOUND_PREORDER_URL, preorderAudio);
 
-        snapshot.forEach(doc => {
-            const data = doc.data();
-            if (data.status === "PENDING") {
-                count++;
-            }
-        });
+  onSnapshot(q, (snapshot) => {
+    let count = 0;
 
-        badge.innerText = count;
-        badge.classList.toggle("hidden", count === 0);
+    snapshot.forEach(doc => {
+      if (doc.data().status === "PENDING") count++;
     });
+
+    badge.innerText = count;
+    badge.classList.toggle("hidden", count === 0);
+
+    if (count > lastPreorderCount) {
+      playPreorderSound(); // 📦 PREORDER
+    }
+
+    lastPreorderCount = count;
+  });
 }
 
-// ===============================
-// ADMIN: NOTIFIKASI PESANAN BARU
-// ===============================
+let lastOrderCount = 0;
+
 function listenOrderNotification() {
-    const badge = document.getElementById("order-badge");
-    if (!badge) return;
+  const badge = document.getElementById("order-badge");
+  if (!badge) return;
 
-    const q = query(
-        collection(db, "orders"),
-        orderBy("createdAt", "desc")
-    );
+  const q = query(
+    collection(db, "orders"),
+    orderBy("createdAt", "desc")
+  );
 
-    onSnapshot(q, (snapshot) => {
-        let count = 0;
+  prepareSound(SOUND_ORDER_KEY, SOUND_ORDER_URL, orderAudio);
 
-        snapshot.forEach(doc => {
-            const data = doc.data();
-            if (data.status === "MENUNGGU") {
-                count++;
-            }
-        });
+  onSnapshot(q, (snapshot) => {
+    let count = 0;
 
-        badge.innerText = count;
-        badge.classList.toggle("hidden", count === 0);
+    snapshot.forEach(doc => {
+      if (doc.data().status === "MENUNGGU") count++;
     });
+
+    badge.innerText = count;
+    badge.classList.toggle("hidden", count === 0);
+
+    if (count > lastOrderCount) {
+      playOrderSound(); // 🔔 ORDER
+    }
+
+    lastOrderCount = count;
+  });
 }
 
         const productsRef = collection(db, "products");
@@ -819,22 +894,3 @@ window.addEventListener('load', () => {
     </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
