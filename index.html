@@ -215,6 +215,7 @@ const SOUND_PREORDER_KEY = "preorder_sound";
 
 const SOUND_ORDER_URL = "order.mp3";
 const SOUND_PREORDER_URL = "preorder.mp3";
+const ORDER_SOUND_FLAG = "order_sound_played";
 
 let orderAudio = new Audio();
 let preorderAudio = new Audio();
@@ -351,11 +352,18 @@ function listenOrderNotification() {
     badge.innerText = count;
     badge.classList.toggle("hidden", count === 0);
 
-    if (count > lastOrderCount) {
-      playOrderSound(); // 🔔 ORDER
-    }
+    const alreadyPlayed = sessionStorage.getItem(ORDER_SOUND_FLAG);
 
-    lastOrderCount = count;
+if (count > lastOrderCount && !alreadyPlayed) {
+  playOrderSound(); // 🔔 ORDER
+  sessionStorage.setItem(ORDER_SOUND_FLAG, "yes");
+}
+
+    if (count > lastOrderCount) {
+  sessionStorage.removeItem(ORDER_SOUND_FLAG);
+}
+
+lastOrderCount = count;
   });
 }
 
