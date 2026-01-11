@@ -206,6 +206,7 @@ import { mediaGrid, mediaThumb } from "./media.js"; // <--- Tambahkan ini
 // 🔔 Tracking order untuk notifikasi admin
 let lastPendingOrderCount = 0;
 let orderListenerInitialized = false;
+let hasInitialSnapshot = false;
 
 let shippingFee = 0;
 const shippingRef = doc(db, "settings", "shipping");
@@ -256,33 +257,35 @@ function listenOrderNotification() {
     );
 
     onSnapshot(q, (snapshot) => {
-        let pendingCount = 0;
+    let pendingCount = 0;
 
-        snapshot.forEach(doc => {
-            const data = doc.data();
-            if (data.status === "MENUNGGU") {
-                pendingCount++;
-            }
-        });
-
-        console.log("ORDER LISTENER TRIGGERED", pendingCount);
-
-        // 🔔 NOTIFIKASI HANYA JIKA ADA ORDER BARU
-        if (pendingCount > lastPendingOrderCount && lastPendingOrderCount !== 0) {
-            if (window.Android) {
-                Android.notify(
-                    "order",
-                    "Pesanan Baru",
-                    "Ada pesanan masuk"
-                );
-            }
+    snapshot.forEach(doc => {
+        const data = doc.data();
+        if (data.status === "MENUNGGU") {
+            pendingCount++;
         }
-
-        lastPendingOrderCount = pendingCount;
-
-        badge.innerText = pendingCount;
-        badge.classList.toggle("hidden", pendingCount === 0);
     });
+
+    // 🔔 Bunyi HANYA setelah snapshot pertama lewat
+    if (hasInitialSnapshot && pendingCount > lastPendingOrderCount) {
+        if (window.Android && !window.location.pathname.includes("orders.html")) {
+            Android.notify(
+                "order",
+                "Pesanan Baru",
+                "Ada pesanan masuk"
+            );
+        }
+    }
+
+    // ⛳ Tandai bahwa snapshot pertama sudah lewat
+    hasInitialSnapshot = true;
+
+    // Simpan jumlah terakhir
+    lastPendingOrderCount = pendingCount;
+
+    badge.innerText = pendingCount;
+    badge.classList.toggle("hidden", pendingCount === 0);
+});
 }
 
         const productsRef = collection(db, "products");
