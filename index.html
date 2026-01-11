@@ -763,7 +763,6 @@ window.updateQty = (id, change) => {
 const total = subtotal + shipping;
 
     try {
- [span_0](start_span)// Simpan ke Firestore (Kode aslimu)[span_0](end_span)
     // 1️⃣ SIMPAN PESANAN (ORDER)
     await addDoc(collection(db, "orders"), {
         userId: user.uid,
@@ -783,12 +782,10 @@ const total = subtotal + shipping;
         cancelableUntil: Date.now() + (5 * 60 * 1000)
     });
 
-  // 🔴 TRIGGER NOTIFIKASI DENGAN DAFTAR PRODUK
+  // 🔴 TRIGGER NOTIFIKASI KE ANDROID
         if (window.Android) {
-            [span_1](start_span)[span_2](start_span)// Parameter 1: "order" (suara order.mp3)[span_1](end_span)[span_2](end_span)
- // Parameter 2: Judul notifikasi
-            // Parameter 3: Isi pesan (daftarProduk)
-            [span_3](start_span)window.Android.notify("order", "Ada Pesanan Masuk!", isiPesan);[span_3](end_span)
+            [span_0](start_span)[span_1](start_span)// "order" akan memicu suara R.raw.order di NotificationHelper.java[span_0](end_span)[span_1](end_span)
+            window.Android.notify("order", "Ada Pesanan Masuk!", isiPesan);
         }
 
     // 3️⃣ BERSIHKAN KERANJANG
