@@ -241,12 +241,11 @@ function listenPreorderNotification() {
     });
 }
 
-// ===============================
-// ADMIN: NOTIFIKASI PESANAN BARU
-// ===============================
 function listenOrderNotification() {
     const badge = document.getElementById("order-badge");
-    if (!badge) return;
+    if (!badge || orderListenerInitialized) return;
+
+    orderListenerInitialized = true;
 
     const q = query(
         collection(db, "orders"),
@@ -254,17 +253,30 @@ function listenOrderNotification() {
     );
 
     onSnapshot(q, (snapshot) => {
-        let count = 0;
+        let pendingCount = 0;
 
         snapshot.forEach(doc => {
             const data = doc.data();
             if (data.status === "MENUNGGU") {
-                count++;
+                pendingCount++;
             }
         });
 
-        badge.innerText = count;
-        badge.classList.toggle("hidden", count === 0);
+        // 🔔 NOTIFIKASI HANYA JIKA ADA ORDER BARU
+        if (pendingCount > lastPendingOrderCount && lastPendingOrderCount !== 0) {
+            if (window.Android) {
+                Android.notify(
+                    "order",
+                    "Pesanan Baru",
+                    "Ada pesanan masuk"
+                );
+            }
+        }
+
+        lastPendingOrderCount = pendingCount;
+
+        badge.innerText = pendingCount;
+        badge.classList.toggle("hidden", pendingCount === 0);
     });
 }
 
@@ -753,10 +765,6 @@ window.updateQty = (id, change) => {
     if (!user) { alert("Silakan login dulu"); return; }
     if (cart.length === 0) { alert("Keranjang kosong"); return; }
 
-// 1. Susun daftar produk untuk pesan notifikasi
-    const daftarProduk = cart.map(item => `${item.qty}x ${item.name}`).join(", ");
-    const isiPesan = "Pesanan baru: " + daftarProduk;
-
     const method = document.querySelector('input[name="delivery"]:checked').value;
     const subtotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
     const shipping = method === "ANTAR" ? shippingFee : 0;
@@ -781,12 +789,6 @@ const total = subtotal + shipping;
         createdAt: serverTimestamp(),        // untuk UI
         cancelableUntil: Date.now() + (5 * 60 * 1000)
     });
-
-  // 🔴 TRIGGER NOTIFIKASI KE ANDROID
-        if (window.Android) {
-            [span_0](start_span)[span_1](start_span)// "order" akan memicu suara R.raw.order di NotificationHelper.java[span_0](end_span)[span_1](end_span)
-            window.Android.notify("order", "Ada Pesanan Masuk!", isiPesan);
-        }
 
     // 3️⃣ BERSIHKAN KERANJANG
     cart = [];
@@ -829,3 +831,22 @@ window.addEventListener('load', () => {
     </script>
 </body>
 </html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
