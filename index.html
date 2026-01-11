@@ -203,6 +203,9 @@ import { mediaGrid, mediaThumb } from "./media.js"; // <--- Tambahkan ini
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
+// 🔔 Tracking order untuk notifikasi admin
+let lastPendingOrderCount = 0;
+let orderListenerInitialized = false;
 
 let shippingFee = 0;
 const shippingRef = doc(db, "settings", "shipping");
