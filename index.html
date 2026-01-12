@@ -836,6 +836,15 @@ window.addEventListener('load', () => {
             }
         }
     });
+
+// 🔴 TEST NOTIF CANCEL (HAPUS SETELAH TES)
+if (window.Android) {
+  Android.notify(
+    "cancel",
+    "TEST Cancel",
+    "Ini tes notif cancel"
+  );
+}
     </script>
 </body>
 </html>
