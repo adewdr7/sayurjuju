@@ -288,6 +288,42 @@ function listenOrderNotification() {
 });
 }
 
+function listenCancelNotification() {
+  const q = query(
+    collection(db, "orders"),
+    orderBy("updatedAt", "desc")
+  );
+
+  let seen = new Set();
+  let initialized = false;
+
+  onSnapshot(q, (snapshot) => {
+    snapshot.docChanges().forEach(change => {
+      if (change.type === "modified") {
+        const data = change.doc.data();
+
+        if (
+          initialized &&
+          data.status === "DIBATALKAN" &&
+          !seen.has(change.doc.id)
+        ) {
+          seen.add(change.doc.id);
+
+          if (window.Android) {
+            Android.notify(
+              "cancel",
+              "Pesanan Dibatalkan",
+              "Ada pesanan yang dibatalkan customer"
+            );
+          }
+        }
+      }
+    });
+
+    initialized = true;
+  });
+}
+
         const productsRef = collection(db, "products");
 const statusRef = doc(db, "settings", "dailyStatus");
 
@@ -350,6 +386,7 @@ document.getElementById("admin-status-note").classList.remove("hidden");
             cartBtn.onclick = () => window.location.href = "orders.html";
 listenOrderNotification();
 listenPreorderNotification();
+listenCancelNotification();
         } else {
 document.getElementById("admin-status-select").classList.add("hidden");
 document.getElementById("admin-status-note").classList.add("hidden");
@@ -836,15 +873,6 @@ window.addEventListener('load', () => {
             }
         }
     });
-
-// 🔴 TEST NOTIF CANCEL (HAPUS SETELAH TES)
-if (window.Android) {
-  Android.notify(
-    "cancel",
-    "TEST Cancel",
-    "Ini tes notif cancel"
-  );
-}
     </script>
 </body>
 </html>
