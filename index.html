@@ -289,33 +289,29 @@ function listenOrderNotification() {
 }
 
 function listenCancelNotification() {
-  const q = query(
-    collection(db, "orders"),
-    orderBy("updatedAt", "desc")
-  );
+  const q = query(collection(db, "orders"));
 
-  let seen = new Set();
   let initialized = false;
+  let notified = new Set();
 
   onSnapshot(q, (snapshot) => {
     snapshot.docChanges().forEach(change => {
-      if (change.type === "modified") {
-        const data = change.doc.data();
+      const data = change.doc.data();
 
-        if (
-          initialized &&
-          data.status === "DIBATALKAN" &&
-          !seen.has(change.doc.id)
-        ) {
-          seen.add(change.doc.id);
+      if (
+        initialized &&
+        change.type === "modified" &&
+        data.status === "DIBATALKAN" &&
+        !notified.has(change.doc.id)
+      ) {
+        notified.add(change.doc.id);
 
-          if (window.Android) {
-            Android.notify(
-              "cancel",
-              "Pesanan Dibatalkan",
-              "Ada pesanan yang dibatalkan customer"
-            );
-          }
+        if (window.Android) {
+          Android.notify(
+            "cancel",
+            "Pesanan Dibatalkan",
+            "Ada pesanan yang dibatalkan customer"
+          );
         }
       }
     });
