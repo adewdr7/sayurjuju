@@ -116,7 +116,7 @@
 <button
   onclick="resetAllTotalSpent()"
   class="flex-1 py-3 bg-red-600/10 text-red-500 rounded-xl text-xs font-bold border border-red-500/30">
-  ⚠ Reset Total Belanja
+  ⚠ Reset % Belanja
 </button>
 
   <button
@@ -128,7 +128,7 @@
   <button
     onclick="resetAllFrequency()"
     class="flex-1 py-3 bg-rose-500/10 text-rose-500 rounded-xl text-xs font-bold border border-rose-500/20">
-    ♻ Reset Frekuensi
+    ♻ Reset Transaksi
   </button>
 </div>
 
@@ -284,12 +284,25 @@ window.resetAllFrequency = async () => {
 
     await Promise.all(batchUpdates);
 
+// 🔔 NOTIFIKASI KE CUSTOMER (ANDROID SAJA)
+    sendAndroidNotif(
+      "reset",
+      "Riwayat Transaksi Direset",
+      "Admin telah mengatur ulang total transaksi kamu ke 0"
+    );
+
     alert("Semua frekuensi berhasil di-reset");
     location.reload();
   } catch (err) {
     alert(err.message);
   }
 };
+
+function sendAndroidNotif(type, title, body) {
+  if (window.Android && typeof Android.notify === "function") {
+    Android.notify(type, title, body);
+  }
+}
 
 window.resetAllTotalSpent = async () => {
   const confirmText = prompt(
