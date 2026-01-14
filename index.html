@@ -186,8 +186,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
         import {
-  getFirestore, collection, onSnapshot, query, orderBy,
-  addDoc, doc, updateDoc, increment, serverTimestamp, deleteDoc, getDoc, setDoc, where 
+  getFirestore, collection, onSnapshot, query, orderBy, limit, addDoc, doc, updateDoc, increment, serverTimestamp, deleteDoc, getDoc, setDoc, where 
 } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 import { mediaGrid, mediaThumb } from "./media.js"; // <--- Tambahkan ini
 
@@ -217,6 +216,12 @@ onSnapshot(shippingRef, (snap) => {
     updateCartUI(); // refresh total realtime
   }
 });
+
+function sendAndroidNotif(type, title, body) {
+  if (window.Android && typeof Android.notify === "function") {
+    Android.notify(type, title, body);
+  }
+}
 
 // ===============================
 // ADMIN: NOTIFIKASI PREORDER
@@ -341,6 +346,37 @@ function listenCancelNotification() {
 }
 
         const productsRef = collection(db, "products");
+
+let isFirstLoad = true;
+
+const q = query(
+  productsRef,
+  orderBy("createdAt", "desc"),
+  limit(1)
+);
+
+onSnapshot(q, (snapshot) => {
+  if (snapshot.empty) return;
+
+  // ⛔ Supaya tidak bunyi saat pertama kali buka app
+  if (isFirstLoad) {
+    isFirstLoad = false;
+    return;
+  }
+
+  snapshot.docChanges().forEach((change) => {
+    if (change.type === "added") {
+      const product = change.doc.data();
+
+      sendAndroidNotif(
+        "newproduk",
+        "Produk Baru Tersedia 🥬",
+        product.name + " sudah tersedia di Pasar Segar"
+      );
+    }
+  });
+});
+
 const statusRef = doc(db, "settings", "dailyStatus");
 
         let allProducts = [];
