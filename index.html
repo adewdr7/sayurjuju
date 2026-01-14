@@ -345,6 +345,42 @@ function listenCancelNotification() {
   });
 }
 
+// ===============================
+// CUSTOMER: NOTIFIKASI PERUBAHAN HARGA
+// ===============================
+function listenPriceUpdateNotification() {
+    const q = query(collection(db, "products"));
+    let initialized = false;
+
+    onSnapshot(q, (snapshot) => {
+        snapshot.docChanges().forEach(change => {
+            const data = change.doc.data();
+            
+            // Cek jika data diubah (modified) dan bukan loading pertama (initialized)
+            if (initialized && change.type === "modified") {
+                const oldData = change.oldIndex !== -1 ? null : null; // Snapshot tidak menyimpan data lama secara langsung, tapi kita cek perubahannya
+                
+                // Panggil notifikasi Android jika terdeteksi perubahan
+                if (window.Android) {
+                    const formattedPrice = new Intl.NumberFormat('id-ID', { 
+                        style: 'currency', 
+                        currency: 'IDR', 
+                        minimumFractionDigits: 0 
+                    }).format(data.price);
+
+                    Android.notify(
+                        "upprice", 
+                        "Info Harga: " + data.name, 
+                        `Harga ${data.name} kini ${formattedPrice}. Cek stoknya sebelum kehabisan!`
+                    );
+                }
+            }
+        });
+        initialized = true;
+    });
+}
+
+
         const productsRef = collection(db, "products");
 
 let isFirstLoad = true;
@@ -444,6 +480,7 @@ document.getElementById("admin-status-select").classList.add("hidden");
 document.getElementById("admin-status-note").classList.add("hidden");
             // Tampilan JIKA PELANGGAN BIASA
             setDefaultCartBtn(cartBtn);
+			listenPriceUpdateNotification(); 
         }
         
         loginBtn.innerHTML = '<i data-lucide="user-check" class="w-6 h-6 text-emerald-400"></i>';
@@ -928,22 +965,3 @@ window.addEventListener('load', () => {
     </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
