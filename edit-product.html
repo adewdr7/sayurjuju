@@ -91,8 +91,8 @@ import { mediaThumb } from "./media.js";
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-window.sendPriceUpdate = () => {
-    // REVISI: Ambil dari #display-name, bukan dari header nav
+window.sendPriceUpdate = async () => {
+    // 1. Ambil data dari elemen UI
     const productName = document.getElementById('display-name').innerText; 
     const newPrice = document.getElementById('p-price').value;
     
@@ -101,22 +101,37 @@ window.sendPriceUpdate = () => {
         return;
     }
 
-    if (window.Android) {
-        const title = "⚠️ Info Harga: " + productName;
+    const confirmSend = confirm(`Kirim notifikasi update harga ${productName} ke semua pelanggan?`);
+    if (!confirmSend) return;
+
+    try {
+        // 2. Format harga ke Rupiah
         const formattedPrice = new Intl.NumberFormat('id-ID', { 
             style: 'currency', 
             currency: 'IDR', 
             minimumFractionDigits: 0 
         }).format(newPrice);
 
-        const body = `Harga ${productName} kini ${formattedPrice}. Cek stoknya sebelum kehabisan!`;
+        // 3. Import fungsi Firestore (Pastikan db sudah terdefinisi di script atasnya)
+        const { collection, addDoc, serverTimestamp } = await import("https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js");
         
-        Android.notify("upprice", title, body); 
-        alert("Notifikasi terkirim ke pelanggan!");
-    } else {
-        alert("Fitur notifikasi hanya tersedia di aplikasi Android.");
+        // 4. Tambah data ke koleksi 'broadcasts'
+        // Koleksi ini yang akan dipantau oleh MainActivity.java di HP Customer
+        await addDoc(collection(db, "broadcasts"), {
+            type: "upprice",
+            title: "⚠️ Info Harga: " + productName,
+            body: `Harga ${productName} kini ${formattedPrice}. Cek stoknya sebelum kehabisan!`,
+            createdAt: serverTimestamp() // PENTING: Untuk validasi waktu di Android
+        });
+
+        alert("Notifikasi berhasil disebarkan ke semua pelanggan!");
+        
+    } catch (err) {
+        console.error("Error sending broadcast:", err);
+        alert("Gagal mengirim notifikasi: " + err.message);
     }
 };
+
 
 
         const ADMIN_UID = "XVmdoXxSptTlA8xHVmAIzeLgkru2";
