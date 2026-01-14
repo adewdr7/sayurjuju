@@ -230,18 +230,38 @@ function listenPreorderNotification() {
         orderBy("createdAt", "desc")
     );
 
+    let initialized = false;
+    let lastPending = 0;
+
     onSnapshot(q, (snapshot) => {
-        let count = 0;
+        let pendingCount = 0;
 
         snapshot.forEach(doc => {
             const data = doc.data();
             if (data.status === "PENDING") {
-                count++;
+                pendingCount++;
             }
         });
 
-        badge.innerText = count;
-        badge.classList.toggle("hidden", count === 0);
+        // 🔔 Notif hanya jika preorder BARU
+        if (
+            initialized &&
+            pendingCount > lastPending &&
+            window.Android &&
+            !window.location.pathname.includes("preorder.html")
+        ) {
+            Android.notify(
+                "preorder",
+                "Pre Order Masuk",
+                "Ada preorder baru dari pelanggan"
+            );
+        }
+
+        initialized = true;
+        lastPending = pendingCount;
+
+        badge.innerText = pendingCount;
+        badge.classList.toggle("hidden", pendingCount === 0);
     });
 }
 
