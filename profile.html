@@ -172,7 +172,8 @@
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
-import { getFirestore, doc, getDoc, getDocs, collection, updateDoc, query, orderBy, where, onSnapshot, increment, arrayUnion, limit } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+import { getFirestore, doc, getDoc, getDocs, collection, updateDoc, query, orderBy, where, onSnapshot, increment, arrayUnion, limit, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+
 
 const firebaseConfig = {
     apiKey: "AIzaSyBWkPqyh54IRccNz2YjuB1bL5r49YadAP4",
@@ -787,19 +788,60 @@ window.confirmOfflineTransaction = async () => {
     return;
   }
 
-  for (const id of ids) {
-    await updateDoc(doc(db, "products", id), {
-      stock: increment(-offlineSelected[id])
+  try {
+    let totalHarga = 0;
+    const itemsForOrder = [];
+    
+    // 1. Ambil data harga produk terbaru & siapkan data item
+    for (const id of ids) {
+      const pSnap = await getDoc(doc(db, "products", id));
+      if (pSnap.exists()) {
+        const pData = pSnap.data();
+        const qty = offlineSelected[id];
+        const subtotal = pData.price * qty;
+        totalHarga += subtotal;
+
+        itemsForOrder.push({
+          productId: id,
+          name: pData.name,
+          price: pData.price,
+          qty: qty
+        });
+
+        // 2. Kurangi stok produk
+        await updateDoc(doc(db, "products", id), {
+          stock: increment(-qty)
+        });
+      }
+    }
+
+    // 3. Buat dokumen Order baru (Agar masuk ke rekap pendapatan Admin)
+    const newOrderRef = doc(collection(db, "orders"));
+    await setDoc(newOrderRef, {
+      userId: offlineTargetUid,
+      items: itemsForOrder,
+      total: totalHarga,
+      status: "SELESAI", // Langsung selesai agar masuk pendapatan
+      deliveryMethod: "OFFLINE",
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
     });
+
+    // 4. Update data akumulasi User (Total belanja & Frekuensi)
+    await updateDoc(doc(db, "users", offlineTargetUid), {
+      offlineOrderCount: increment(1),
+      totalSpent: increment(totalHarga),
+      lastTransactionAt: serverTimestamp()
+    });
+
+    closeOfflineModal();
+    alert(`Transaksi offline Rp ${totalHarga.toLocaleString()} berhasil dicatat!`);
+  } catch (err) {
+    console.error(err);
+    alert("Gagal mencatat transaksi: " + err.message);
   }
-
-  await updateDoc(doc(db, "users", offlineTargetUid), {
-    offlineOrderCount: increment(1)
-  });
-
-  closeOfflineModal();
-  alert("Transaksi offline berhasil dicatat");
 };
+
 
 window.closeOfflineModal = () => {
   document.getElementById("offline-modal").classList.add("hidden");
