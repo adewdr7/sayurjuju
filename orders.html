@@ -43,14 +43,29 @@
         <button onclick="updateShippingFee()" class="px-6 py-2 bg-emerald-500 text-white rounded-xl font-bold text-sm hover:bg-emerald-600 transition-all">Simpan</button>
     </div>
 </div>
-
-
-  <!-- Ringkasan Status -->
-  <div class="grid grid-cols-3 gap-3 mb-6">
+    <div class="grid grid-cols-3 gap-3 mb-6">
     <div class="bg-slate-900 border border-slate-800 p-3 rounded-2xl text-center">
       <p id="count-pending" class="text-xl font-bold text-amber-500">0</p>
       <p class="text-[10px] text-slate-500">Menunggu</p>
     </div>
+    <div class="bg-slate-900 border border-slate-800 p-3 rounded-2xl text-center">
+      <p id="count-process" class="text-xl font-bold text-cyan-400">0</p>
+      <p class="text-[10px] text-slate-500">Proses</p>
+    </div>
+    <div class="bg-slate-900 border border-slate-800 p-3 rounded-2xl text-center">
+      <p id="count-done" class="text-xl font-bold text-emerald-500">0</p>
+      <p class="text-[10px] text-slate-500">Selesai</p>
+    </div>
+  </div>
+
+  <div class="flex gap-2 mb-6">
+    <button onclick="filterType('SEMUA')" id="btn-filter-semua" class="flex-1 py-2 rounded-xl text-[10px] font-bold border border-emerald-500 bg-emerald-500 text-slate-950 transition-all">SEMUA</button>
+    <button onclick="filterType('ANTAR')" id="btn-filter-antar" class="flex-1 py-2 rounded-xl text-[10px] font-bold border border-slate-800 bg-slate-900 text-slate-400 transition-all">🛵 ANTAR</button>
+    <button onclick="filterType('AMBIL')" id="btn-filter-ambil" class="flex-1 py-2 rounded-xl text-[10px] font-bold border border-slate-800 bg-slate-900 text-slate-400 transition-all">🚶 AMBIL</button>
+    <button onclick="filterType('OFFLINE')" id="btn-filter-offline" class="flex-1 py-2 rounded-xl text-[10px] font-bold border border-slate-800 bg-slate-900 text-slate-400 transition-all">🏪 OFFLINE</button>
+  </div>
+
+
     <div class="bg-slate-900 border border-slate-800 p-3 rounded-2xl text-center">
       <p id="count-process" class="text-xl font-bold text-cyan-400">0</p>
       <p class="text-[10px] text-slate-500">Proses</p>
@@ -101,6 +116,8 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
+let currentTypeFilter = 'SEMUA';
+
 
 const shippingRef = doc(db, "settings", "shipping");
 
@@ -185,29 +202,20 @@ function loadOrders() {
     }
 
     for (const docSnap of snap.docs) {
-
-const o = docSnap.data();
-const id = docSnap.id;
-
-const userSnap = await getDoc(doc(db, "users", o.userId));
-const buyerName = userSnap.exists()
-  ? userSnap.data().name || "Tanpa Nama"
-  : "User";
-
-// Di dalam loop snap.forEach
-const deleteBtn =
-  (o.status === "SELESAI" || o.status === "DIBATALKAN")
-    ? `
-      <button onclick="deleteSingleOrder('${id}')"
-        class="p-2 text-rose-500 hover:bg-rose-500/10 rounded-lg">
-        <i data-lucide="trash-2" class="w-4 h-4"></i>
-      </button>
-    `
-    : "";
-// Masukkan variabel deleteBtn ke dalam template literal card di bagian header
-
+      const o = docSnap.data();
+      const id = docSnap.id;
       
-      // Hitung ringkasan
+      // Filter Logika
+      if (currentTypeFilter !== 'SEMUA' && o.deliveryMethod !== currentTypeFilter) continue;
+
+      const userSnap = await getDoc(doc(db, "users", o.userId));
+      const buyerName = userSnap.exists() ? userSnap.data().name || "User" : "User";
+
+      const deleteBtn = (o.status === "SELESAI" || o.status === "DIBATALKAN")
+        ? `<button onclick="deleteSingleOrder('${id}')" class="p-2 text-rose-500 hover:bg-rose-500/10 rounded-lg"><i data-lucide="trash-2" class="w-4 h-4"></i></button>`
+        : "";
+      
+      // Hitung ringkasan (Hanya jika status SELESAI)
       if (o.status === "MENUNGGU" || o.status === "SIAP DIAMBIL") counts.pending++;
       else if (o.status === "DIANTAR") counts.process++;
       else if (o.status === "SELESAI") {
@@ -216,91 +224,58 @@ const deleteBtn =
       }
 
       const dateStr = o.createdAt ? new Date(o.createdAt.seconds * 1000).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '...';
-
       const card = document.createElement("div");
-      card.className = "bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl";
+      card.className = "bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl mb-4";
+
+      // Badge Warna untuk Offline
+      let methodBadge = "";
+      if (o.deliveryMethod === 'ANTAR') methodBadge = 'bg-emerald-500/10 text-emerald-400';
+      else if (o.deliveryMethod === 'AMBIL') methodBadge = 'bg-cyan-500/10 text-cyan-400';
+      else methodBadge = 'bg-purple-500/10 text-purple-400';
 
       card.innerHTML = `
-  <div class="p-4 border-b border-slate-800 flex justify-between items-start">
-    <div>
-      <div class="flex items-center gap-2 mb-1">
-        <span class="text-[10px] font-bold px-2 py-0.5 rounded ${o.deliveryMethod === 'ANTAR' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-cyan-500/10 text-cyan-400'}">
-          ${o.deliveryMethod === 'ANTAR' ? '🛵 ANTAR' : '🚶 AMBIL'}
-        </span>
-        <span class="text-[10px] text-slate-500 font-mono">#${id.slice(-5).toUpperCase()}</span>
-      </div>
-      <p class="text-xs font-bold text-slate-200">
-  👤 ${buyerName}
-</p>
-    </div>
-    
-    <div class="flex items-start gap-2">
-      <div class="text-right">
-        <p class="text-xs font-bold text-slate-400">${dateStr}</p>
-        <span class="text-[10px] font-bold uppercase ${getStatusColor(o.status)}">${o.status}</span>
-      </div>
-      
-      ${deleteBtn} 
-    </div>
-  </div>
-
+        <div class="p-4 border-b border-slate-800 flex justify-between items-start">
+          <div>
+            <div class="flex items-center gap-2 mb-1">
+              <span class="text-[10px] font-bold px-2 py-0.5 rounded ${methodBadge}">
+                ${o.deliveryMethod === 'OFFLINE' ? '🏪 OFFLINE' : (o.deliveryMethod === 'ANTAR' ? '🛵 ANTAR' : '🚶 AMBIL')}
+              </span>
+              <span class="text-[10px] text-slate-500 font-mono">#${id.slice(-5).toUpperCase()}</span>
+            </div>
+            <p class="text-xs font-bold text-slate-200">👤 ${buyerName}</p>
+          </div>
+          <div class="flex items-start gap-2">
+            <div class="text-right">
+              <p class="text-xs font-bold text-slate-400">${dateStr}</p>
+              <span class="text-[10px] font-bold uppercase ${getStatusColor(o.status)}">${o.status}</span>
+            </div>
+            ${deleteBtn}
+          </div>
+        </div>
         <div class="p-4 bg-slate-900/50">
           <ul class="space-y-2 mb-3">
-            ${o.items.map(i => `
-              <li class="flex justify-between text-xs">
-                <span class="text-slate-400">${i.qty}x ${i.name}</span>
-                <span class="text-slate-200">Rp ${(i.price * i.qty).toLocaleString()}</span>
-              </li>
-            `).join("")}
+            ${o.items.map(i => `<li class="flex justify-between text-xs"><span class="text-slate-400">${i.qty}x ${i.name}</span><span class="text-slate-200">Rp ${(i.price * i.qty).toLocaleString()}</span></li>`).join("")}
           </ul>
-          
           <div class="flex justify-between items-center pt-2 border-t border-slate-800">
             <span class="text-xs text-slate-500">Total Pembayaran</span>
             <span class="text-emerald-400 font-bold">Rp ${o.total.toLocaleString()}</span>
           </div>
         </div>
-
-    <div class="p-4 bg-slate-900 flex gap-2">
-  ${
-    o.status !== "SELESAI" && o.status !== "DIBATALKAN"
-      ? `
-        <button onclick="updateStatus('${id}', '${o.status}')"
-          class="flex-1 bg-emerald-500 hover:bg-emerald-400 text-slate-950 py-3 rounded-xl text-xs font-bold transition-colors active:scale-95">
-          ${getNextActionLabel(o.status)}
-        </button>
-      `
-      : o.status === "SELESAI"
-        ? `
-          <div class="flex-1 text-center py-2 bg-slate-800 rounded-xl border border-slate-700">
-            <span class="text-xs text-slate-500 font-bold">
-              ✓ Pesanan Selesai
-            </span>
-          </div>
-        `
-        : `
-          <div class="flex-1 text-center py-2 bg-rose-500/10 rounded-xl border border-rose-500/30">
-            <span class="text-xs text-rose-400 font-bold">
-              ✖ Pesanan Dibatalkan Pelanggan
-            </span>
-          </div>
-        `
-  }
-</div>
+        <div class="p-4 bg-slate-900 flex gap-2">
+          ${o.status !== "SELESAI" && o.status !== "DIBATALKAN" ? `<button onclick="updateStatus('${id}', '${o.status}')" class="flex-1 bg-emerald-500 text-slate-950 py-3 rounded-xl text-xs font-bold">${getNextActionLabel(o.status)}</button>` : `<div class="flex-1 text-center py-2 bg-slate-800 rounded-xl"><span class="text-xs text-slate-500 font-bold">✓ Pesanan Selesai</span></div>`}
+        </div>
       `;
-
       ordersList.appendChild(card);
-}
+    }
 
-
-    // Update Header
     document.getElementById("total-revenue").innerText = `Rp ${totalRev.toLocaleString()}`;
     document.getElementById("count-pending").innerText = counts.pending;
     document.getElementById("count-process").innerText = counts.process;
     document.getElementById("count-done").innerText = counts.done;
-
     lucide.createIcons();
   });
 }
+
 
 function getStatusColor(status) {
     if (status === "MENUNGGU") return "text-amber-500";
@@ -367,7 +342,24 @@ window.updateStatus = async (id, current) => {
         alert("Gagal mengupdate status: " + err.message);
     }
 };
-lucide.createIcons(); 
+
+window.filterType = (type) => {
+  currentTypeFilter = type;
+  
+  // Update UI Button (Ganti warna tombol yang aktif)
+  const filters = ['SEMUA', 'ANTAR', 'AMBIL', 'OFFLINE'];
+  filters.forEach(f => {
+    const btn = document.getElementById(`btn-filter-${f.toLowerCase()}`);
+    if (f === type) {
+      btn.className = "flex-1 py-2 rounded-xl text-[10px] font-bold border border-emerald-500 bg-emerald-500 text-slate-950 transition-all";
+    } else {
+      btn.className = "flex-1 py-2 rounded-xl text-[10px] font-bold border border-slate-800 bg-slate-900 text-slate-400 transition-all";
+    }
+  });
+
+  loadOrders(); // Muat ulang list dengan filter baru
+};
+
 
 </script>
 </body>
