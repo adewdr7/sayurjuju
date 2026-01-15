@@ -865,41 +865,74 @@ window.updateQty = (id, change) => {
     const method = document.querySelector('input[name="delivery"]:checked').value;
     const subtotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
     const shipping = method === "ANTAR" ? shippingFee : 0;
-const total = subtotal + shipping;
+    const total = subtotal + shipping;
+
+    // Import runTransaction secara lokal jika belum ada di atas
+    import { runTransaction } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
     try {
-    // 1️⃣ SIMPAN PESANAN (ORDER)
-    await addDoc(collection(db, "orders"), {
-        userId: user.uid,
-        userName: document.getElementById('user-name')?.innerText || user.email,
-        items: cart.map(i => ({
-            productId: i.id,
-            name: i.name,
-            qty: i.qty,
-            price: i.price
-        })),
-        subtotal,
-        shipping,
-        total,
-        deliveryMethod: method,
-        status: "MENUNGGU", 
-        createdAt: serverTimestamp(),        // untuk UI
-        cancelableUntil: Date.now() + (5 * 60 * 1000)
-    });
+        await runTransaction(db, async (transaction) => {
+            const productSnapshots = [];
 
-    // 3️⃣ BERSIHKAN KERANJANG
-    cart = [];
-    localStorage.removeItem(CART_KEY);
-    updateCartUI();
-    toggleCart();
+            // 1. Validasi stok untuk semua item di keranjang
+            for (const item of cart) {
+                const productRef = doc(db, "products", item.id);
+                const productDoc = await transaction.get(productRef);
 
-    alert("Pesanan berhasil dibuat 🎉");
-    window.location.href = "profile.html";
-} catch (err) {
-   console.error(err);
-   alert("Gagal membuat pesanan");
-}
+                if (!productDoc.exists()) {
+                    throw `Produk ${item.name} sudah tidak tersedia!`;
+                }
+
+                const currentStock = productDoc.data().stock;
+                if (currentStock < item.qty) {
+                    throw `Maaf, stok ${item.name} tersisa ${currentStock}. Tidak cukup untuk pesanan Anda.`;
+                }
+                
+                productSnapshots.push({ ref: productRef, newStock: currentStock - item.qty });
+            }
+
+            // 2. Jika semua stok aman, eksekusi pengurangan stok
+            productSnapshots.forEach(p => {
+                transaction.update(p.ref, { stock: p.newStock });
+            });
+
+            // 3. Simpan Pesanan (Order)
+            const orderRef = doc(collection(db, "orders"));
+            transaction.set(orderRef, {
+                userId: user.uid,
+                userName: user.displayName || user.email,
+                items: cart.map(i => ({
+                    productId: i.id,
+                    name: i.name,
+                    qty: i.qty,
+                    price: i.price
+                })),
+                subtotal,
+                shipping,
+                total,
+                deliveryMethod: method,
+                status: "MENUNGGU",
+                createdAt: serverTimestamp(),
+                cancelableUntil: Date.now() + (5 * 60 * 1000)
+            });
+        });
+
+        // 4. BERSIHKAN KERANJANG SETELAH TRANSAKSI BERHASIL
+        cart = [];
+        localStorage.removeItem(CART_KEY);
+        updateCartUI();
+        toggleCart();
+
+        alert("Pesanan berhasil dibuat 🎉 Stok telah diperbarui.");
+        window.location.href = "profile.html";
+
+    } catch (err) {
+        console.error("Checkout gagal: ", err);
+        // Tampilkan pesan error spesifik jika stok kurang
+        alert(err);
+    }
 };
+
 
         lucide.createIcons();
 
