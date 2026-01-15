@@ -964,21 +964,23 @@ const listenToOrderStatus = (userId) => {
                 const isRecent = (now - updatedAt) < 30000; 
 
                 if (window.Android && isRecent) {
-                    if (status === "DIANTAR") {
-                        window.Android.notify(
-                            "default", 
-                            "Pesanan Sedang Diantar! 🛵", 
-                            "Kurir kami sedang menuju lokasi Anda."
-                        );
-                    } 
-                    else if (status === "SELESAI") {
-                        window.Android.notify(
-                            "default", 
-                            "Terima Kasih! 🎉", 
-                            "Pesanan telah diterima. Sampai belanja kembali!"
-                        );
-                    }
-                }
+    const notifType = orderData.notification || "order"
+
+    if (notifType === "delivering") {
+        Android.notify(
+            "delivering",
+            "Pesanan Sedang Diantar! 🛵",
+            "Kurir kami sedang menuju lokasi Anda."
+        );
+    }
+    else if (notifType === "thanks") {
+        Android.notify(
+            "thanks",
+            "Terima Kasih! 🎉",
+            "Pesanan telah diterima. Sampai belanja kembali!"
+        );
+    }
+}
             }
         });
     });
