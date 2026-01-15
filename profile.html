@@ -900,6 +900,58 @@ window.filterOfflineProducts = () => {
 
 // Update pemanggilan icon agar icon search muncul
 lucide.createIcons();
+
+// Fungsi Pengawas Status Pesanan (Customer Side)
+const listenToOrderStatus = (userId) => {
+    const q = query(
+        collection(db, "orders"),
+        where("userId", "==", userId)
+    );
+
+    onSnapshot(q, (snapshot) => {
+        snapshot.docChanges().forEach((change) => {
+            // Kita hanya bereaksi jika data di Firestore di-MODIFIED (diubah oleh admin)
+            if (change.type === "modified") {
+                const orderData = change.doc.data();
+                const status = orderData.status;
+                
+                // Keamanan: Cek apakah perubahan ini baru saja terjadi (dalam 30 detik terakhir)
+                // Agar user tidak dapat notif berulang saat buka halaman
+                const now = Date.now();
+                const updatedAt = orderData.updatedAt ? orderData.updatedAt.toMillis() : now;
+                const isRecent = (now - updatedAt) < 30000; 
+
+                if (window.Android && isRecent) {
+                    if (status === "DIANTAR") {
+                        window.Android.notify(
+                            "default", 
+                            "Pesanan Sedang Diantar! 🛵", 
+                            "Kurir kami sedang menuju lokasi Anda."
+                        );
+                    } 
+                    else if (status === "SELESAI") {
+                        window.Android.notify(
+                            "default", 
+                            "Terima Kasih! 🎉", 
+                            "Pesanan telah diterima. Sampai belanja kembali!"
+                        );
+                    }
+                }
+            }
+        });
+    });
+};
+
+// Pastikan dipanggil di dalam listener auth
+onAuthStateChanged(auth, (user) => {
+    if (user) {
+        listenToOrderStatus(user.uid);
+        loadUserOrders(user.uid); // Fungsi yang sudah ada di file Anda
+        loadUserData(user.uid);   // Fungsi yang sudah ada di file Anda
+    }
+});
+
+
     </script>
 <div id="offline-modal"
  class="fixed inset-0 bg-black/70 z-50 hidden flex items-center justify-center p-4">
