@@ -107,11 +107,24 @@
         <!-- ================= ADMIN SECTION ================= -->
         <div id="admin-section" class="hidden space-y-4">
             <h3 class="text-lg font-bold text-white">Daftar Pelanggan</h3>
+
 <div class="relative mt-2 mb-4">
     <i data-lucide="search" class="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"></i>
     <input type="text" id="search-customer" oninput="filterCustomers()" placeholder="Cari nama pelanggan..." 
     class="w-full bg-slate-900 border border-slate-800 rounded-2xl py-3 pl-11 pr-4 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
 </div>
+
+<div class="relative mt-2 mb-4">
+    <i data-lucide="search" class="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"></i>
+    <input type="text" id="search-customer" oninput="handleCustomerSearch()" placeholder="Cari nama pelanggan..." 
+    class="w-full bg-slate-900 border border-slate-800 rounded-2xl py-3 pl-11 pr-10 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
+    
+    <button id="clear-customer" onclick="clearCustomerSearch()" class="hidden absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white">
+        <i data-lucide="x" class="w-4 h-4"></i>
+    </button>
+</div>
+
+    
 <div class="flex gap-3 mb-4">
 <button
   onclick="resetAllTotalSpent()"
@@ -995,6 +1008,39 @@ onAuthStateChanged(auth, (user) => {
     }
 });
 
+// --- Fungsi Pencarian Customer ---
+window.handleCustomerSearch = () => {
+    const input = document.getElementById('search-customer');
+    const clearBtn = document.getElementById('clear-customer');
+    
+    clearBtn.classList.toggle('hidden', input.value.length === 0);
+    filterCustomers(); // Memanggil fungsi filter yang sudah ada
+};
+
+window.clearCustomerSearch = () => {
+    const input = document.getElementById('search-customer');
+    input.value = '';
+    document.getElementById('clear-customer').classList.add('hidden');
+    filterCustomers();
+    input.focus();
+};
+
+// --- Fungsi Pencarian Modal Offline ---
+window.handleOfflineSearch = () => {
+    const input = document.getElementById('search-product-offline');
+    const clearBtn = document.getElementById('clear-offline');
+    
+    clearBtn.classList.toggle('hidden', input.value.length === 0);
+    filterOfflineProducts(); // Memanggil fungsi filter yang sudah ada
+};
+
+window.clearOfflineSearch = () => {
+    const input = document.getElementById('search-product-offline');
+    input.value = '';
+    document.getElementById('clear-offline').classList.add('hidden');
+    filterOfflineProducts();
+    input.focus();
+};
 
     </script>
 <div id="offline-modal"
@@ -1007,10 +1053,20 @@ onAuthStateChanged(auth, (user) => {
     </div>
 
     <div class="relative mb-6">
-        <i data-lucide="search" class="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"></i>
-        <input type="text" id="search-product-offline" oninput="filterOfflineProducts()" placeholder="Cari nama produk..." 
-        class="w-full bg-slate-950 border border-slate-800 rounded-2xl py-4 pl-12 pr-4 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
-    </div>
+    <i data-lucide="search" class="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"></i>
+    <input type="text" id="search-product-offline" oninput="filterOfflineProducts()" placeholder="Cari nama produk..." 
+    class="w-full bg-slate-950 border border-slate-800 rounded-2xl py-4 pl-12 pr-4 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
+</div>
+
+<div class="relative mb-6">
+    <i data-lucide="search" class="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"></i>
+    <input type="text" id="search-product-offline" oninput="handleOfflineSearch()" placeholder="Cari nama produk..." 
+    class="w-full bg-slate-950 border border-slate-800 rounded-2xl py-4 pl-12 pr-11 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
+    
+    <button id="clear-offline" onclick="clearOfflineSearch()" class="hidden absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white">
+        <i data-lucide="x" class="w-4 h-4"></i>
+    </button>
+</div>
 
     <div id="offline-product-list" class="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[50vh] overflow-y-auto pr-2 hide-scrollbar">
         </div>
