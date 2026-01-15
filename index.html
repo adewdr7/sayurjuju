@@ -103,18 +103,25 @@
   <!-- SEARCH -->
   <div class="px-4 pt-4 pointer-events-auto">
     <div class="relative">
-      <i data-lucide="search"
-         class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 w-4 h-4"></i>
+  <i data-lucide="search"
+     class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 w-4 h-4"></i>
 
-      <input
-        type="text"
-        id="search-input"
-        oninput="renderProducts()"
-        placeholder="Cari bumbu, sayur..."
-        class="w-full bg-slate-900 border border-slate-800 rounded-xl
-               py-3 pl-10 pr-4 text-sm
-               focus:ring-2 focus:ring-emerald-500 outline-none">
-    </div>
+  <input
+    type="text"
+    id="search-input"
+    oninput="handleSearchInput()"
+    placeholder="Cari bumbu, sayur..."
+    class="w-full bg-slate-900 border border-slate-800 rounded-xl
+           py-3 pl-10 pr-10 text-sm
+           focus:ring-2 focus:ring-emerald-500 outline-none">
+
+  <button 
+    id="clear-search"
+    onclick="clearSearch()"
+    class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white">
+    <i data-lucide="x" class="w-4 h-4"></i>
+  </button>
+</div>
   </div>
 
   <!-- FILTER -->
@@ -570,6 +577,34 @@ function setDefaultCartBtn(btn) {
             renderCategories();
             renderProducts();
         };
+
+// Fungsi untuk menangani input pencarian & memunculkan tombol X
+window.handleSearchInput = () => {
+    const input = document.getElementById('search-input');
+    const clearBtn = document.getElementById('clear-search');
+    
+    // Munculkan tombol X jika ada teks, sembunyikan jika kosong
+    if (input.value.length > 0) {
+        clearBtn.classList.remove('hidden');
+    } else {
+        clearBtn.classList.add('hidden');
+    }
+    
+    // Jalankan render produk seperti biasa
+    renderProducts();
+};
+
+// Fungsi untuk membersihkan pencarian
+window.clearSearch = () => {
+    const input = document.getElementById('search-input');
+    const clearBtn = document.getElementById('clear-search');
+    
+    input.value = ''; // Kosongkan input
+    clearBtn.classList.add('hidden'); // Sembunyikan tombol X
+    
+    renderProducts(); // Render ulang produk (menampilkan semua)
+    input.focus(); // Kembalikan fokus ke input
+};
 
         window.renderProducts = () => {
     const searchTerm = document.getElementById('search-input').value.toLowerCase();
