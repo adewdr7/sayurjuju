@@ -186,8 +186,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
         import {
-  getFirestore, collection, onSnapshot, query, orderBy, limit, addDoc, doc, updateDoc, increment, serverTimestamp, deleteDoc, getDoc, setDoc, where 
-} from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+  getFirestore, collection, onSnapshot, query, orderBy, limit, addDoc, doc, updateDoc, increment, serverTimestamp, deleteDoc, getDoc, setDoc, where, runTransaction } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 import { mediaGrid, mediaThumb } from "./media.js"; // <--- Tambahkan ini
 
         const firebaseConfig = {
@@ -867,14 +866,12 @@ window.updateQty = (id, change) => {
     const shipping = method === "ANTAR" ? shippingFee : 0;
     const total = subtotal + shipping;
 
-    // Import runTransaction secara lokal jika belum ada di atas
-    import { runTransaction } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
-
     try {
+        // Menggunakan runTransaction untuk memastikan stok diperiksa secara real-time sebelum dikurangi
         await runTransaction(db, async (transaction) => {
-            const productSnapshots = [];
+            const productUpdates = [];
 
-            // 1. Validasi stok untuk semua item di keranjang
+            // 1. Validasi stok semua item
             for (const item of cart) {
                 const productRef = doc(db, "products", item.id);
                 const productDoc = await transaction.get(productRef);
@@ -883,20 +880,20 @@ window.updateQty = (id, change) => {
                     throw `Produk ${item.name} sudah tidak tersedia!`;
                 }
 
-                const currentStock = productDoc.data().stock;
-                if (currentStock < item.qty) {
-                    throw `Maaf, stok ${item.name} tersisa ${currentStock}. Tidak cukup untuk pesanan Anda.`;
+                const currentDbStock = productDoc.data().stock;
+                if (currentDbStock < item.qty) {
+                    throw `Maaf, stok ${item.name} sisa ${currentDbStock}. Pesanan Anda (${item.qty}) melebihi stok.`;
                 }
-                
-                productSnapshots.push({ ref: productRef, newStock: currentStock - item.qty });
+
+                productUpdates.push({ ref: productRef, newStock: currentDbStock - item.qty });
             }
 
-            // 2. Jika semua stok aman, eksekusi pengurangan stok
-            productSnapshots.forEach(p => {
+            // 2. Jalankan update stok jika semua valid
+            productUpdates.forEach(p => {
                 transaction.update(p.ref, { stock: p.newStock });
             });
 
-            // 3. Simpan Pesanan (Order)
+            // 3. Catat pesanan baru
             const orderRef = doc(collection(db, "orders"));
             transaction.set(orderRef, {
                 userId: user.uid,
@@ -917,21 +914,22 @@ window.updateQty = (id, change) => {
             });
         });
 
-        // 4. BERSIHKAN KERANJANG SETELAH TRANSAKSI BERHASIL
+        // 4. Reset keranjang jika berhasil
         cart = [];
         localStorage.removeItem(CART_KEY);
         updateCartUI();
         toggleCart();
 
-        alert("Pesanan berhasil dibuat 🎉 Stok telah diperbarui.");
+        alert("Pesanan berhasil dibuat 🎉 Stok telah diperbarui otomatis.");
         window.location.href = "profile.html";
 
     } catch (err) {
         console.error("Checkout gagal: ", err);
-        // Tampilkan pesan error spesifik jika stok kurang
+        // Alert ini akan muncul jika stok di database tiba-tiba habis saat user klik tombol
         alert(err);
     }
 };
+
 
 
         lucide.createIcons();
