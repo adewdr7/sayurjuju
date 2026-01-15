@@ -48,34 +48,14 @@
       <p id="count-pending" class="text-xl font-bold text-amber-500">0</p>
       <p class="text-[10px] text-slate-500">Menunggu</p>
     </div>
-    <div class="bg-slate-900 border border-slate-800 p-3 rounded-2xl text-center">
-      <p id="count-process" class="text-xl font-bold text-cyan-400">0</p>
-      <p class="text-[10px] text-slate-500">Proses</p>
-    </div>
-    <div class="bg-slate-900 border border-slate-800 p-3 rounded-2xl text-center">
-      <p id="count-done" class="text-xl font-bold text-emerald-500">0</p>
-      <p class="text-[10px] text-slate-500">Selesai</p>
-    </div>
-  </div>
+    
 
   <div class="flex gap-2 mb-6">
     <button onclick="filterType('SEMUA')" id="btn-filter-semua" class="flex-1 py-2 rounded-xl text-[10px] font-bold border border-emerald-500 bg-emerald-500 text-slate-950 transition-all">SEMUA</button>
     <button onclick="filterType('ANTAR')" id="btn-filter-antar" class="flex-1 py-2 rounded-xl text-[10px] font-bold border border-slate-800 bg-slate-900 text-slate-400 transition-all">🛵 ANTAR</button>
     <button onclick="filterType('AMBIL')" id="btn-filter-ambil" class="flex-1 py-2 rounded-xl text-[10px] font-bold border border-slate-800 bg-slate-900 text-slate-400 transition-all">🚶 AMBIL</button>
     <button onclick="filterType('OFFLINE')" id="btn-filter-offline" class="flex-1 py-2 rounded-xl text-[10px] font-bold border border-slate-800 bg-slate-900 text-slate-400 transition-all">🏪 OFFLINE</button>
-  </div>
-
-
-    <div class="bg-slate-900 border border-slate-800 p-3 rounded-2xl text-center">
-      <p id="count-process" class="text-xl font-bold text-cyan-400">0</p>
-      <p class="text-[10px] text-slate-500">Proses</p>
-    </div>
-    <div class="bg-slate-900 border border-slate-800 p-3 rounded-2xl text-center">
-      <p id="count-done" class="text-xl font-bold text-emerald-500">0</p>
-      <p class="text-[10px] text-slate-500">Selesai</p>
-    </div>
-  </div>
-
+  </div>   
 <button onclick="clearFinishedOrders()" class="w-full mb-4 py-3 bg-slate-900 text-rose-500 border border-slate-800 rounded-2xl text-xs font-bold flex items-center justify-center gap-2">
     <i data-lucide="trash-2" class="w-4 h-4"></i>
     Bersihkan Semua Pesanan Selesai
