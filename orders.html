@@ -318,6 +318,7 @@ function getNextActionLabel(current) {
     return "Update Status";
 }
 
+
 window.updateStatus = async (id, current) => {
     let next = "SELESAI";
     if (current === "MENUNGGU") next = "DIANTAR";
@@ -327,37 +328,46 @@ window.updateStatus = async (id, current) => {
         const orderRef = doc(db, "orders", id);
         const orderSnap = await getDoc(orderRef);
         const orderData = orderSnap.data();
-if (next === "SELESAI") {
-  const batch = writeBatch(db);
 
-  // 1️⃣ Kurangi stok produk
-  for (const item of orderData.items) {
-    const pRef = doc(db, "products", item.productId);
-    batch.update(pRef, { stock: increment(-item.qty) });
-  }
+        if (next === "SELESAI") {
+            const batch = writeBatch(db);
 
-  // 2️⃣ Update data user (HANYA SAAT PESANAN SELESAI)
-// 2️⃣ Update data user (HANYA SAAT PESANAN SELESAI)
-const userRef = doc(db, "users", orderData.userId);
-batch.update(userRef, {
-  lastTransactionAt: serverTimestamp(),
-  orderCount: increment(1),        // ✅ online transaction
-  totalSpent: increment(orderData.total)
-});
+            // 1. Kurangi stok produk
+            for (const item of orderData.items) {
+                const pRef = doc(db, "products", item.productId);
+                batch.update(pRef, { stock: increment(-item.qty) });
+            }
 
+            // 2. Update data user
+            const userRef = doc(db, "users", orderData.userId);
+            batch.update(userRef, {
+                lastTransactionAt: serverTimestamp(),
+                orderCount: increment(1),
+                totalSpent: increment(orderData.total)
+            });
 
-  // 3️⃣ Update status pesanan
-  batch.update(orderRef, { status: "SELESAI" });
-
-  await batch.commit();
-  alert("Pesanan selesai & stok diperbarui.");
-  return;
+            // 3. Update status pesanan & Waktu Update
+            batch.update(orderRef, { 
+                status: next, 
+                updatedAt: serverTimestamp() 
+            });
+            
+            await batch.commit();
         } else {
-            await updateDoc(orderRef, { status: next });
+            // Update status untuk tahapan antara (MENUNGGU -> DIANTAR)
+            await updateDoc(orderRef, { 
+                status: next, 
+                updatedAt: serverTimestamp() 
+            });
         }
-    } catch (err) { alert("Error: " + err.message); }
+
+        alert(`Pesanan berhasil diupdate ke: ${next}`);
+    } catch (err) {
+        console.error(err);
+        alert("Gagal mengupdate status: " + err.message);
+    }
 };
-lucide.createIcons();
+
 </script>
 </body>
 </html>
