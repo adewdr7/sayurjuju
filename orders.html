@@ -286,8 +286,15 @@ function getNextActionLabel(current) {
 
 window.updateStatus = async (id, current) => {
     let next = "SELESAI";
-    if (current === "MENUNGGU") next = "DIANTAR";
-    else if (current === "DIANTAR" || current === "SIAP DIAMBIL") next = "SELESAI";
+    let notificationType = "thanks"; // Default untuk status SELESAI
+
+    if (current === "MENUNGGU") {
+        next = "DIANTAR";
+        notificationType = "delivering"; // Notifikasi sedang diantar
+    } else if (current === "DIANTAR" || current === "SIAP DIAMBIL") {
+        next = "SELESAI";
+        notificationType = "thanks"; // Notifikasi terima kasih
+    }
 
     try {
         const orderRef = doc(db, "orders", id);
@@ -311,9 +318,10 @@ window.updateStatus = async (id, current) => {
                 totalSpent: increment(orderData.total)
             });
 
-            // 3. Update status pesanan & Waktu Update
+            // 3. Update status pesanan & Notifikasi
             batch.update(orderRef, { 
                 status: next, 
+                notification: notificationType, // Mengubah ke "thanks"
                 updatedAt: serverTimestamp() 
             });
             
@@ -322,6 +330,7 @@ window.updateStatus = async (id, current) => {
             // Update status untuk tahapan antara (MENUNGGU -> DIANTAR)
             await updateDoc(orderRef, { 
                 status: next, 
+                notification: notificationType, // Mengubah ke "delivering"
                 updatedAt: serverTimestamp() 
             });
         }
@@ -333,6 +342,7 @@ window.updateStatus = async (id, current) => {
     }
 };
 
+    
 window.filterType = (type) => {
   currentTypeFilter = type;
   
