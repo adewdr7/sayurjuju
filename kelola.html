@@ -37,12 +37,33 @@
     </div>
 
     <main class="p-4 pb-32">
-        <div class="flex items-center justify-between mb-6">
-            <div class="flex items-center gap-2 bg-slate-900 p-1 rounded-xl border border-slate-800">
-                <button id="select-all" onclick="toggleSelectAll()" class="px-3 py-1.5 text-xs font-semibold rounded-lg hover:bg-slate-800 transition-colors">Pilih Semua</button>
-            </div>
-            <span id="selected-count" class="text-xs text-slate-500">0 produk dipilih</span>
+        <div class="space-y-4 mb-6">
+
+    <!-- BARIS LAMA -->
+    <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2 bg-slate-900 p-1 rounded-xl border border-slate-800">
+            <button id="select-all" onclick="toggleSelectAll()" class="px-3 py-1.5 text-xs font-semibold rounded-lg hover:bg-slate-800 transition-colors">
+                Pilih Semua
+            </button>
         </div>
+        <span id="selected-count" class="text-xs text-slate-500">0 produk dipilih</span>
+    </div>
+
+    <!-- BARIS BARU: SEARCH -->
+    <div class="flex gap-2">
+        <input
+            id="search-input"
+            type="text"
+            placeholder="Cari nama produk..."
+            oninput="applySearch(this.value)"
+            class="flex-1 bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-sm outline-none focus:border-emerald-500"
+        >
+        <button onclick="clearSearch()" class="px-4 bg-slate-800 rounded-xl text-xs font-bold">
+            Clear
+        </button>
+    </div>
+
+</div>
 
         <div id="management-grid" class="space-y-3">
             <!-- Item produk render di sini -->
@@ -85,6 +106,21 @@
                 </div>
             </form>
         </div>
+</div>
+<div id="bulk-stock-modal" class="fixed inset-0 z-[70] hidden">
+    <div class="absolute inset-0 bg-black/80" onclick="closeBulkStock()"></div>
+    <div class="absolute bottom-0 left-0 right-0 bg-slate-900 rounded-t-[2.5rem] p-6 border-t border-slate-800">
+        <h3 class="text-lg font-bold mb-4 text-center">Edit Stok Massal</h3>
+        <input
+            id="bulk-stock-value"
+            type="number"
+            placeholder="Masukkan stok baru"
+            class="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 text-sm mb-4"
+        >
+        <button onclick="applyBulkStock()" class="w-full py-4 bg-emerald-500 rounded-2xl font-bold">
+            Terapkan ke Semua
+        </button>
+    </div>
     </div>
 
     <script type="module">
@@ -110,6 +146,7 @@ import { mediaThumb } from "./media.js"; // <--- Tambahkan ini
 
         let allProducts = [];
         let selectedIds = new Set();
+let searchQuery = '';
 
         // Guard Access
         onAuthStateChanged(auth, (user) => {
@@ -126,9 +163,32 @@ import { mediaThumb } from "./media.js"; // <--- Tambahkan ini
             renderManagement();
         });
 
+window.applySearch = (value) => {
+    searchQuery = value.toLowerCase();
+    renderManagement();
+};
+
+window.clearSearch = () => {
+    searchQuery = '';
+    document.getElementById('search-input').value = '';
+    renderManagement();
+};
+
         window.renderManagement = () => {
             const grid = document.getElementById('management-grid');
-            grid.innerHTML = allProducts.map(p => `
+
+// FILTER SEARCH
+const filtered = allProducts.filter(p =>
+    p.name.toLowerCase().includes(searchQuery)
+);
+
+// PIN CHECKLIST KE ATAS
+const sorted = [
+    ...filtered.filter(p => selectedIds.has(p.id)),
+    ...filtered.filter(p => !selectedIds.has(p.id))
+];
+
+grid.innerHTML = sorted.map(p => `
                 <div class="bg-slate-900 border ${selectedIds.has(p.id) ? 'border-emerald-500 bg-emerald-500/5' : 'border-slate-800'} rounded-2xl p-3 flex items-center gap-4 transition-all">
                     <div class="relative">
                         <input type="checkbox" id="check-${p.id}" ${selectedIds.has(p.id) ? 'checked' : ''} 
@@ -167,10 +227,18 @@ import { mediaThumb } from "./media.js"; // <--- Tambahkan ini
         };
 
         window.toggleSelectAll = () => {
-            if (selectedIds.size === allProducts.length) selectedIds.clear();
-            else allProducts.forEach(p => selectedIds.add(p.id));
-            renderManagement();
-        };
+    const visible = allProducts.filter(p =>
+        p.name.toLowerCase().includes(searchQuery)
+    );
+
+    if (selectedIds.size === visible.length) {
+        selectedIds.clear();
+    } else {
+        visible.forEach(p => selectedIds.add(p.id));
+    }
+
+    renderManagement();
+};
 
         const updateUI = () => {
             document.getElementById('selected-count').innerText = `${selectedIds.size} produk dipilih`;
@@ -178,11 +246,13 @@ import { mediaThumb } from "./media.js"; // <--- Tambahkan ini
             
             if (selectedIds.size > 0) {
                 actionContainer.innerHTML = `
-                    <button onclick="deleteSelected()" class="p-2 bg-rose-500 text-white rounded-xl">
-                        <i data-lucide="trash-2" class="w-5 h-5"></i>
-                    </button>
-                    <button onclick="bulkStatus('Segar')" class="px-4 py-2 bg-emerald-500 text-[10px] font-bold rounded-xl">Set Segar</button>
-                `;
+    <button onclick="openBulkStock()" class="px-4 py-2 bg-slate-800 rounded-xl text-[10px] font-bold">
+        Edit Stok
+    </button>
+    <button onclick="deleteSelected()" class="p-2 bg-rose-500 text-white rounded-xl">
+        <i data-lucide="trash-2" class="w-5 h-5"></i>
+    </button>
+`;
             } else {
                 actionContainer.innerHTML = '';
             }
@@ -254,6 +324,30 @@ import { mediaThumb } from "./media.js"; // <--- Tambahkan ini
                 closeEditModal();
             } catch (err) { alert(err.message); }
         };
+
+window.openBulkStock = () => {
+    document.getElementById('bulk-stock-modal').classList.remove('hidden');
+};
+
+window.closeBulkStock = () => {
+    document.getElementById('bulk-stock-modal').classList.add('hidden');
+};
+
+window.applyBulkStock = async () => {
+    const value = Number(document.getElementById('bulk-stock-value').value);
+    if (isNaN(value)) return alert('Stok tidak valid');
+
+    const batch = writeBatch(db);
+    selectedIds.forEach(id => {
+        batch.update(doc(db, "products", id), { stock: value });
+    });
+
+    await batch.commit();
+
+    selectedIds.clear();
+    closeBulkStock();
+    renderManagement();
+};
 
     </script>
 </body>
