@@ -280,7 +280,7 @@ window.toggleSort = (btn) => {
 
 
 window.resetAllFrequency = async () => {
-  if (!confirm("Reset semua frekuensi belanja ke 0% ?")) return;
+  if (!confirm("Reset semua frekuensi belanja ke 0 ?")) return;
 
   try {
     const snap = await getDocs(collection(db, "users"));
