@@ -163,20 +163,22 @@ window.sendResetPassword = async () => {
         const messaging = getMessaging(app);
 
         // Simpan FCM token ke Firestore
-        async function saveFcmToken(userId) {
-            try {
-                const token = await getToken(messaging, {
-                    vapidKey: "BKO-KP9AyLbDDGY_3Pe6pBVArirWsXF0FOcrLHclMoseRPBspndSmhv8PXG4fp8NFXeV2VoNQScbgWPIEpw8Dxc"
-                });
-                if (token) {
-                    await setDoc(doc(db, "users", userId), { fcmToken: token }, { merge: true });
-                    console.log("FCM token tersimpan:", token);
-                }
-            } catch (err) {
-                console.warn("Tidak bisa ambil FCM token:", err);
-            }
+        
+async function saveFcmToken(userId) {
+    try {
+        const token = await getToken(messaging, {
+            vapidKey: "BKO-KP9AyLbDDGY_3Pe6pBVArirWsXF0FOcrLHclMoseRPBspndSmhv8PXG4fp8NFXeV2VoNQScbgWPIEpw8Dxc"
+        });
+        if (token) {
+            await setDoc(doc(db, "users", userId), { fcmToken: token }, { merge: true });
+            alert("FCM token tersimpan: " + token.substring(0, 20) + "...");
+        } else {
+            alert("Token kosong/null");
         }
-
+    } catch (err) {
+        alert("Error FCM: " + err.message);
+    }
+}
         // Atur bahasa email ke Indonesia
         auth.languageCode = 'id';
 
