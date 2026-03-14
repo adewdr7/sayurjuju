@@ -201,6 +201,19 @@ window.togglePassword = () => {
                 }
 
                 await ensureUserDoc(user);
+                
+
+// DEBUG SEMENTARA
+alert("UID: " + user.uid + " | Android tersedia: " + (!!window.Android));
+
+if (window.Android && typeof Android.saveFcmToken === "function") {
+    Android.saveFcmToken(user.uid);
+    alert("saveFcmToken dipanggil!");
+} else {
+    alert("Android.saveFcmToken TIDAK ada!");
+}
+
+await checkAddressAndPrompt(user);
                 await checkAddressAndPrompt(user);
             } catch (err) {
                 let message = "Gagal masuk: ";
