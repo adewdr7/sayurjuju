@@ -218,7 +218,8 @@ window.togglePassword = () => {
                 }
 
                 await ensureUserDoc(user);
-await checkAddressAndPrompt(user);
+                await saveFcmToken(user.uid);
+                await checkAddressAndPrompt(user);
             } catch (err) {
                 let message = "Gagal masuk: ";
                 if(err.code === 'auth/invalid-credential') message += "Email atau password salah.";
