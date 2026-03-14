@@ -119,6 +119,7 @@ sendPasswordResetEmail,
             signOut 
         } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
         import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+        import { getMessaging, getToken } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-messaging.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBWkPqyh54IRccNz2YjuB1bL5r49YadAP4",
@@ -159,6 +160,22 @@ window.sendResetPassword = async () => {
   }
 };
         const db = getFirestore(app);
+        const messaging = getMessaging(app);
+
+        // Simpan FCM token ke Firestore
+        async function saveFcmToken(userId) {
+            try {
+                const token = await getToken(messaging, {
+                    vapidKey: "BKO-KP9AyLbDDGY_3Pe6pBVArirWsXF0FOcrLHclMoseRPBspndSmhv8PXG4fp8NFXeV2VoNQScbgWPIEpw8Dxc"
+                });
+                if (token) {
+                    await setDoc(doc(db, "users", userId), { fcmToken: token }, { merge: true });
+                    console.log("FCM token tersimpan:", token);
+                }
+            } catch (err) {
+                console.warn("Tidak bisa ambil FCM token:", err);
+            }
+        }
 
         // Atur bahasa email ke Indonesia
         auth.languageCode = 'id';
