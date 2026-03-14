@@ -13,6 +13,11 @@ firebase.initializeApp({
 const messaging = firebase.messaging();
 
 messaging.onBackgroundMessage((payload) => {
-    const { title, body } = payload.notification;
-    self.registration.showNotification(title, { body });
+    const title = payload.notification ? payload.notification.title : payload.data.title;
+    const body = payload.notification ? payload.notification.body : payload.data.body;
+
+    self.registration.showNotification(title, {
+        body: body,
+        icon: "/sayurjuju/icon.png"
+    });
 });
